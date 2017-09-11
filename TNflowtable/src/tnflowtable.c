@@ -30,7 +30,6 @@ const char filename[] = "/sys/bus/pci/devices/0000:01:00.0/resource1";
 const char *argp_program_bug_address = "<ulbricht@innoroute.de>";
 struct flock lock;
 
-
 /*
    OPTIONS.  Field 1 in ARGP.
    Order of fields: {NAME, KEY, ARG, FLAGS, DOC}.
@@ -74,7 +73,6 @@ static struct argp_option options[] = {
   {0}
 };
 
-
 /*
    PARSER. Field 2 in ARGP.
    Order of parameters: KEY, ARG, STATE.
@@ -83,7 +81,6 @@ static error_t
 parse_opt (int key, char *arg, struct argp_state *state)
 {
   struct arguments *arguments = state->input;
-
   switch (key) {
   case 'v':
     arguments->verbose = 1;
@@ -134,7 +131,7 @@ parse_opt (int key, char *arg, struct argp_state *state)
   case 'Y':
     arguments->ACTION_ID = strtoul (arg, 0, 0);
     break;
-/*  case 'n':
+  /*case 'n':
     arguments->NEXT_BIT = strtoul (arg, 0, 0);
     break; */
   case 'c':
@@ -142,16 +139,16 @@ parse_opt (int key, char *arg, struct argp_state *state)
     break;
   case 'S':
     arguments->MAC_SRC = strtoull (arg, 0, 0);
-    hwaddr_aton2(arg,&arguments->MAC_SRC);
-    arguments->MAC_SRC=htobe64(arguments->MAC_SRC)>>16;
+    hwaddr_aton2(arg, &arguments->MAC_SRC);
+    arguments->MAC_SRC = htobe64(arguments->MAC_SRC) >> 16;
     arguments->MASK_MAC_SRC = 0;
     arguments->dohave_MAC_SRC = 1;
     arguments->dohave_MASK_MAC_SRC = 1;
     break;
   case 'D':
     arguments->MAC_DST = strtoull (arg, 0, 0);
-    hwaddr_aton2(arg,&arguments->MAC_DST);
-    arguments->MAC_DST=htobe64(arguments->MAC_DST)>>16;
+    hwaddr_aton2(arg, &arguments->MAC_DST);
+    arguments->MAC_DST = htobe64(arguments->MAC_DST) >> 16;
     arguments->MASK_MAC_DST = 0;
     arguments->dohave_MAC_DST = 1;
     arguments->dohave_MASK_MAC_DST = 1;
@@ -190,14 +187,13 @@ parse_opt (int key, char *arg, struct argp_state *state)
     arguments->dohave_MASK_INPORT = 1;
     break;
   case 'C':
-    arguments->IPv4_SRC = htobe32(inet_addr(arg));//strtoul (arg, 0, 0);
+    arguments->IPv4_SRC = htobe32(inet_addr(arg));
     arguments->MASK_IPv4_SRC = 0;
     arguments->dohave_IPv4_SRC = 1;
     arguments->dohave_MASK_IPv4_SRC = 1;
     break;
   case 'T':
-    arguments->IPv4_DST =htobe32(inet_addr(arg));
-//    arguments->IPv4_DST =parseIPV4string(arg);// strtoul (arg, 0, 0);
+    arguments->IPv4_DST = htobe32(inet_addr(arg));
     arguments->MASK_IPv4_DST = 0;
     arguments->dohave_IPv4_DST = 1;
     arguments->dohave_MASK_IPv4_DST = 1;
@@ -276,20 +272,22 @@ main (int argc, char **argv)
   clear_arguments (&arguments);
   argp_parse (&argp, argc, argv, 0, 0, &arguments);
 
-  if ((fd = open (filename, O_RDWR | O_SYNC)) == -1)
+  if ((fd = open (filename, O_RDWR | O_SYNC)) == -1) {
     printf ("error opening file\n");
+  }
 
-  lock.l_start=0;
-  lock.l_whence=SEEK_SET;
-  lock.l_len=0;
-  lock.l_type=F_RDLCK;
-  fcntl(fd, F_SETLKW, &lock);//block until file is free
+  lock.l_start = 0;
+  lock.l_whence = SEEK_SET;
+  lock.l_len = 0;
+  lock.l_type = F_RDLCK;
+  fcntl(fd, F_SETLKW, &lock); //block until file is free
 
-  if ((fd_shadow = open ("/tmp/INR_FC_shadow.mem", O_CREAT | O_RDWR | O_SYNC, 0600)) == -1)
+  if ((fd_shadow = open ("/tmp/INR_FC_shadow.mem", O_CREAT | O_RDWR | O_SYNC, 0600)) == -1) {
     printf ("error opening shadowmem file\n");
-//fd=fd_shadow; //workaround for missing memory
-  if ((fd_master = open ("/tmp/INR_FC_masterTable.mem", O_CREAT | O_RDWR | O_SYNC, 0600)) == -1)
+  }
+  if ((fd_master = open ("/tmp/INR_FC_masterTable.mem", O_CREAT | O_RDWR | O_SYNC, 0600)) == -1) {
     printf ("error opening msterTable file\n");
+  }
 
   ftruncate (fd_shadow, MAP_SIZE);
   ftruncate (fd_master, MASTERTABLE_length * sizeof (struct arguments));
@@ -298,30 +296,33 @@ main (int argc, char **argv)
   map_base_shadow = mmap (0, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd_shadow, 0);
   map_base_master = mmap (0, MASTERTABLE_length * sizeof (struct arguments), PROT_READ | PROT_WRITE, MAP_SHARED, fd_master, 0);
 
-  if (!map_base)
+  if (!map_base) {
     printf ("error mapping memory\n");
-  if (!map_base_shadow)
+  }
+  if (!map_base_shadow) {
     printf ("error mapping memory\n");
-  if (!map_base_master)
+  }
+  if (!map_base_master) {
     printf ("error mapping memory\n");
+  }
   FCinit_EMH (map_base, map_base_shadow);
   FCinit_MasterTable (map_base_master);
 
   switch (arguments.args[0][0]) {
   case 'A':
-    switch (arguments.args[0][5]) {	//actiontable
+    switch (arguments.args[0][5]) { //actiontable
     case 'a':
       AT_add (&arguments);
-      break;			//add
+      break;
     case 'd':
       AT_del (arguments);
-      break;			//del
+      break;
     case 'c':
       AT_clear (arguments);
-      break;			//clear all
+      break;
     case 'p':
       AT_print (arguments);
-      break;			//print
+      break;
     default:
       printf ("unknown subaction\n");
       break;
@@ -329,139 +330,139 @@ main (int argc, char **argv)
     break;
   case 'H':
     if (arguments.args[0][8] == 'H')
-      switch (arguments.args[0][10]) {	//hashtable
+      switch (arguments.args[0][10]) { //hashtable
       case 'a':
-	HT_EMH_add (&arguments);
-	break;			//add
+        HT_EMH_add (&arguments);
+        break;
       case 'd':
-	HT_EMH_del (arguments);
-	break;			//del
+        HT_EMH_del (arguments);
+        break;
       case 'c':
-	HT_EMH_clear (arguments);
-	break;			//clear all
+        HT_EMH_clear (arguments);
+        break;
       case 'p':
-	HT_EMH_print (arguments);
-	break;			//print
+        HT_EMH_print (arguments);
+        break;
       default:
-	printf ("unknown subaction\n");
-	break;
+        printf ("unknown subaction\n");
+        break;
       }
     else
-      switch (arguments.args[0][10]) {	//hashtable
+      switch (arguments.args[0][10]) {  //hashtable
       case 'a':
-	HT_EMA_add (&arguments);
-	break;			//add
+        HT_EMA_add (&arguments);
+        break;
       case 'd':
-	HT_EMA_del (arguments);
-	break;			//del
+        HT_EMA_del (arguments);
+        break;
       case 'c':
-	HT_EMA_clear (arguments);
-	break;			//clear all
+        HT_EMA_clear (arguments);
+        break;
       case 'p':
-	HT_EMA_print (arguments);
-	break;			//print
+        HT_EMA_print (arguments);
+        break;
       default:
-	printf ("unknown subaction\n");
-	break;
+        printf ("unknown subaction\n");
+        break;
       }
     break;
   case 'C':
     if (arguments.args[0][8] == 'H')
-      switch (arguments.args[0][10]) {	//ruletable
+      switch (arguments.args[0][10]) {  //ruletable
       case 'a':
-	CT_EMH_add (&arguments);
-	break;			//add
+        CT_EMH_add (&arguments);
+        break;
       case 'd':
-	CT_EMH_del (arguments);
-	break;			//del
+        CT_EMH_del (arguments);
+        break;
       case 'u':
-	CT_EMH_update (arguments);
-	break;			//del
+        CT_EMH_update (arguments);
+        break;
       case 'c':
-	CT_EMH_clear (arguments);
-	break;			//clear all
+        CT_EMH_clear (arguments);
+        break;
       case 'p':
-	CT_EMH_print (arguments);
-	break;			//print
+        CT_EMH_print (arguments);
+        break;
       default:
-	printf ("unknown subaction\n");
-	break;
+        printf ("unknown subaction\n");
+        break;
       }
     break;
   case 'R':
     if (arguments.args[0][8] == 'H')
-      switch (arguments.args[0][10]) {	//ruletable
+      switch (arguments.args[0][10]) { //ruletable
       case 'a':
-	RT_EMH_add (&arguments);
-	break;			//add
+        RT_EMH_add (&arguments);
+        break;
       case 'd':
-	RT_EMH_del (arguments);
-	break;			//del
+        RT_EMH_del (arguments);
+        break;
       case 'u':
-	RT_EMH_update (arguments);
-	break;			//del
+        RT_EMH_update (arguments);
+        break;
       case 'c':
-	RT_EMH_clear (arguments);
-	break;			//clear all
+        RT_EMH_clear (arguments);
+        break;
       case 'p':
-	RT_EMH_print (arguments);
-	break;			//print
+        RT_EMH_print (arguments);
+        break;
       default:
-	printf ("unknown subaction\n");
-	break;
+        printf ("unknown subaction\n");
+        break;
       }
     else
-      switch (arguments.args[0][10]) {	//ruletable
+      switch (arguments.args[0][10]) {  //ruletable
       case 'a':
-	RT_EMA_add (&arguments);
-	break;			//add
+        RT_EMA_add (&arguments);
+        break;
       case 'd':
-	RT_EMA_del (arguments);
-	break;			//del
+        RT_EMA_del (arguments);
+        break;
       case 'u':
-	RT_EMA_update (arguments);
-	break;			//del
+        RT_EMA_update (arguments);
+        break;
       case 'c':
-	RT_EMA_clear (arguments);
-	break;			//clear all
+        RT_EMA_clear (arguments);
+        break;
       case 'p':
-	RT_EMA_print (arguments);
-	break;			//print
+        RT_EMA_print (arguments);
+        break;
       default:
-	printf ("unknown subaction\n");
-	break;
+        printf ("unknown subaction\n");
+        break;
       }
     break;
-  default:			//mastertable
-    switch (arguments.args[0][0]) {	//ruletable
+  default: //mastertable
+    switch (arguments.args[0][0]) { //ruletable
     case 'a':
       FC_MasterT_add (&arguments);
-      break;			//add
+      break;
     case 'd':
       FC_MasterT_del_entry (&arguments);
-      break;			//del
+      break;
     case 'u':
       FC_MasterT_update (arguments.ID);
-      break;			//del
+      break;
     case 'c':
       FC_MasterT_clear ();
-      break;			//clear all
+      break;
     case 'p':
       FC_MasterT_print (&arguments);
-      break;			//print
+      break;
     default:
       printf ("unknown subaction\n");
       break;
     }
     break;
   }
-munmap(map_base,MAP_SIZE);
-munmap(map_base_shadow,MAP_SIZE);
-munmap(map_base_master,MASTERTABLE_length * sizeof (struct arguments));
-close(fd_shadow);
-close(fd_master);
-lock.l_type=F_UNLCK;
-fcntl(fd, F_SETLK, &lock);//release filelock
-close(fd);
+  munmap(map_base, MAP_SIZE);
+  munmap(map_base_shadow, MAP_SIZE);
+  munmap(map_base_master, MASTERTABLE_length * sizeof (struct arguments));
+  close(fd_shadow);
+  close(fd_master);
+  lock.l_type = F_UNLCK;
+  fcntl(fd, F_SETLK, &lock);//release filelock
+  close(fd);
   return 0;
 }

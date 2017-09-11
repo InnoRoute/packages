@@ -4,7 +4,6 @@
 #define MT_matchfiled(entry, arguments, match, type) {if( (entry)-> type != (arguments)->type ) (match) =0;}
 #define MT_dohaveprint(entry, type) {if( entry ->dohave_ ## type )printf(#type":0x%lx ", entry -> type);}
 
-
 void FCinit_MasterTable (uint64_t * baseaddr_master);
 uint64_t INR_MasterT_get_addr (uint64_t id);
 uint64_t INR_MasterT_get_next_free_entry (uint64_t id);
