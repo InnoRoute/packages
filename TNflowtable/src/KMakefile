@@ -1,0 +1,16 @@
+obj-m := TNflowtable_k.o
+TNflowtable_k-objs	:= mastertable.o tnlibflowtable.o flowtableactions.o
+OBJ = mastertable.o tnlibflowtable.o flowtableactions.o tnflowtable.o
+all: 
+	$(MAKE)  -C ${KERNEL}  M=$(PWD) modules
+
+tnflowtable: $(OBJ)
+	$(CC) $(CFLAGS) -o tnflowtable $(OBJ) $(LDFLAGS)
+
+doku:
+	indent -br -l150 *.c
+	indent -br -l150 *.h
+	doxygen Doxyfile
+	
+clean:
+	$(MAKE) -C ${KERNEL}  M=$(PWD) clean

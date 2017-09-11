@@ -1,0 +1,38 @@
+cmake_minimum_required(VERSION 2.8.9)
+project (tnflowtable)
+add_executable(tnflowtable tnflowtable.c)
+target_link_libraries(tnflowtable tnlibflowtable)
+#target_link_libraries(tnflowtable argp)
+add_library(tnlibflowtable SHARED tnlibflowtable.c flowtableactions.c mastertable.c)
+INSTALL(TARGETS tnflowtable RUNTIME DESTINATION sbin)
+SET( MODULE_NAME TNflowtable)
+SET( MODULE_SOURCE_FILES TNflowtable_main.c tnlibflowtable.c flowtableactions.c	mastertable.c tnlibflowtable.h flowtableactions.h mastertable.h) 
+SET( MODULE_OUTPUT_DIR
+	${CMAKE_BINARY_DIR}
+)
+SET( MODULE_FILE ${MODULE_NAME}.ko)
+#SET( KBUILD_COMMAND ${CMAKE_MAKE_PROGRAM} $(KERNEL_MAKEOPTS) -C ${KERNEL_DIR} SUBDIRS=${MODULE_OUTPUT_DIR} modules)
+#SET( KBUILD_COMMAND ${CMAKE_MAKE_PROGRAM} $(KERNEL_MAKEOPTS) SUBDIRS="$(PKG_BUILD_DIR)" M=${MODULE_OUTPUT_DIR} modules)
+SET( KBUILD_COMMAND ${CMAKE_MAKE_PROGRAM} -C ${KERNEL}   M=${MODULE_OUTPUT_DIR} modules)
+#SET( KBUILD_COMMAND $(MAKE) -f ${CMAKE_BINARY_DIR}/KMakefile $(KERNEL_MAKEOPTS) SUBDIRS="$(PKG_BUILD_DIR)")
+CONFIGURE_FILE(
+	Kbuild.in
+	${MODULE_OUTPUT_DIR}/Kbuild
+)
+
+FOREACH( MODULE_SOURCE_FILE ${MODULE_SOURCE_FILES} )
+	CONFIGURE_FILE(
+		${MODULE_SOURCE_FILE}
+		${MODULE_OUTPUT_DIR}/${MODULE_SOURCE_FILE}
+		COPYONLY
+	)
+ENDFOREACH( MODULE_SOURCE_FILE )
+
+ADD_CUSTOM_COMMAND(
+	OUTPUT ${MODULE_OUTPUT_DIR}/${MODULE_FILE}
+	COMMAND ${KBUILD_COMMAND}
+	WORKING_DIRECTORY ${MODULE_OUTPUT_DIR}
+	DEPENDS ${MODULE_SOURCE_FILES} Kbuild.in
+	VERBATIM
+)
+ADD_CUSTOM_TARGET(${MODULE_NAME} ALL DEPENDS ${MODULE_OUTPUT_DIR}/${MODULE_FILE})
