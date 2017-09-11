@@ -1,0 +1,26 @@
+var _i_n_r__n_w_8h =
+[
+    [ "INR_NW_packet", "d3/d1d/struct_i_n_r___n_w__packet.html", "d3/d1d/struct_i_n_r___n_w__packet" ],
+    [ "INR_NW_priv", "d8/d9d/struct_i_n_r___n_w__priv.html", "d8/d9d/struct_i_n_r___n_w__priv" ],
+    [ "INR_NW_devcount", "dd/de5/_i_n_r-_n_w_8h.html#ac416adf17e2828924cba8fbd50e1d067", null ],
+    [ "INR_NW_repeatonbusy", "dd/de5/_i_n_r-_n_w_8h.html#a6fc1b9c34720b349e41aa298dc754220", null ],
+    [ "INR_NWDEV_features", "dd/de5/_i_n_r-_n_w_8h.html#ac59d717d27c246107808e479f54f148a", null ],
+    [ "get_nwdev", "dd/de5/_i_n_r-_n_w_8h.html#a3be8a2ad7ead39dfd6b239b890dc1146", null ],
+    [ "INR_HW_tx", "dd/de5/_i_n_r-_n_w_8h.html#af213fcd83b8f0998962d3ecdfcc4d076", null ],
+    [ "INR_NW_change_mtu", "dd/de5/_i_n_r-_n_w_8h.html#a50081b211a56adba3d006e0d1217b1e4", null ],
+    [ "INR_NW_config", "dd/de5/_i_n_r-_n_w_8h.html#a20dce5ca3a09dd03f5749dd65ce537a9", null ],
+    [ "INR_NW_header", "dd/de5/_i_n_r-_n_w_8h.html#a5aee227fbf218d7fe1f9a027b0e891dc", null ],
+    [ "INR_NW_init", "dd/de5/_i_n_r-_n_w_8h.html#a7b526b67a1a857f6ccc0c846151d732f", null ],
+    [ "INR_NW_ioctl", "dd/de5/_i_n_r-_n_w_8h.html#a5b4be059f962691ee3a2ea1916581a8f", null ],
+    [ "INR_NW_open", "dd/de5/_i_n_r-_n_w_8h.html#a3c5997cfd98ac8aa47a8b72bd7679866", null ],
+    [ "INR_NW_rebuild_header", "dd/de5/_i_n_r-_n_w_8h.html#a474add1efd0349469ad626a9ab18a6f7", null ],
+    [ "INR_NW_rx", "dd/de5/_i_n_r-_n_w_8h.html#aaba3f0bc97075473952ec438fe917f05", null ],
+    [ "INR_NW_set_features", "dd/de5/_i_n_r-_n_w_8h.html#ac8b9ee10763c33262bc89ea095e22682", null ],
+    [ "INR_NW_stats", "dd/de5/_i_n_r-_n_w_8h.html#abb319f65421dabda9340aaf552ea54ba", null ],
+    [ "INR_NW_stop", "dd/de5/_i_n_r-_n_w_8h.html#a4fe1414ed84f58a4448cd07ba24d7317", null ],
+    [ "INR_NW_tx", "dd/de5/_i_n_r-_n_w_8h.html#adca6307173d3752d1f3bc9285b0cb25c", null ],
+    [ "INR_NW_tx_timeout", "dd/de5/_i_n_r-_n_w_8h.html#a873b31f10f306248e842e2998edd25ac", null ],
+    [ "set_nwdev", "dd/de5/_i_n_r-_n_w_8h.html#ae2ed490a9f239ce54dfb26ce4a8e293a", null ],
+    [ "INR_NW_header_ops", "dd/de5/_i_n_r-_n_w_8h.html#a6a43442ffc8bbda8333c244e1cf7a1ac", null ],
+    [ "INR_NW_netdev_ops", "dd/de5/_i_n_r-_n_w_8h.html#aec4f4a32143364de3f75818d325e3096", null ]
+];

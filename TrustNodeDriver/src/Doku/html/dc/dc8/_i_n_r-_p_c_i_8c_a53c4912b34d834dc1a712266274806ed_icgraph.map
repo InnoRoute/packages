@@ -1,0 +1,28 @@
+<map id="INR_PCI_rx_descriptor_pool_refill" name="INR_PCI_rx_descriptor_pool_refill">
+<area shape="rect" id="node2" href="$dc/dc8/_i_n_r-_p_c_i_8c.html#af88a9db4ef6451751a395e1207fd7066" title="INR_PCI_get_new_rx\l_descriptor_ring_entry" alt="" coords="212,545,363,586"/>
+<area shape="rect" id="node3" href="$dc/dc8/_i_n_r-_p_c_i_8c.html#a03f960f01f96c2f664301c6830461c7f" title="INR_PCI_alloc_new_rx_skb" alt="" coords="411,552,597,579"/>
+<area shape="rect" id="node4" href="$dc/dc8/_i_n_r-_p_c_i_8c.html#a317b7c374854b88af0059ff2a3708ce9" title="INR_PCI_process_rx\l_descriptor_ring" alt="" coords="645,429,792,470"/>
+<area shape="rect" id="node27" href="$dc/dc8/_i_n_r-_p_c_i_8c.html#a7b6c1bb3d3c608c7a226531d7a6f0965" title="INR_RX_RING_init" alt="" coords="650,668,787,695"/>
+<area shape="rect" id="node5" href="$d1/d67/_i_n_r-_n_a_p_i_8c.html#a87ec5cd355cffe8b96296dbb83278bfe" title="INR_NAPI_poll_0" alt="" coords="845,5,972,32"/>
+<area shape="rect" id="node10" href="$d1/d67/_i_n_r-_n_a_p_i_8c.html#a938e6a3d06b11a5dc3da541a5d05c0b2" title="INR_NAPI_poll_1" alt="" coords="845,56,972,83"/>
+<area shape="rect" id="node11" href="$d1/d67/_i_n_r-_n_a_p_i_8c.html#a69ec3410fe5dc7da35e2f6a8d72acdb4" title="INR_NAPI_poll_10" alt="" coords="842,107,975,133"/>
+<area shape="rect" id="node12" href="$d1/d67/_i_n_r-_n_a_p_i_8c.html#a7b9c6dd796e70895de209d2803e13ccc" title="INR_NAPI_poll_11" alt="" coords="842,157,975,184"/>
+<area shape="rect" id="node13" href="$d1/d67/_i_n_r-_n_a_p_i_8c.html#a3a1602b0c3f015b8aabd0b978d704493" title="INR_NAPI_poll_12" alt="" coords="842,208,975,235"/>
+<area shape="rect" id="node14" href="$d1/d67/_i_n_r-_n_a_p_i_8c.html#a2ee390e1624519f6a631b3046c2fbd3f" title="INR_NAPI_poll_13" alt="" coords="842,259,975,285"/>
+<area shape="rect" id="node15" href="$d1/d67/_i_n_r-_n_a_p_i_8c.html#a2cbf12b9e0e03b3b3862a98784ecc52b" title="INR_NAPI_poll_14" alt="" coords="842,309,975,336"/>
+<area shape="rect" id="node16" href="$d1/d67/_i_n_r-_n_a_p_i_8c.html#a91f701f31afe930ece5c8bf5fb1a7ed6" title="INR_NAPI_poll_15" alt="" coords="842,360,975,387"/>
+<area shape="rect" id="node17" href="$d1/d67/_i_n_r-_n_a_p_i_8c.html#ae6bc59b863b3928700468d13efd23e27" title="INR_NAPI_poll_2" alt="" coords="845,411,972,437"/>
+<area shape="rect" id="node18" href="$d1/d67/_i_n_r-_n_a_p_i_8c.html#a7888221fd9575d7e7aae78ed125d8646" title="INR_NAPI_poll_3" alt="" coords="845,461,972,488"/>
+<area shape="rect" id="node19" href="$d1/d67/_i_n_r-_n_a_p_i_8c.html#a5e711c1ae61572a4bab9ffefc34d0f34" title="INR_NAPI_poll_4" alt="" coords="845,512,972,539"/>
+<area shape="rect" id="node20" href="$d1/d67/_i_n_r-_n_a_p_i_8c.html#a4c7935fe4ef401ccd186e05e1047748c" title="INR_NAPI_poll_5" alt="" coords="845,563,972,589"/>
+<area shape="rect" id="node21" href="$d1/d67/_i_n_r-_n_a_p_i_8c.html#a2a63c16bad3fb8de0dacd9bb0b02a40f" title="INR_NAPI_poll_6" alt="" coords="845,613,972,640"/>
+<area shape="rect" id="node22" href="$d1/d67/_i_n_r-_n_a_p_i_8c.html#a05cb8dc7168c07cf8755dc8e4075caba" title="INR_NAPI_poll_7" alt="" coords="845,664,972,691"/>
+<area shape="rect" id="node23" href="$d1/d67/_i_n_r-_n_a_p_i_8c.html#a56cfbbdff0a9b3fba466a06079b21ed8" title="INR_NAPI_poll_8" alt="" coords="845,715,972,741"/>
+<area shape="rect" id="node24" href="$d1/d67/_i_n_r-_n_a_p_i_8c.html#a7411c18801eb32e892612975b01d604e" title="INR_NAPI_poll_9" alt="" coords="845,765,972,792"/>
+<area shape="rect" id="node25" href="$dc/dc8/_i_n_r-_p_c_i_8c.html#a1c0927891fa571e8aec98ebe5fd266f6" title="XPCIe_IRQHandler" alt="" coords="840,816,977,843"/>
+<area shape="rect" id="node6" href="$d1/d67/_i_n_r-_n_a_p_i_8c.html#a4d6b9bd7496ab1a6ae8d17e5889d6adb" title="INR_NAPI_init" alt="" coords="1027,411,1136,437"/>
+<area shape="rect" id="node7" href="$dc/dc8/_i_n_r-_p_c_i_8c.html#a63ce64abfe6217358041ed07e918a398" title="INR_init_drv" alt="" coords="1185,816,1280,843"/>
+<area shape="rect" id="node8" href="$d0/d29/main_8c.html#a1f2bd07aac6fb1d9a27f635dac28669b" title="probe" alt="" coords="1328,816,1383,843"/>
+<area shape="rect" id="node9" href="$d0/d29/main_8c.html#a28d5841b26c9924ab02d6adb235e9848" title="remove" alt="" coords="1431,816,1496,843"/>
+<area shape="rect" id="node26" href="$dc/dc8/_i_n_r-_p_c_i_8c.html#af7926b059a794041b841cda82ea84ca9" title="INR_int_enable" alt="" coords="1025,816,1137,843"/>
+</map>

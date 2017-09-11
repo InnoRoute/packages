@@ -1,0 +1,26 @@
+var _i_n_r_ctl_8c =
+[
+    [ "PROCFS_MAX_SIZE", "d2/d08/_i_n_r-ctl_8c.html#acb57117519ba69a9fa2bc2ea4661ccaf", null ],
+    [ "hello_proc_open", "d2/d08/_i_n_r-ctl_8c.html#ac0a10e4772cc85522f7873b08ec83a5d", null ],
+    [ "hello_proc_open2", "d2/d08/_i_n_r-ctl_8c.html#a98ff68100f6aef31e36efbae0db67898", null ],
+    [ "hello_proc_show", "d2/d08/_i_n_r-ctl_8c.html#a854c7848d6ae190c33075d2ad27b3af3", null ],
+    [ "hello_proc_show2", "d2/d08/_i_n_r-ctl_8c.html#acdab47ba615081a1677a9afe6bc1f553", null ],
+    [ "INR_CTL_init_ovs", "d2/d08/_i_n_r-ctl_8c.html#a5089b7e2de8cb2e1598ce60220094df1", null ],
+    [ "INR_CTL_init_proc", "d2/d08/_i_n_r-ctl_8c.html#a53b5a28c7c3b608c419eb5f9da6f197b", null ],
+    [ "INR_CTL_ovs_d", "d2/d08/_i_n_r-ctl_8c.html#a9c189ca74efb7ebe5f93ab70e6bed1bf", null ],
+    [ "INR_CTL_ovs_flow_add", "d2/d08/_i_n_r-ctl_8c.html#a8615615818bea94eac8f6977aad3bdcb", null ],
+    [ "INR_CTL_ovs_flow_flush", "d2/d08/_i_n_r-ctl_8c.html#aa9ea0b37c656036e774bb8960acb4537", null ],
+    [ "INR_CTL_ovs_flow_rm", "d2/d08/_i_n_r-ctl_8c.html#a1cb437a3e12b9f41466424a454e5b7fd", null ],
+    [ "INR_CTL_remove_proc", "d2/d08/_i_n_r-ctl_8c.html#aba50eabbac94466b4c31d4fb64824e55", null ],
+    [ "procfile_write", "d2/d08/_i_n_r-ctl_8c.html#a140b602157d344e18a9e8750d96d7d81", null ],
+    [ "procfile_write2", "d2/d08/_i_n_r-ctl_8c.html#a77c045ccdfd4c399a6d85dc83c3da0a8", null ],
+    [ "gBaseHdwr1", "d2/d08/_i_n_r-ctl_8c.html#a1f56f16fd4840e705da69a11a6b6b0a1", null ],
+    [ "gBaseLen1", "d2/d08/_i_n_r-ctl_8c.html#a57d82805161e905154b75d03a94934d6", null ],
+    [ "gBaseVirt1", "d2/d08/_i_n_r-ctl_8c.html#ae56ded3fa2e80123edc6a31dbd0170b1", null ],
+    [ "globalvar", "d2/d08/_i_n_r-ctl_8c.html#ad9d1332d79e8693f3080ae2954988294", null ],
+    [ "INR_proc_dir", "d2/d08/_i_n_r-ctl_8c.html#a05c1c4f47288687d2e8206d9436dccf1", null ],
+    [ "procfs_buffer", "d2/d08/_i_n_r-ctl_8c.html#a836e8f38ee43ca09d926f84997179f1d", null ],
+    [ "procfs_buffer_size", "d2/d08/_i_n_r-ctl_8c.html#a6899cc17f88576d95e2f628c5f6cb151", null ],
+    [ "reg1", "d2/d08/_i_n_r-ctl_8c.html#a02953c4475542c395fef0a8cda26c590", null ],
+    [ "reg2", "d2/d08/_i_n_r-ctl_8c.html#a8523f1127f606bc6fd9dc6ecb887e2bc", null ]
+];

@@ -1,0 +1,10 @@
+[  152.734666] INR:Strange RX_Tail value 0xffffffff  written value was 0x240
+[  152.743113] INR:Strange RX_Tail value 0xf  written value was 0xf
+[  152.749810] INR:Strange RX_Tail value 0x1f  written value was 0x1f
+[  152.756809] INR:Strange RX_Tail value 0x2f  written value was 0x2f
+[  152.763707] INR:Strange RX_Tail value 0x3f  written value was 0x3f
+[  152.770811] INR:Strange RX_Tail value 0x4f  written value was 0x4f
+[  152.777455] INR:Strange RX_Tail value 0x5f  written value was 0x5f
+[  152.784260] INR:Strange RX_Tail value 0x6f  written value was 0x6f
+[  152.791292] INR:Strange RX_Tail value 0x7f  written value was 0x7f
+....

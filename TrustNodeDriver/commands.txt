@@ -1,0 +1,176 @@
+#!/bin/bash
+ifconfig br-lan 192.167.1.44 && 	 && insmod trustnode.ko&&ifconfig TN0 up&&tcpdump -i TN0 -vvv -e -XX -ttt -w capture2.pcap
+
+scp *.pcap delphin@192.168.1.117:/home/delphin/svn2/brynhild/InnoRoute
+
+tcpdump -i TN0 -vvv -e -XX -ttt &
+
+gunzip -c bin/x86/openwrt-r45675-x86-64-combined-ext4.img.gz | sudo dd bs=1M of=/dev/sdb && sudo sync
+
+insmod trustnode.ko&&ifconfig br-lan down&&brctl delbr br-lan
+ifconfig br-lan down&&brctl delbr br-lan&&ifconfig TN0 up&&ifconfig TN1 up&&brctl addbr br0&&
+brctl addbr br1&&brctl addif br0 eth0&&brctl addif br0 TN0&&brctl addif br1 TN1&&brctl addif br1 eth1&&ifconfig br0 up&&ifconfig br1 up
+
+ifconfig TN1 hw ether 00:53:4E:55:4C:32
+tcpdump -i eth0 -e -c 1000 -w eth0.pcap &tcpdump -i eth1 -e -c 1000 -w eth1.pcap &tcpdump -i TN0 -e -c 1000 -w TN0.pcap &tcpdump -i TN1 -e -c 1000 -w TN1.pcap &tcpdump -i Tbr0 -e -c 1000 -w br0.pcap &tcpdump -i br0 -e -c 1000 -w br0.pcap &tcpdump -i br1 -e -c 1000 -w br1.pcap &
+
+ifconfig br-lan down&&brctl delbr br-lan&&ifconfig eth0 192.168.1.66&&scp delphin@192.168.1.117:/home/delphin/svn2/brynhild/InnoRoute/openwrt/build_dir/target-x86_64_uClibc-0.9.33.2/linux-x86_64/trustnode-0.1/trustnode.ko .&&insmod trustnode.ko
+
+ifconfig TN0 up&&ifconfig TN1 up&&brctl addbr br0&&
+brctl addbr br1&&brctl addif br0 eth0&&brctl addif br0 TN0&&brctl addif br1 TN1&&brctl addif br1 eth1&&ifconfig br0 up&&ifconfig br1 up
+
+ifconfig br-lan down&&brctl delbr br-lan
+ovs-vsctl add-br br0
+ovs-vsctl add-port br0 eth0
+ovs-vsctl add-port br0 eth1
+ovs-vsctl set-fail-mode br0 secure
+ifconfig br0 192.168.2.4
+ovs-vsctl set-controller br0 tcp:192.168.2.1:6633
+
+scp delphin@192.168.1.189:/home/delphin/Dokumente/Selbständigkeit/InnoRoute/sshfs/openwrt/build_dir/target-x86_64_uClibc-0.9.33.2/linux-x86_64/trustnode-0.1/trustnode.ko .
+
+ifconfig eth2 up &&insmod trustnode.ko
+ifconfig TN0 up&& ifconfig TN1 up
+brctl addbr br0&&brctl addbr br1&&brctl addif br0 eth2&&brctl addif br0 TN0&&brctl addif br1 TN1&&brctl addif br1 eth1&&ifconfig br0 up&&ifconfig br1 up
+
+scp delphin@192.168.1.117:/home/delphin/svn2/brynhild/InnoRoute/openwrt/build_dir/target-x86_64_uClibc-0.9.33.2/linux-x86_64/trustnode-0.1/trustnode.ko .&&insmod trustnode.ko
+
+brctl addbr br0&&
+brctl addbr br1&&brctl addif br0 eth0&&brctl addif br0 TN0&&brctl addif br1 TN1&&brctl addif br1 eth1&&ifconfig br0 up&&ifconfig br1 up
+
+scp delphin@192.168.1.117:/home/delphin/svn2/brynhild/InnoRoute/openwrt/build_dir/target-x86_64_uClibc-0.9.33.2/TNopenvswitch-2.4.0/datapath/linux/openvswitch.ko .
+
+scp delphin@192.168.6.1:/home/delphin/Dokumente/Selbständigkeit/InnoRoute/sshfs/openwrt/build_dir/target-x86_64_uClibc-0.9.33.2/linux-x86_64/trustnode-0.2/trustnode.ko . && insmod trustnode.ko
+
+scp delphin@192.168.1.117:/home/delphin/svn2/brynhild/InnoRoute/openwrt2/build_dir/target-x86_64_musl-1.1.14/linux-x86_64/trustnode-0.2/trustnode.ko .
+insmod trustnode.ko
+ifconfig eth0 up&&ifconfig TN0 up&&ifconfig TN1 up&&brctl addbr br0&&brctl addif br0 TN0&&brctl addif br0 eth0&&ifconfig br0 up
+brctl addbr br0&&brctl addif br0 TN0&&brctl addif br0 eth0&&ifconfig br0 up&&brctl addbr br1&&brctl addif br1 TN1&&brctl addif br1 eth1&&ifconfig br1 up
+
+brctl addbr br0&&brctl addif br0 TN0&&brctl addif br0 eth0&&ifconfig br0 up
+
+scp delphin@192.168.1.117:/home/delphin/svn2/brynhild/InnoRoute/openwrt/build_dir/target-x86_64_uClibc-0.9.33.2/linux-x86_64/trustnode-0.2/trustnode.ko .
+
+root@Trustnode:/# mz -c 10000 -p 100 -a own -b rand -A own -B bc -t ip TN1
+
+brctl addbr br0&&brctl addif br0 TN0&&brctl addif br0 eth0&&ifconfig br0 up&&brctl addbr br1&&brctl addif br1 TN1&&ifconfig br1 up
+
+mz TN1 -p1000 -c 0 -Q 50,100 -A rand -B 10.5.5.0/25 -t tcp "flags=syn, dp=1-1023"
+
+scp delphin@192.168.1.117:/home/delphin/svn2/brynhild/InnoRoute/openwrt/build_dir/target-x86_64_uClibc-0.9.33.2/tnflowtable/tnflowtable .
+
+./tnflowtable --ID=0 --COUNT=0 --RULETYPE=1 --RC_MAC_SRC=0xaa --RULEPRIO=1  /tmp/test RuleT_u
+touch /tmp/test && dd if=/dev/zero of=/tmp/test bs=1k count=92
+
+mz TN0 -p10 -c 0 -Q 50,100 -A 10.10.10.2/24 -B 10.5.5.0/25 -t tcp "flags=syn, dp=1-1023"
+brctl addbr br0&&brctl addif br0 TN0&&brctl addif br0 eth0&&ifconfig br0 up
+scp delphin@192.168.1.117:/home/delphin/svn2/brynhild/InnoRoute/openwrt/build_dir/target-x86_64_uClibc-0.9.33.2/linux-x86_64/trustnode-0.2/trustnode.ko .
+
+$ for irq in `grep INRBusmaster /proc/interrupts | cut -d: -f1`; do \
+        echo ffffff > /proc/irq/268/smp_affinity; \
+    done
+
+scp delphin@192.168.1.117:/home/delphin/svn2/brynhild/InnoRoute/openwrt/build_dir/target-x86_64_uClibc-0.9.33.2/linux-x86_64/pllctl-0.2/pllctl.ko .
+
+gunzip -c bin/x86-glibc/openwrt-r45675-x86-64-combined-ext4.img.gz | sudo dd bs=1M of=/dev/sdb && sudo sync
+
+scp delphin@192.168.1.117:/home/delphin/svn2/brynhild/InnoRoute/openwrt/build_dir/target-x86_64_glibc-2.19/linux-x86_64/trustnode-0.2/trustnode.ko .
+scp delphin@192.168.1.117:/home/delphin/svn2/brynhild/InnoRoute/openwrt/build_dir/target-x86_64_glibc-2.19/linux-x86_64/LPCtool-0.2/LPCtool.ko .
+mz TN0 -p500 -c 0 -Q 50,100 -A 10.10.10.2/24 -B 10.5.5.0/25 -t tcp "flags=syn, dp=1-1023"&
+mz TN1 -p500 -c 0 -Q 50,100 -A 10.10.10.2/24 -B 10.5.5.0/25 -t tcp "flags=syn, dp=1-1023"&
+mz TN2 -p10 -c 0 -Q 50,100 -A 10.10.10.2/24 -B 10.5.5.0/25 -t tcp "flags=syn, dp=1-1023"&
+mz TN3 -p10 -c 0 -Q 50,100 -A 10.10.10.2/24 -B 10.5.5.0/25 -t tcp "flags=syn, dp=1-1023"&
+mz TN4 -p10 -c 0 -Q 50,100 -A 10.10.10.2/24 -B 10.5.5.0/25 -t tcp "flags=syn, dp=1-1023"&
+mz TN5 -p10 -c 0 -Q 50,100 -A 10.10.10.2/24 -B 10.5.5.0/25 -t tcp "flags=syn, dp=1-1023"&
+mz TN6 -p10 -c 0 -Q 50,100 -A 10.10.10.2/24 -B 10.5.5.0/25 -t tcp "flags=syn, dp=1-1023"&
+mz TN7 -p10 -c 0 -Q 50,100 -A 10.10.10.2/24 -B 10.5.5.0/25 -t tcp "flags=syn, dp=1-1023"&
+mz TN8 -p10 -c 0 -Q 50,100 -A 10.10.10.2/24 -B 10.5.5.0/25 -t tcp "flags=syn, dp=1-1023"&
+mz TN9 -p10 -c 0 -Q 50,100 -A 10.10.10.2/24 -B 10.5.5.0/25 -t tcp "flags=syn, dp=1-1023"&
+mz TN10 -p10 -c 0 -Q 50,100 -A 10.10.10.2/24 -B 10.5.5.0/25 -t tcp "flags=syn, dp=1-1023"&
+mz TN11 -p10 -c 0 -Q 50,100 -A 10.10.10.2/24 -B 10.5.5.0/25 -t tcp "flags=syn, dp=1-1023"&
+mz TN12 -p10 -c 0 -Q 50,100 -A 10.10.10.2/24 -B 10.5.5.0/25 -t tcp "flags=syn, dp=1-1023"&
+mz TN13 -p10 -c 0 -Q 50,100 -A 10.10.10.2/24 -B 10.5.5.0/25 -t tcp "flags=syn, dp=1-1023"&
+mz TN14 -p10 -c 0 -Q 50,100 -A 10.10.10.2/24 -B 10.5.5.0/25 -t tcp "flags=syn, dp=1-1023"&
+mz TN15 -p10 -c 0 -Q 50,100 -A 10.10.10.2/24 -B 10.5.5.0/25 -t tcp "flags=syn, dp=1-1023"&
+
+tc qdisc change dev eth0 root netem delay 0ms
+tc qdisc add dev eth0 root netem delay 0ms
+tc qdisc add dev eth2 root netem delay 0ms
+
+tc qdisc change dev eth0 root netem delay 0ms && tc qdisc change dev eth2 root netem delay 0ms
+tc qdisc change dev eth0 root netem delay 100ms && tc qdisc change dev eth2 root netem delay 100ms
+tc qdisc change dev eth0 root netem delay 20ms && tc qdisc change dev eth2 root netem delay 20ms
+tc qdisc change dev eth0 root netem delay 50ms && tc qdisc change dev eth2 root netem delay 50ms
+tc qdisc change dev eth0 root netem delay 200ms && tc qdisc change dev eth2 root netem delay 200ms
+
+brctl addbr br0
+
+gunzip -c bin/x86-glibc/openwrt-r45675-x86-64-combined-ext4.img.gz | sudo dd bs=1M of=/dev/mmcblk1 && sudo sync
+scp delphin@192.168.1.117:/home/delphin/svn2/brynhild/InnoRoute/openwrt/build_dir/target-x86_64_glibc-2.22/linux-x86_64/trustnode-0.2/trustnode.ko .
+brctl addbr br0&&brctl addbr br1
+ifconfig TN0 up&& ifconfig TN1 up&&ifconfig eth1 up
+brctl addif br0 eth0&&brctl addif br0 TN0&& ifconfig br0 up
+brctl addif br1 eth1&&brctl addif br1 TN1&& ifconfig br1 up
+TNlabel -i192.188.0.140 -I192.188.0.2 -p2660 -P17 -T3 -l0x18 -N0 -L
+ovs-ofctl add-flow ovsbr priority=6,in_port=1,action=goto_table:3
+x11vnc -clip xinerama0
+i2cset -y 0 4 5 20
+sudo arp -s 192.168.2.2 78:45:c4:2b:e9:f5
+sudo arp -s 192.168.2.1 78:45:c4:2b:f1:1c
+arp -a -n
+
+ifconfig TN0 up&& ifconfig TN1 up
+brctl addbr br0
+brctl addif br0 TN0 &&brctl addif br0 TN1
+ifconfig br0 up
+
+wpa_supplicant -B -iwlan0 -c /etc/wpa_supplicant.conf && ifconfig wlan0 192.168.1.33
+
+echo 'network={
+    ssid="***"
+    psk="***"
+}' >/etc/wpa_supplicant.conf 
+
+TNflowtable RuleT_EMH_add -a -t1 -D0xaffeabba0000 -E0x0800 -S0xacdcacdc0000 -z -O1 -X0x1 -p1
+#TNflowtable RuleT_EMH_add -a -t2 -A0x2 -C0x01020304 -P0x06 -R0x1 -T0x05060708 -z -O1 -X0x1 -p1
+#TNflowtable RuleT_EMH_add -a -t2 -A0x1 -C0x05060708 -P0x11 -R0x2 -T0x01020304 -z -O1 -X0x1 -p1
+TNflowtable RuleT_EMA_add -a  -A0x1 -C0x05060708 -P0x11 -R0x2 -T0x01020304 -z -O1 -X0x1 -p1
+TNflowtable RuleT_EMA_add -a  -D0xaffeabba0000 -E0x0800 -S0xacdcacdc0000 -z -O1 -X0x1 -p1
+TNflowtable CollT_EMH_add -a -t1 -D0xaffeabba0000 -E0x0800 -S0xacdcacdc0000 -z -O1 -X0x1 -p1
+TNflowtable CollT_EMH_add -a -t2 -A0x1 -C0x05060708 -P0x11 -R0x2 -T0x01020304 -z -O1 -X0x1 -p1
+TNflowtable CollT_EMH_add -a -t2 -A0x2 -C0x01020304 -P0x06 -R0x1 -T0x05060708 -z -O1 -X0x1 -p1
+TNflowtable ActT_add -i0x155 -O1
+
+TNflowtable RuleT_EMA_add -a -t1 -S0xacdcacdc0000 -z -O1 -X0x1 -p1
+TNflowtable RuleT_EMA_add -a -t1 -D0xacdcacdc0000 -z -O1 -X0x1 -p1
+TNflowtable RuleT_EMA_add -a -t2  -T0x05060708 -z -O1 -X0x1 -p1
+
+TNflowtable add -C0x05060708 -P0x11 -R0x2 -T0x01020304 -z -O1 -X0x1 -p1
+
+scp delphin@192.168.1.117:/home/delphin/svn2/brynhild/InnoRoute/openwrt/bin/TrustNode-glibc/packages/kernel/kmod-trustnode_4.4.7+0.2-1_x86_64.ipk . && opkg install kmod-trustnode_4.4.7\+0.2-1_x86_64.ipk 
+scp delphin@192.168.1.117:/home/delphin/svn2/brynhild/InnoRoute/openwrt/bin/TrustNode-glibc/packages/base/tnflowtable_1.3_x86_64.ipk . && opkg install tnflowtable_1.3_x86_64.ipk
+scp delphin@192.168.1.117://home/delphin/svn2/brynhild/InnoRoute/openwrt/bin/TrustNode-glibc/packages/kernel/kmod-tnflowtable_4.4.7-1.3_x86_64.ipk . && opkg install kmod-tnflowtable_4.4.7-1.3_x86_64.ipk && rmmod TNflowtable &&insmod  TNflowtable
+scp delphin@192.168.1.117:/home/delphin/svn2/brynhild/InnoRoute/openwrt/bin/TrustNode-glibc/packages/kernel/kmod-TNopenvswitch_4.4.7+2.7.0-1_x86_64.ipk . && opkg install kmod-TNopenvswitch_4.4.7\+2.7.0-1_x86_64.ipk
+scp delphin@192.168.1.117:/home/delphin/svn2/brynhild/InnoRoute/openwrt/bin/TrustNode-glibc/packages/packages/kmod-openvswitch_4.4.7+2.7.0-1_x86_64.ipk . && opkg install kmod-openvswitch_4.4.7+2.7.0-1_x86_64.ipk
+
+echo "0" > /proc/TN_TXdbg
+echo "1" > /proc/TN_TXdbg
+#
+echo "0" > /proc/TN_RXdbg
+echo "1" > /proc/TN_RXdbg
+
+TNflowtable add -D0xaffeabba0000 -E0x0800 -S0xacdcacdc0000 -O1 -X0x1 -p1 -V0 -v
+TNflowtable add -Daf:fe:ab:ba:00:00 -E0x0800 -Sac:dc:ac:dc:00:00 -O1 -X0x1 -p1 -V0 -v
+TNflowtable add -A0x1 -C0x05060708 -P0x11 -R0x2 -T0x01020304 -O1 -X0x1 -p1 -V0 -v
+TNflowtable add -A0x1 -C5.6.7.8 -P0x11 -R0x2 -T1.2.3.4 -O1 -X0x1 -p1 -V0 -v
+TNflowtable add -C0x05060708 -O1
+TNflowtable add -D0xaffeabba0000 -O1
+
+create /usr/share/openvswitch/conf.db /usr/share/openvswitch/vswitch.ovsschema
+ovs-vsctl add-br br1
+ovs-vsctl add-port br1 TN0
+ovs-ofctl dump-flows br0
+ovs-ofctl add-flow TNbr dl_dst=af:fe:ab:ba:00:00,idle_timeout=10,action=output:1
+
+ovs-ofctl add-flow TNbr dl_dst=af:fe:ab:ba:00:00,idle_timeout=10,action=output:4
+ovs-ofctl add-flow TNbr dl_src=ac:dc:ac:dc:00:00,idle_timeout=10,action=output:4

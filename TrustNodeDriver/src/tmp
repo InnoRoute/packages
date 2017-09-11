@@ -1,0 +1,35 @@
+#MAKE_FLAGS += \
+#	KERNEL_DIR=$(LINUX_DIR) \
+#	NDPI_PATH=$(PKG_BUILD_DIR) \
+#	ARCH="$(LINUX_KARCH)" \
+#	CROSS_COMPILE="$(TARGET_CROSS)" \
+
+define KernelPackage/ipt-ndpi
+  SUBMENU:=Netfilter Extensions
+  TITLE:= nDPI net netfilter module
+  DEPENDS:=+kmod-ipt-compat-xtables
+  KCONFIG:=CONFIG_NF_CONNTRACK \
+	CONFIG_NF_CONNTRACK_EVENTS=y
+  FILES:= \
+	$(PKG_BUILD_DIR)/ndpi-netfilter/src/xt_ndpi.ko
+  AUTOLOAD:=$(call AutoLoad,46,xt_ndpi)
+endef
+
+$(eval $(call KernelPackage,ipt-ndpi))
+
+#MAKE_PATH := ndpi-netfilter
+
+CONFIGURE_ARGS += \
+        --with-pic \
+	--target=$(GNU_TARGET_NAME) \
+        --host=$(GNU_TARGET_NAME) \
+        --build=$(GNU_HOST_NAME) \
+	LIBS=-lposix -lndpi_la-spotify.lo -lndpi_la-ahocorasick.lo 
+
+autoreconf -iv;
+
+$(INSTALL_DIR) $(1)/etc/init.d
+	$(INSTALL_CONF) ./files/EcoNetd $(1)/etc/init.d
+	chmod +x $(1)/etc/init.d/EcoNetd
+	$(INSTALL_DIR) $(1)/usr/sbin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/EcoNetd $(1)/usr/sbin/

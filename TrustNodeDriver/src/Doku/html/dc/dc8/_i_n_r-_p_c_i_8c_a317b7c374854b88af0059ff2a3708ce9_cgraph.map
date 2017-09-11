@@ -1,0 +1,8 @@
+<map id="INR_PCI_process_rx_descriptor_ring" name="INR_PCI_process_rx_descriptor_ring">
+<area shape="rect" id="node2" href="$de/dc6/_i_n_r-_n_w_8c.html#a3be8a2ad7ead39dfd6b239b890dc1146" title="get_nwdev" alt="" coords="251,5,336,32"/>
+<area shape="rect" id="node3" href="$d3/d3a/_i_n_r_8c.html#a055451b31abceb46e8c92789d0523980" title="INR_CHECK_fpga_read_val" alt="" coords="435,56,624,83"/>
+<area shape="rect" id="node4" href="$d3/d3a/_i_n_r_8c.html#a549bff83219b80ccf76c695682e37707" title="INR_LOG_debug" alt="" coords="879,132,1001,159"/>
+<area shape="rect" id="node5" href="$dc/dc8/_i_n_r-_p_c_i_8c.html#a03f960f01f96c2f664301c6830461c7f" title="INR_PCI_alloc_new_rx_skb" alt="" coords="200,161,387,188"/>
+<area shape="rect" id="node6" href="$dc/dc8/_i_n_r-_p_c_i_8c.html#af88a9db4ef6451751a395e1207fd7066" title="INR_PCI_get_new_rx\l_descriptor_ring_entry" alt="" coords="454,158,605,199"/>
+<area shape="rect" id="node7" href="$dc/dc8/_i_n_r-_p_c_i_8c.html#adbea73204b38d31f4b80feb56a27b810" title="INR_PCI_rx_descriptor\l_pool_refill" alt="" coords="672,209,831,250"/>
+</map>

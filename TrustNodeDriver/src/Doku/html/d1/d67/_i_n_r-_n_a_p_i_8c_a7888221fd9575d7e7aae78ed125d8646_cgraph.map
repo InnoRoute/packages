@@ -1,0 +1,10 @@
+<map id="INR_NAPI_poll_3" name="INR_NAPI_poll_3">
+<area shape="rect" id="node2" href="$d1/d67/_i_n_r-_n_a_p_i_8c.html#a517ed25d9d1f3ee1c648633b74f4469b" title="INR_NAPI_complete" alt="" coords="181,23,326,49"/>
+<area shape="rect" id="node3" href="$dc/dc8/_i_n_r-_p_c_i_8c.html#a317b7c374854b88af0059ff2a3708ce9" title="INR_PCI_process_rx\l_descriptor_ring" alt="" coords="180,74,327,115"/>
+<area shape="rect" id="node4" href="$d3/d3a/_i_n_r_8c.html#a055451b31abceb46e8c92789d0523980" title="INR_CHECK_fpga_read_val" alt="" coords="609,5,799,32"/>
+<area shape="rect" id="node5" href="$d3/d3a/_i_n_r_8c.html#a549bff83219b80ccf76c695682e37707" title="INR_LOG_debug" alt="" coords="1053,81,1176,108"/>
+<area shape="rect" id="node6" href="$de/dc6/_i_n_r-_n_w_8c.html#a3be8a2ad7ead39dfd6b239b890dc1146" title="get_nwdev" alt="" coords="425,107,511,133"/>
+<area shape="rect" id="node7" href="$dc/dc8/_i_n_r-_p_c_i_8c.html#a03f960f01f96c2f664301c6830461c7f" title="INR_PCI_alloc_new_rx_skb" alt="" coords="375,157,561,184"/>
+<area shape="rect" id="node8" href="$dc/dc8/_i_n_r-_p_c_i_8c.html#af88a9db4ef6451751a395e1207fd7066" title="INR_PCI_get_new_rx\l_descriptor_ring_entry" alt="" coords="629,150,779,191"/>
+<area shape="rect" id="node9" href="$dc/dc8/_i_n_r-_p_c_i_8c.html#adbea73204b38d31f4b80feb56a27b810" title="INR_PCI_rx_descriptor\l_pool_refill" alt="" coords="847,158,1005,199"/>
+</map>
