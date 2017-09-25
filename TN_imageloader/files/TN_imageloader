@@ -1,0 +1,28 @@
+#!/bin/sh /etc/rc.common
+
+START=90
+
+
+
+start() {
+source /usr/share/InnoRoute/TNmod.conf
+echo "flashing FPGA and reboot if necesarry"
+case $TNmod in
+	0) echo "automatic FPGA-image load disabled";;
+#	1) xc3sprog  -c ftdi -p0 -v  /usr/share/InnoRoute/trustnode_top_6t_4ports_2.bit > /usr/share/InnoRoute/imageloader.log 2>&1 && echo "done";;
+#	2) xc3sprog  -c ftdi -p0 -v  /usr/share/InnoRoute/tn_accdp_1.bit > /usr/share/InnoRoute/imageloader.log 2>&1 && /etc/init.d/TN_imageloader disable&& reboot&& echo "done";;
+#	3) xc3sprog  -c ftdi -p0 -v  /usr/share/InnoRoute/trustnode_top_ethsw.bit > /usr/share/InnoRoute/imageloader.log 2>&1 && echo "done";;
+	1) TN_opto_prog  /usr/share/InnoRoute/trustnode_top_6t_4ports_2.bit > /usr/share/InnoRoute/imageloader.log 2>&1 && echo "done";;
+	2) TN_opto_prog  /usr/share/InnoRoute/tn_accdp.bit > /usr/share/InnoRoute/imageloader.log 2>&1 && echo "done";;
+#	3) TN_opto_prog  /usr/share/InnoRoute/trustnode_top_ethsw.bit > /usr/share/InnoRoute/imageloader.log 2>&1 && echo "done";;
+	4) TN_opto_prog  /usr/share/InnoRoute/tn_display_loopback.bin > /usr/share/InnoRoute/imageloader.log 2>&1 && echo "done";;
+	5) TN_opto_prog  /usr/share/InnoRoute/tn_atom_ctrl.bin > /usr/share/InnoRoute/imageloader.log 2>&1 && echo "done";;
+	6) TN_opto_prog  /usr/share/InnoRoute/tn_fc.bit > /usr/share/InnoRoute/imageloader.log 2>&1 && echo "done";;
+	*) echo "Invalid TrustNode modus or module deactivated" ;;
+esac
+}
+
+stop() {
+echo "stop"
+}
+

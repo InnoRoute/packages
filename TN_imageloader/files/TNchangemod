@@ -1,0 +1,20 @@
+#!/bin/bash
+#Trustnode modus changer
+#ulbricht@innoroute.de 2017
+if [[ $# -ne 1 ]] || [[ "$1" -ne "$1" ]] ; 
+    then echo "Please provide number of modus to change to!"
+	echo -e "\t 0:disabled"
+	echo -e "\t 1:6Tree"
+	echo -e "\t 2:Acceleration Datapath"
+#	echo -e "\t 3:Ethernet swiching "
+	echo -e "\t 4:Displaytest and loopback "
+	echo -e "\t 5:Atom-FPGA control interface "
+	echo -e "\t 6:Flowcache "
+	cat /usr/share/InnoRoute/TNmod.conf
+fi
+if [ $# -eq 1 ]; 
+    then echo "TNmod=$1" > /usr/share/InnoRoute/TNmod.conf
+	/etc/init.d/TN_imageloader enable
+	/etc/init.d/TN_imageloader start
+fi
+
