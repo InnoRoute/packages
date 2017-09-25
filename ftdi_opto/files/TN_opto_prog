@@ -1,0 +1,23 @@
+#!/bin/bash
+if [ $# -ne 1 ] ; 
+    then echo "Please provide a file to programm"
+	
+fi
+if [ $# -eq 1 ]; 
+then i2cset -y 0 4 2 1
+
+# Wait for SMBus accesses to be executed -> might be skipped
+i2cget -y 0 4 2
+
+# Write Data using FTDI tool
+INR_ftdi_opto_tool $1
+
+# echo 4 > /proc/TN_LPC_ctl
+
+i2cset -y 0 4 2 2
+
+# Wait for SMBus accesses to be executed -> might be skipped
+i2cget -y 0 4 2
+
+i2cset -y 0 4 2 0
+fi
