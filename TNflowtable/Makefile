@@ -23,7 +23,7 @@ define Package/tnflowtable/install
 	$(INSTALL_DIR) $(1)/usr/sbin
 #	$(INSTALL_DIR) $(1)/usr/lib
 	$(INSTALL_DIR) $(1)/usr/share/InnoRoute/
-	$(INSTALL_CONF) ./files/tn_fc.bit $(1)/usr/share/InnoRoute/
+#	$(INSTALL_CONF) ./files/tn_fc.bit $(1)/usr/share/InnoRoute/
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/tnflowtable $(1)/usr/sbin/TNflowtable
 #	$(INSTALL_BIN) $(PKG_BUILD_DIR)/libtnlibflowtable.so $(1)/usr/lib/	
 endef
