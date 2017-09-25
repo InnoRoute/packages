@@ -8,7 +8,7 @@ define Package/TN_tools
  SECTION:=TN_tools
  CATEGORY:=InnoRoute
  TITLE:=TN_tools
-# DEPENDS:=
+ DEPENDS:=TNbar1
  endef
 define Build/Prepare
 	$(CP) ./src/* $(PKG_BUILD_DIR)/
