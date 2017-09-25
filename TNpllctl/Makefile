@@ -18,7 +18,7 @@ define Package/$(PKG_NAME)/install
 	$(INSTALL_DIR) $(1)/usr/sbin
 	$(INSTALL_DIR) $(1)/usr/share
 	$(INSTALL_DIR) $(1)/usr/share/InnoRoute/
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/$(PKG_NAME) $(1)/usr/sbin/
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/pllctl $(1)/usr/sbin/
 	$(INSTALL_BIN) ./files/pllload.sh $(1)/usr/sbin/INRpllload
 	$(INSTALL_CONF) ./files/*.stp $(1)/usr/share/InnoRoute/
 endef
