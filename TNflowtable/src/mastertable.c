@@ -442,21 +442,11 @@ FC_MasterT_print (struct arguments *arguments)
         MT_dohaveprint(entry, CutValue);
         printf ("\n");
         printf("prio:%li ", entry->PRIORITY);
-        if (entry->TableID.EMH_RT)printf {
-          ("EMH_RT:%li ", entry->TableID.EMH_RT);
-        }
-        if (entry->TableID.EMH_HT)printf {
-          ("EMH_HT:%li ", entry->TableID.EMH_HT);
-        }
-        if (entry->TableID.EMH_CT)printf {
-          ("EMH_CT:%li ", entry->TableID.EMH_CT);
-        }
-        if (entry->TableID.EMA_RT)printf {
-          ("EMA_RT:%li ", entry->TableID.EMA_RT);
-        }
-        if (entry->TableID.EMA_HT)printf {
-          ("EMA_HT:%li ", entry->TableID.EMA_HT);
-        }
+        if (entry->TableID.EMH_RT)printf("EMH_RT:%li ", entry->TableID.EMH_RT);     
+        if (entry->TableID.EMH_HT)printf("EMH_HT:%li ", entry->TableID.EMH_HT);
+        if (entry->TableID.EMH_CT)printf("EMH_CT:%li ", entry->TableID.EMH_CT);
+        if (entry->TableID.EMA_RT)printf("EMA_RT:%li ", entry->TableID.EMA_RT);
+        if (entry->TableID.EMA_HT)printf("EMA_HT:%li ", entry->TableID.EMA_HT);
         if (entry->TableID.ActT) {
           printf("ActT:%li ", entry->TableID.ActT);
         }
