@@ -1,0 +1,1 @@
+TrustNode autostart configuration
