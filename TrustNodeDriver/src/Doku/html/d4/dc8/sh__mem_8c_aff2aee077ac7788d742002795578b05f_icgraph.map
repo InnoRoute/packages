@@ -1,4 +1,0 @@
-<map id="semaphore_operation" name="semaphore_operation">
-<area shape="rect" id="node2" href="$d4/dc4/sh__mem_8h.html#a8b85fa444a0a8b6084ed4b4374f1c49f" title="Kopiert einen Tiefenframe 320*240*2 bytes aus dem SharedMemory, gibt übermitteltes Flag zurück (siehe..." alt="" coords="201,5,306,32"/>
-<area shape="rect" id="node3" href="$d4/dc4/sh__mem_8h.html#a390bcefab6c30e196c2d8cd3cd76e323" title="Kopiert einen Tiefenframe 320*240*2 bytes in den SharedMemory. " alt="" coords="208,56,299,83"/>
-</map>

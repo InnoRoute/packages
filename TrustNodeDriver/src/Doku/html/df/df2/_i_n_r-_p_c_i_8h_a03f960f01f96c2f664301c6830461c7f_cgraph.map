@@ -1,5 +1,0 @@
-<map id="INR_PCI_alloc_new_rx_skb" name="INR_PCI_alloc_new_rx_skb">
-<area shape="rect" id="node2" href="$dc/dc8/_i_n_r-_p_c_i_8c.html#af88a9db4ef6451751a395e1207fd7066" title="INR_PCI_get_new_rx\l_descriptor_ring_entry" alt="" coords="240,5,391,47"/>
-<area shape="rect" id="node3" href="$d3/d3a/_i_n_r_8c.html#a549bff83219b80ccf76c695682e37707" title="INR_LOG_debug" alt="" coords="645,13,768,39"/>
-<area shape="rect" id="node4" href="$dc/dc8/_i_n_r-_p_c_i_8c.html#adbea73204b38d31f4b80feb56a27b810" title="INR_PCI_rx_descriptor\l_pool_refill" alt="" coords="439,35,597,76"/>
-</map>

@@ -1,7 +1,0 @@
-<map id="INR_CTL_init_ovs" name="INR_CTL_init_ovs">
-<area shape="rect" id="node2" href="$d2/d08/_i_n_r-ctl_8c.html#a9c189ca74efb7ebe5f93ab70e6bed1bf" title="INR_CTL_ovs_d" alt="" coords="184,56,304,83"/>
-<area shape="rect" id="node3" href="$d2/d08/_i_n_r-ctl_8c.html#a8615615818bea94eac8f6977aad3bdcb" title="INR_CTL_ovs_flow_add" alt="" coords="356,5,521,32"/>
-<area shape="rect" id="node5" href="$d2/d08/_i_n_r-ctl_8c.html#a1cb437a3e12b9f41466424a454e5b7fd" title="INR_CTL_ovs_flow_rm" alt="" coords="359,56,518,83"/>
-<area shape="rect" id="node6" href="$d2/d08/_i_n_r-ctl_8c.html#aa9ea0b37c656036e774bb8960acb4537" title="INR_CTL_ovs_flow_flush" alt="" coords="353,107,525,133"/>
-<area shape="rect" id="node4" href="$d3/d3a/_i_n_r_8c.html#a549bff83219b80ccf76c695682e37707" title="INR_LOG_debug" alt="" coords="573,56,696,83"/>
-</map>

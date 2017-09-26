@@ -1,8 +1,0 @@
-<map id="INR_STATUS_set" name="INR_STATUS_set">
-<area shape="rect" id="node2" href="$df/df2/_i_n_r-_p_c_i_8h.html#a63ce64abfe6217358041ed07e918a398" title="INR_init_drv" alt="" coords="369,83,464,109"/>
-<area shape="rect" id="node3" href="$d0/d29/main_8c.html#a1f2bd07aac6fb1d9a27f635dac28669b" title="probe" alt="" coords="512,133,567,160"/>
-<area shape="rect" id="node5" href="$dc/dc8/_i_n_r-_p_c_i_8c.html#af7926b059a794041b841cda82ea84ca9" title="INR_int_enable" alt="" coords="197,32,309,59"/>
-<area shape="rect" id="node6" href="$dc/dc8/_i_n_r-_p_c_i_8c.html#a7b6c1bb3d3c608c7a226531d7a6f0965" title="INR_RX_RING_init" alt="" coords="184,83,321,109"/>
-<area shape="rect" id="node7" href="$dc/dc8/_i_n_r-_p_c_i_8c.html#a30bfb6d989886092253041816a123bb4" title="INR_TX_RING_init" alt="" coords="185,133,320,160"/>
-<area shape="rect" id="node4" href="$d0/d29/main_8c.html#a28d5841b26c9924ab02d6adb235e9848" title="remove" alt="" coords="615,133,680,160"/>
-</map>

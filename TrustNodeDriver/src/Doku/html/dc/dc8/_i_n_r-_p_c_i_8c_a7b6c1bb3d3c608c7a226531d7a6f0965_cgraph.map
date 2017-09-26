@@ -1,7 +1,0 @@
-<map id="INR_RX_RING_init" name="INR_RX_RING_init">
-<area shape="rect" id="node2" href="$d3/d3a/_i_n_r_8c.html#a549bff83219b80ccf76c695682e37707" title="INR_LOG_debug" alt="" coords="831,32,953,59"/>
-<area shape="rect" id="node3" href="$dc/dc8/_i_n_r-_p_c_i_8c.html#a03f960f01f96c2f664301c6830461c7f" title="INR_PCI_alloc_new_rx_skb" alt="" coords="191,36,377,63"/>
-<area shape="rect" id="node6" href="$d3/d3a/_i_n_r_8c.html#af47261efd77bbc66a759860ab782f170" title="INR_STATUS_set" alt="" coords="219,87,349,113"/>
-<area shape="rect" id="node4" href="$dc/dc8/_i_n_r-_p_c_i_8c.html#af88a9db4ef6451751a395e1207fd7066" title="INR_PCI_get_new_rx\l_descriptor_ring_entry" alt="" coords="425,33,576,74"/>
-<area shape="rect" id="node5" href="$dc/dc8/_i_n_r-_p_c_i_8c.html#adbea73204b38d31f4b80feb56a27b810" title="INR_PCI_rx_descriptor\l_pool_refill" alt="" coords="624,83,783,125"/>
-</map>

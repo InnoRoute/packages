@@ -1,6 +1,0 @@
-<map id="INR_NW_tx" name="INR_NW_tx">
-<area shape="rect" id="node2" href="$d3/d3a/_i_n_r_8c.html#a549bff83219b80ccf76c695682e37707" title="INR_LOG_debug" alt="" coords="325,5,448,32"/>
-<area shape="rect" id="node3" href="$d3/d3a/_i_n_r_8c.html#ac9fa7fdfdb1d1521d13b233e604123df" title="INR_STATUS_get" alt="" coords="321,107,452,133"/>
-<area shape="rect" id="node4" href="$dc/dc8/_i_n_r-_p_c_i_8c.html#a4887a4c2c584fbcf488d415ba2792f6e" title="INR_TX_push" alt="" coords="148,56,253,83"/>
-<area shape="rect" id="node5" href="$dc/dc8/_i_n_r-_p_c_i_8c.html#a962a04c34b5e83ae81e7336ae16cc9ef" title="INR_PCI_pointerdistance" alt="" coords="301,56,472,83"/>
-</map>
