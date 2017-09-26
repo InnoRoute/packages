@@ -1,4 +1,9 @@
-#ifndef __KERNEL__
+/**
+*@file flowtableactions.c
+*@brief highlevelactions to manipulate flowtables
+*M.Ulbricht 2017
+**/
+#ifndef __KERNEL__ //check if we compile a kernel module or not
 	#include <inttypes.h>
 	#include <stddef.h>
 	#include <stdio.h>
@@ -21,7 +26,6 @@ void
 clear_arguments (struct arguments *arguments)
 {
 	arguments->args[0] = "";
-//arguments.args[1] = "";
 	arguments->verbose = 0;
 	arguments->MAC_SRC = 0;
 	arguments->MAC_DST = 0;
@@ -38,7 +42,6 @@ clear_arguments (struct arguments *arguments)
 	arguments->PRIORITY = 1;	//prio should not be null
 	arguments->TOS = 0;
 	arguments->ACTION_ID = 0;
-//arguments.NEXT_BIT=0;
 	arguments->RULEPOINTER = 0;
 	arguments->ID = 0;
 	arguments->COUNT = 0;
@@ -71,7 +74,6 @@ clear_arguments (struct arguments *arguments)
 	arguments->TableID.EMA_HT = 0;
 	arguments->TableID.ActT = 0;
 	arguments->used = 0;
-
 	arguments->dohave_MAC_SRC = 0;
 	arguments->dohave_MAC_DST = 0;
 	arguments->dohave_VLAN_ID = 0;
@@ -317,7 +319,6 @@ RT_EMH_add (struct arguments *arguments)
 			entry_shadow->TYPE_ID = 0x3f & arguments->TYPE_ID;	//& (1<<(arguments->TYPE_ID-1));
 			entry_shadow->PRIORITY = 0xff & arguments->PRIORITY;
 			entry_shadow->ACTION_ID = 0xffff & arguments->ACTION_ID;
-			//entry->NEXT_BIT = 0x1 & arguments.NEXT_BIT;
 			uint8_t j = 0;
 			switch (arguments->TYPE_ID) {
 			case 1:
@@ -658,7 +659,6 @@ CT_EMH_print (struct arguments arguments)
 			printf ("TYPE_ID:0x%x  ", entry->TYPE_ID);
 			printf ("PRIORITY:0x%x  ", entry->PRIORITY);
 			printf ("ACTION_ID:0x%x  ", entry->ACTION_ID);
-			//printf ("NEXT_BIT:0x%x  ", entry->NEXT_BIT);
 			printf ("\n\t");
 			switch (entry->TYPE_ID) {
 			case 1:
@@ -772,23 +772,23 @@ RT_EMA_add (struct arguments *arguments)
 			}
 			arguments->RULEPOINTER = INR_RuleTable_EMA_get_next_free_entry (0xffff & arguments->ID);	//save where rule is stored
 	
-			entry_shadow->VALID_BIT = 1;	    /**<use this rule or not*/
+			entry_shadow->VALID_BIT = 1;	    //use this rule or not
 			entry_shadow->reserved = 0;
-			entry_shadow->TYPE_ID = 0xfff & arguments->TYPE_ID;	  /**<type of rule*/
+			entry_shadow->TYPE_ID = 0xfff & arguments->TYPE_ID;	  //type of rule
 			entry_shadow->PRIORITY = 0xff & arguments->PRIORITY;
-			entry_shadow->ACTION_ID = 0xffff & arguments->ACTION_ID;	   /**<pointer to action table*/
+			entry_shadow->ACTION_ID = 0xffff & arguments->ACTION_ID;	   //pointer to action table
 			entry_shadow->INGRESS_PORT = 0x1f & arguments->INPORT;
-			entry_shadow->MAC_SRC = arguments->MAC_SRC;		    /**<source MAC*/
-			entry_shadow->MAC_DST = arguments->MAC_DST;		    /**<destination MAC*/
-			entry_shadow->ETHERTYPE = 0xffff & arguments->ETHERTYPE;	    /**<ETHERTYPE*/
-			entry_shadow->VLAN_ID = 0xfff & arguments->VLAN_ID;	    /**<VLAN_ID*/
-			entry_shadow->VLAN_PRIO = 7 & arguments->VLAN_PRIO;	    /**<VLAN_Priority*/
-			entry_shadow->IPv4_SRC = 0xffffffff & arguments->IPv4_SRC;	  /**<IPv4 source address*/
-			entry_shadow->IPv4_DST = 0xffffffff & arguments->IPv4_DST;	  /**<IPv4 destination address*/
-			entry_shadow->PROTOCOL = 0xff & arguments->PROTOCOL;	  /**<layer 3 protocol*/
+			entry_shadow->MAC_SRC = arguments->MAC_SRC;		    //source MAC
+			entry_shadow->MAC_DST = arguments->MAC_DST;		   //destination MAC
+			entry_shadow->ETHERTYPE = 0xffff & arguments->ETHERTYPE;	    //ETHERTYPE
+			entry_shadow->VLAN_ID = 0xfff & arguments->VLAN_ID;	    //VLAN_ID
+			entry_shadow->VLAN_PRIO = 7 & arguments->VLAN_PRIO;	    //VLAN_Priority
+			entry_shadow->IPv4_SRC = 0xffffffff & arguments->IPv4_SRC;	  //IPv4 source address
+			entry_shadow->IPv4_DST = 0xffffffff & arguments->IPv4_DST;	  //IPv4 destination address
+			entry_shadow->PROTOCOL = 0xff & arguments->PROTOCOL;	  //layer 3 protocol
 			entry_shadow->TOS = 0x3f & arguments->TOS;
-			entry_shadow->PORT_SRC = 0xffff & arguments->PORT_SRC;	  /**<TCP/UDP source port*/
-			entry_shadow->PORT_DST = 0xffff & arguments->PORT_DST;	  /**<TCP/UDP destination port*/
+			entry_shadow->PORT_SRC = 0xffff & arguments->PORT_SRC;	  //TCP/UDP source port
+			entry_shadow->PORT_DST = 0xffff & arguments->PORT_DST;	  //TCP/UDP destination port
 
 			FCmemcpy (entry, entry_shadow, INR_FC_EMA_RuleTable_entry_length_memcpy);	//copy shadow to mmi (wordwise)
 
@@ -866,23 +866,23 @@ RT_EMA_update (struct arguments arguments)
 	struct INR_FC_EMA_RULE *entry = (struct INR_FC_EMA_RULE *) INR_RuleTable_EMA_get_addr (0xffff & arguments.ID);
 	struct INR_FC_EMA_RULE *entry_shadow = (struct INR_FC_EMA_RULE *) INR_RuleTable_EMA_shadow_get_addr (0xffff & arguments.ID);
 	if (entry != NULL) {		
-		entry_shadow->VALID_BIT = 1;	    /**<use this rule or not*/
+		entry_shadow->VALID_BIT = 1;	    //use this rule or not
 		entry_shadow->reserved = 0;
-		entry_shadow->TYPE_ID = 0xfff & arguments.TYPE_ID;	 /**<type of rule*/
+		entry_shadow->TYPE_ID = 0xfff & arguments.TYPE_ID;	 //type of rule
 		entry_shadow->PRIORITY = 0xff & arguments.PRIORITY;
-		entry_shadow->ACTION_ID = 0xffff & arguments.ACTION_ID;	   /**<pointer to action table*/
+		entry_shadow->ACTION_ID = 0xffff & arguments.ACTION_ID;	   //pointer to action table
 		entry_shadow->INGRESS_PORT = 0x1f & arguments.INPORT;
-		entry_shadow->MAC_SRC = arguments.MAC_SRC;	   /**<source MAC*/
-		entry_shadow->MAC_DST = arguments.MAC_DST;	   /**<destination MAC*/
-		entry_shadow->ETHERTYPE = 0xffff & arguments.ETHERTYPE;	    /**<ETHERTYPE*/
-		entry_shadow->VLAN_ID = 0xfff & arguments.VLAN_ID;	   /**<VLAN_ID*/
-		entry_shadow->VLAN_PRIO = 7 & arguments.VLAN_PRIO;	   /**<VLAN_Priority*/
-		entry_shadow->IPv4_SRC = 0xffffffff & arguments.IPv4_SRC;	 /**<IPv4 source address*/
-		entry_shadow->IPv4_DST = 0xffffffff & arguments.IPv4_DST;	 /**<IPv4 destination address*/
-		entry_shadow->PROTOCOL = 0xff & arguments.PROTOCOL;		  /**<layer 3 protocol*/
+		entry_shadow->MAC_SRC = arguments.MAC_SRC;	   //source MAC
+		entry_shadow->MAC_DST = arguments.MAC_DST;	   //destination MAC
+		entry_shadow->ETHERTYPE = 0xffff & arguments.ETHERTYPE;	    //ETHERTYPE
+		entry_shadow->VLAN_ID = 0xfff & arguments.VLAN_ID;	   //VLAN_ID
+		entry_shadow->VLAN_PRIO = 7 & arguments.VLAN_PRIO;	   //VLAN_Priority
+		entry_shadow->IPv4_SRC = 0xffffffff & arguments.IPv4_SRC;	 //IPv4 source address
+		entry_shadow->IPv4_DST = 0xffffffff & arguments.IPv4_DST;	//IPv4 destination address
+		entry_shadow->PROTOCOL = 0xff & arguments.PROTOCOL;		 //layer 3 protocol
 		entry_shadow->TOS = 0x3f & arguments.TOS;
-		entry_shadow->PORT_SRC = 0xffff & arguments.PORT_SRC;	  /**<TCP/UDP source port*/
-		entry_shadow->PORT_DST = 0xffff & arguments.PORT_DST;	  /**<TCP/UDP destination port*/
+		entry_shadow->PORT_SRC = 0xffff & arguments.PORT_SRC;	  //TCP/UDP source port
+		entry_shadow->PORT_DST = 0xffff & arguments.PORT_DST;	  //TCP/UDP destination port
 		FCmemcpy (entry, entry_shadow, INR_FC_EMA_RuleTable_entry_length_memcpy);	//copy shadow to mmi (wordwise)
 	}	else {
 		verblog printf ("no free space\n");
@@ -1005,13 +1005,13 @@ AT_add (struct arguments *arguments)
 			arguments->TableID.ActT = arguments->RULEPOINTER;	//store table position in arguments structure
 			arguments->ACTION_ID = arguments->RULEPOINTER;
 
-			entry_shadow->OutPort_enable = 1 & arguments->OutPort_enable;	/**<Outputport enable  */
-			entry_shadow->OutPort = 0x1f & arguments->OutPort;	/**<outputport assignment  */
-			entry_shadow->Bad_enable = 1 & arguments->Bad_enable;	/**<bad enable  */
-			entry_shadow->BadValue = 1 & arguments->BadValue;	/**<bad assignment  */
-			entry_shadow->BadReason = 0x1f & arguments->BadReason;	/**<bad reason  */
-			entry_shadow->Cut_enable = 1 & arguments->Cut_enable;	/**<cut through enable  */
-			entry_shadow->CutValue = 1 & arguments->CutValue;	/**<cut through assignment  */
+			entry_shadow->OutPort_enable = 1 & arguments->OutPort_enable;	//Outputport enable 
+			entry_shadow->OutPort = 0x1f & arguments->OutPort;	//outputport assignment 
+			entry_shadow->Bad_enable = 1 & arguments->Bad_enable;	//bad enable 
+			entry_shadow->BadValue = 1 & arguments->BadValue;	//bad assignment 
+			entry_shadow->BadReason = 0x1f & arguments->BadReason;	//bad reason  
+			entry_shadow->Cut_enable = 1 & arguments->Cut_enable;	//cut through enable  
+			entry_shadow->CutValue = 1 & arguments->CutValue;	//cut through assignment 
 			entry_shadow->unused = 0xffffffffffffffff;
 			FCmemcpy (entry, entry_shadow, INR_FC_ActT_entry_length_memcpy);	//copy shadow to mmi (wordwise)
 		}
@@ -1033,13 +1033,13 @@ AT_update (struct arguments arguments)
 	struct INR_FC_ActT_RULE *entry = (struct INR_FC_ActT_RULE *) INR_ActT_get_addr (0xffff & arguments.ID);
 	struct INR_FC_ActT_RULE *entry_shadow = (struct INR_FC_ActT_RULE *) INR_ActT_shadow_get_addr (0xffff & arguments.ID);
 	if (entry != NULL) {
-		entry_shadow->OutPort_enable = 1 & arguments.OutPort_enable;  /**<Outputport enable  */
-		entry_shadow->OutPort = 0x1f & arguments.OutPort;  /**<outputport assignment  */
-		entry_shadow->Bad_enable = 1 & arguments.Bad_enable;  /**<bad enable  */
-		entry_shadow->BadValue = 1 & arguments.BadValue;  /**<bad assignment  */
-		entry_shadow->BadReason = 0x1f & arguments.BadReason;  /**<bad reason  */
-		entry_shadow->Cut_enable = 1 & arguments.Cut_enable;  /**<cut through enable  */
-		entry_shadow->CutValue = 1 & arguments.CutValue;  /**<cut through assignment  */
+		entry_shadow->OutPort_enable = 1 & arguments.OutPort_enable;  //Outputport enable 
+		entry_shadow->OutPort = 0x1f & arguments.OutPort;  //outputport assignment 
+		entry_shadow->Bad_enable = 1 & arguments.Bad_enable;  //bad enable  
+		entry_shadow->BadValue = 1 & arguments.BadValue;  //bad assignment  
+		entry_shadow->BadReason = 0x1f & arguments.BadReason;  //bad reason  
+		entry_shadow->Cut_enable = 1 & arguments.Cut_enable;  //cut through enable  
+		entry_shadow->CutValue = 1 & arguments.CutValue;  //cut through assignment 
 		FCmemcpy (entry, entry_shadow, INR_FC_ActT_entry_length_memcpy);	//copy shadow to mmi (wordwise)
 	}	else {
 		verblog printf ("no free space\n");

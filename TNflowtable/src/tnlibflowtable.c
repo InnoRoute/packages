@@ -1,7 +1,7 @@
 /**
-*@file TNR.c
-*@brief userspace flowtable acces lib
-*M.Ulbricht 2015
+*@file tnlibflowtable.c
+*@brief common flowtable access functions
+*M.Ulbricht 2017
 **/
 #ifndef __KERNEL__
   #include <inttypes.h>
@@ -583,7 +583,6 @@ void set_verbose(uint8_t i) {verbose = i;};
 //************************************************************************************************************************************
 /**
 *get verbode
-*@param verbose value
 */
 uint8_t get_verbose() {return verbose;};
 
@@ -617,7 +616,11 @@ hwaddr_aton2(const char *txt, uint8_t *addr)
   }
   return pos - txt;
 }
-
+//************************************************************************************************************************************
+/**
+*convert hex to integer
+*@param hex calue
+*/
 static int hex2num(char c)
 {
   if (c >= '0' && c <= '9') {
@@ -631,7 +634,11 @@ static int hex2num(char c)
   }
   return -1;
 }
-
+//************************************************************************************************************************************
+/**
+*parse ipv4 address
+*@param ipAddress char
+*/
 uint32_t
 parseIPV4string(char* ipAddress) 
 {

@@ -30,7 +30,8 @@ void set_verbose(uint8_t i);
 int hwaddr_aton2(const char *txt, uint8_t *addr);
 static int hex2num(char c);
 uint32_t parseIPV4string(char* ipAddress) ;
-
+#define verblog if(get_verbose()) //macro for checking verbose bit
+//base addresses:
 //hashtable with hardcoded fields
 #define  INR_FC_ActT_base 458752
 #define  INR_FC_ActT_length 512
@@ -107,7 +108,6 @@ struct INR_FC_EMH_RULE
   uint8_t dc1: 2;        /**<dont care bit 1*/
   uint8_t PRIORITY: 8;
   uint16_t ACTION_ID: 16;    /**<pointer to action table*/
-//  uint32_t NEXT_BIT:1;         /**<rule has extension?*/ removed
   union INR_FC_EMH_RULE_TYPES COMP_FIELDS;      /**<fields used for comparison, depends on ruletype*/
 } __attribute__ ((__packed__));
 
@@ -118,7 +118,6 @@ struct INR_FC_EMA_RULE
   uint16_t TYPE_ID: 12;   /**<type of rule*/
   uint8_t PRIORITY: 8;
   uint16_t ACTION_ID: 16;    /**<pointer to action table*/
-//  uint32_t NEXT_BIT:1;         /**<rule has extension?*/ removed
   uint8_t INGRESS_PORT: 5;
   uint64_t MAC_SRC: 48;     /**<source MAC*/
   uint64_t MAC_DST: 48;     /**<destination MAC*/
@@ -136,8 +135,7 @@ struct INR_FC_EMA_RULE
 struct INR_FC_EMH_HashTable_entry
 {
   uint32_t RULEPOINTER: 9;
-  uint32_t unused: 23;
-  //dontcare
+  uint32_t unused: 23;  //dontcare
 } __attribute__ ((__packed__));
 
 struct INR_FC_EMA_HashTable_entry_data
@@ -161,20 +159,18 @@ struct INR_FC_EMA_HashTable_entry_fields
 {
   struct INR_FC_EMA_HashTable_entry_data din;
   struct INR_FC_EMA_HashTable_entry_data mask;
-  //dontcare
 } __attribute__ ((__packed__));
 
 struct INR_FC_EMA_HashTable_entry_words
 {
-  uint32_t dinL;
+  uint32_t dinL; //tcam acces fileds
   uint32_t dinH;
   uint32_t maskL;
   uint32_t maskH;
-  //dontcare
 } __attribute__ ((__packed__));
 
 union INR_FC_EMA_HashTable_entry
-{ //put all types in same meory
+{ //put all types in same memory
   struct INR_FC_EMA_HashTable_entry_fields fields;
   struct INR_FC_EMA_HashTable_entry_words words;
 } __attribute__ ((__packed__));
@@ -203,4 +199,4 @@ struct INR_FC_ActT_RULE
   /**<fill bits  */
 } __attribute__ ((__packed__));
 
-#define verblog if(get_verbose())
+

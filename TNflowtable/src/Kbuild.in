@@ -1,7 +1,0 @@
-obj-m := ${MODULE_NAME}.o
-${MODULE_NAME}-objs += mastertable.o
-${MODULE_NAME}-objs += TNflowtable_main.o
-${MODULE_NAME}-objs += tnlibflowtable.o
-
-EXTRA_CFLAGS := -I${PROJECT_SOURCE_DIR}/include
-EXTRA_CFLAGS += -DDEBUG

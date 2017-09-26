@@ -1,4 +1,9 @@
-#ifndef __KERNEL__
+/**
+*@file mastertable.c
+*@brief functions to handle flowtable mastertable
+*M.Ulbricht 2015
+**/
+#ifndef __KERNEL__ //find out, if we build a kernel module or not
   #include <inttypes.h>
   #include <stddef.h>
   #include <stdio.h>
@@ -15,12 +20,12 @@
 #include "flowtableactions.h"
 #include "mastertable.h"
 
-uint64_t MAbase = 0;
+uint64_t MAbase = 0;//base addres of master table
 const uint64_t MASTERTABLE_ENTRY_length = sizeof(struct arguments);
 
 //************************************************************************************************************************************
 /**
-*int Mastertable
+*init Mastertable
 *@param baseaddr_master pointer to Mastertable-root
 */
 void
@@ -200,7 +205,7 @@ FC_MT_FIND_entry (struct arguments *arguments)
     MT_matchfiled(entry, arguments, match, dohave_CutValue);
 
     verblog if (match) {
-      printf("Entry fund, ID:%li\n");
+      printf("Entry found, ID:%li\n");
     }
     if (match) {
       return i - 1;
@@ -409,7 +414,7 @@ FC_MasterT_print (struct arguments *arguments)
       printf ("ID:%li  ", i);
       printf ("VALID_BIT:0x%x  ", entry->used);
       if (entry->used) {
-        MT_dohaveprint(entry, MAC_SRC);
+        MT_dohaveprint(entry, MAC_SRC);//print if filed is available
         MT_dohaveprint(entry, MAC_DST);
         MT_dohaveprint(entry, VLAN_ID);
         MT_dohaveprint(entry, VLAN_PRIO);

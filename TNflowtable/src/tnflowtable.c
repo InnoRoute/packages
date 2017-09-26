@@ -1,6 +1,6 @@
 /**
 *@file tnflowtable.c
-*@brief userspace flowtable acces
+*@brief userspace flowtable acces tool
 *M.Ulbricht 2016
 **/
 //*****************************************************************************************************************
@@ -34,7 +34,7 @@ struct flock lock;
    OPTIONS.  Field 1 in ARGP.
    Order of fields: {NAME, KEY, ARG, FLAGS, DOC}.
 */
-static struct argp_option options[] = {
+static struct argp_option options[] = {//user interface
   {0, 0, 0, 0, "General options:", 0},
   {"verbose", 'v', 0, 0, "Produce verbose output"},
   {"ID", 'i', "", 0, "ID of entry"},
@@ -268,7 +268,7 @@ main (int argc, char **argv)
   int fd, fd_shadow, fd_master;
   uint64_t *map_base, *map_base_shadow, *map_base_master;
   off_t target;
-  struct arguments arguments;
+  struct arguments arguments;//create structure for passing comandlinearguments and settings
   clear_arguments (&arguments);
   argp_parse (&argp, argc, argv, 0, 0, &arguments);
 
@@ -276,23 +276,23 @@ main (int argc, char **argv)
     printf ("error opening file\n");
   }
 
-  lock.l_start = 0;
+  lock.l_start = 0;//lock semaphor to prevent shadowfile acces of other instances
   lock.l_whence = SEEK_SET;
   lock.l_len = 0;
   lock.l_type = F_RDLCK;
   fcntl(fd, F_SETLKW, &lock); //block until file is free
 
-  if ((fd_shadow = open ("/tmp/INR_FC_shadow.mem", O_CREAT | O_RDWR | O_SYNC, 0600)) == -1) {
+  if ((fd_shadow = open ("/tmp/INR_FC_shadow.mem", O_CREAT | O_RDWR | O_SYNC, 0600)) == -1) {//shadowmemory, because FPGA-mmi is write only
     printf ("error opening shadowmem file\n");
   }
-  if ((fd_master = open ("/tmp/INR_FC_masterTable.mem", O_CREAT | O_RDWR | O_SYNC, 0600)) == -1) {
+  if ((fd_master = open ("/tmp/INR_FC_masterTable.mem", O_CREAT | O_RDWR | O_SYNC, 0600)) == -1) { //memory to store mastertable
     printf ("error opening msterTable file\n");
   }
 
-  ftruncate (fd_shadow, MAP_SIZE);
+  ftruncate (fd_shadow, MAP_SIZE);//if new files created, expand them
   ftruncate (fd_master, MASTERTABLE_length * sizeof (struct arguments));
 
-  map_base = mmap (0, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+  map_base = mmap (0, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);//map files and mmi to memory
   map_base_shadow = mmap (0, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd_shadow, 0);
   map_base_master = mmap (0, MASTERTABLE_length * sizeof (struct arguments), PROT_READ | PROT_WRITE, MAP_SHARED, fd_master, 0);
 
@@ -306,9 +306,9 @@ main (int argc, char **argv)
     printf ("error mapping memory\n");
   }
   FCinit_EMH (map_base, map_base_shadow);
-  FCinit_MasterTable (map_base_master);
+  FCinit_MasterTable (map_base_master);//pass the memorypointer to the flowcache libs
 
-  switch (arguments.args[0][0]) {
+  switch (arguments.args[0][0]) {//parse commandline arguments
   case 'A':
     switch (arguments.args[0][5]) { //actiontable
     case 'a':
@@ -434,7 +434,7 @@ main (int argc, char **argv)
       }
     break;
   default: //mastertable
-    switch (arguments.args[0][0]) { //ruletable
+    switch (arguments.args[0][0]) { 
     case 'a':
       FC_MasterT_add (&arguments);
       break;
@@ -456,12 +456,12 @@ main (int argc, char **argv)
     }
     break;
   }
-  munmap(map_base, MAP_SIZE);
+  munmap(map_base, MAP_SIZE);//unmap files and mmi from memory
   munmap(map_base_shadow, MAP_SIZE);
   munmap(map_base_master, MASTERTABLE_length * sizeof (struct arguments));
-  close(fd_shadow);
+  close(fd_shadow);//close shadow files
   close(fd_master);
-  lock.l_type = F_UNLCK;
+  lock.l_type = F_UNLCK;//free semaphor
   fcntl(fd, F_SETLK, &lock);//release filelock
   close(fd);
   return 0;

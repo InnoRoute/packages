@@ -1,3 +1,8 @@
+/**
+*@file TNflowtable_main.c
+*@brief main file of TNflowtable kernel module (for OVS interaction)
+*M.Ulbricht 2017
+**/
 #include <linux/init.h>
 #include <linux/module.h>
 #include <linux/kernel.h>
