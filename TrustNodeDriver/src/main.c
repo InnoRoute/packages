@@ -5,7 +5,7 @@
 *This is the documentation for the TrustNode Ethernet driver. The code is mainly structured in PCI and NetWork communication. You should start browsing the <a href="files.html">filelist</a> first.<br>Questions and bugs please report to <a href="mailto:ulbricht@innoroute.de">ulbricht@innoroute.de</a>
 **/
 /**
-*@file 
+*@file
 *@brief main driver Function
 *M.Ulbricht 2015
 **/
@@ -18,23 +18,23 @@
 #include <linux/delay.h>
 #include <linux/netdevice.h>
 #include <linux/etherdevice.h>
-//#include <linux/autoconf.h>
 #include "INR.h"
 #include "INR-PCI.h"
 #include "INR-NW.h"
 #include "INR-ctl.h"
 volatile uint8_t probed=0;
 static void remove (struct pci_dev *dev);
+
 /**
 *@brief PCI-Device definition
 *
 */
 static struct pci_device_id ids[] = {
-  {PCI_DEVICE (0xAAAA, 0x7024),},
-  {0,}
+    {PCI_DEVICE (0xAAAA, 0x7024),},
+    {0,}
 };
 
-struct net_device *INR_NW;/**<Network device definition*/
+struct net_device *INR_NW;
 
 /**
 *@brief init nw-device
@@ -43,31 +43,21 @@ struct net_device *INR_NW;/**<Network device definition*/
 int
 INR_NWDEV_init (void)
 {
-  uint8_t i = 0;
-  for (i = 0; i < INR_NW_devcount; i++) {
-    INR_NW = alloc_netdev (sizeof (struct INR_NW_priv), "TN%d", NET_NAME_UNKNOWN, INR_NW_init);	//set device name ""INRx""
-    if (INR_NW == NULL) {
-      INR_LOG_debug ("Cant alloc NWDEV %i !\n", i);
-      return 1;
+    uint8_t i = 0;
+    for (i = 0; i < INR_NW_devcount; i++) {
+        INR_NW = alloc_netdev (sizeof (struct INR_NW_priv), "TN%d", NET_NAME_UNKNOWN, INR_NW_init);
+        if (INR_NW == NULL) {
+            INR_LOG_debug ("Cant alloc NWDEV %i !\n", i);
+            return 1;
+        } else {
+
+            if (0 == register_netdev (INR_NW))
+                INR_LOG_debug ("NWDev %i registerd, flags:%llx ", i, INR_NW->hw_features);
+            INR_LOG_debug ("flags2:%llx\n", INR_NW->hw_features);
+            set_nwdev (i, INR_NW);
+        }
     }
-    else {			//INR_NW->features|=NETIF_F_SG;
-
-      if (0 == register_netdev (INR_NW))
-	INR_LOG_debug ("NWDev %i registerd, flags:%llx ", i, INR_NW->hw_features);
-
-      INR_LOG_debug ("flags2:%llx\n", INR_NW->hw_features);
-      set_nwdev (i, INR_NW);	//save nw-dev
-    }
-  }
-  /*int result;
-     strcpy (INR_NW.name, "INRNWDev");
-     if ((result = register_netdev (&INR_NW)))
-     {
-     debug ("INRNWDEv init error\n");
-     return result;
-     } */
-  return 0;
-
+    return 0;
 }
 
 //*****************************************************************************************************************
@@ -77,12 +67,12 @@ INR_NWDEV_init (void)
 void
 INR_NWDEV_destroi (void)
 {
-uint8_t i = 0;
-  for (i = 0; i < INR_NW_devcount; i++) {
-  INR_LOG_debug ("destroy INRNWDEV %i\n",i);
-  unregister_netdev (get_nwdev(i));
-  free_netdev (get_nwdev(i));
-}
+    uint8_t i = 0;
+    for (i = 0; i < INR_NW_devcount; i++) {
+        INR_LOG_debug ("destroy INRNWDEV %i\n",i);
+        unregister_netdev (get_nwdev(i));
+        free_netdev (get_nwdev(i));
+    }
 }
 
 //*****************************************************************************************************************
@@ -92,42 +82,42 @@ uint8_t i = 0;
 static int
 probe (struct pci_dev *dev, const struct pci_device_id *id)
 {
-  printk (KERN_ALERT "moep2\n");
-if (probed){INR_LOG_debug ("driver already loaded... exit\n");return -1;}
-probed++;
-INR_NW_zerovars();//reset all global vars... in case driver was loaded before...
-INR_PCI_zerovars();
-INR_zerovars();
-  int result;
-  INR_LOG_timelog_init ();	//safe timestamp
-
-  INR_LOG_debug ("Start load module\n");
-  if ((result = pci_enable_device (dev)) < 0) {
-    INR_LOG_debug ("device enable fail...\n");
-    return result;
-  }
-  else {
-    INR_LOG_debug ("device enabled\n");
-    INR_STATUS_set (INR_STATUS_DEVICE);
-  }
-  //INR_init_drv (dev);           //INIT pci and network
-  if (0 == INR_NWDEV_init ())
-    INR_STATUS_set (INR_STATUS_NW_enabled);
-  INR_init_drv (dev);		//INIT pci and network
-  INR_CTL_init_proc (dev);	//init proc fs
-  INR_CTL_init_ovs ();		//init openvswitch-dp link
-  /*if (skel_get_revision(dev) == 1)
-     return -ENODEV; */
-  INR_STATUS_set (INR_STATUS_DRV_INIT_done);
-  return 0;
+    printk (KERN_ALERT "moep!\n"); //this is one of the verry important things needed to run the driver :D
+    if (probed) {
+        INR_LOG_debug ("driver already loaded... exit\n");
+        return -1;
+    }
+    probed++;   //prevent driver from loaded twice
+    INR_NW_zerovars();  //reset all global vars
+    INR_PCI_zerovars();
+    INR_zerovars();
+    int result;
+    INR_LOG_timelog_init ();	//safe timestamp
+    INR_LOG_debug ("Start load module\n");
+    if ((result = pci_enable_device (dev)) < 0) {
+        INR_LOG_debug ("device enable fail...\n");
+        return result;
+    } else {
+        INR_LOG_debug ("device enabled\n");
+        INR_STATUS_set (INR_STATUS_DEVICE);
+    }
+    if (0 == INR_NWDEV_init ()) {
+        INR_STATUS_set (INR_STATUS_NW_enabled);
+    }
+    INR_init_drv (dev);		//INIT pci and network
+    INR_CTL_init_proc (dev);	//init proc fs
+    INR_STATUS_set (INR_STATUS_DRV_INIT_done);
+    return 0;
 }
+
 //*****************************************************************************************************************
 static struct pci_driver pci_driver = {
-  .name = "INRTrustnode",
-  .id_table = ids,
-  .probe = probe,
-  .remove = remove,
+    .name = "INRTrustnode",
+    .id_table = ids,
+    .probe = probe,
+    .remove = remove,
 };
+
 //*****************************************************************************************************************
 /**
 *driver-end function, called by kernel
@@ -135,32 +125,29 @@ static struct pci_driver pci_driver = {
 */
 static void
 remove (struct pci_dev *dev)
-{ INR_NWDEV_destroi();
-  INR_CTL_remove_proc (dev);
-  INR_LOG_debug ("remove Module\n");
-  INR_LOG_debug ("Reset Logic\n");
-
-  //msleep (1);
-  //writel (0, (gBaseVirt + (4 * 2)));  //reset Logic
-  //debug ("Ready-Flag:%i\n", readl ((gBaseVirt + (4 * 3))));
-  INR_remove_drv (dev);
-if(probed)probed--;
+{
+    INR_NWDEV_destroi();
+    INR_CTL_remove_proc (dev);
+    INR_LOG_debug ("remove Module\n");
+    INR_LOG_debug ("Reset Logic\n");
+    INR_remove_drv (dev);
+    if(probed){ 
+        probed--;
+    }
 }
-
-
 
 //*****************************************************************************************************************
 static int __init
 pci_skel_init (void)
 {
-  return pci_register_driver (&pci_driver);
+    return pci_register_driver (&pci_driver);
 }
 
 //*****************************************************************************************************************
 static void __exit
 pci_skel_exit (void)
 {
-  pci_unregister_driver (&pci_driver);
+    pci_unregister_driver (&pci_driver);
 }
 
 //*****************************************************************************************************************
@@ -168,6 +155,6 @@ module_init (pci_skel_init);
 module_exit (pci_skel_exit);
 MODULE_LICENSE ("Dual BSD/GPL");
 MODULE_AUTHOR ("M.Ulbricht");
-MODULE_VERSION ("0.9");
+MODULE_VERSION ("1.0");
 MODULE_DESCRIPTION ("InnoRoute Trustnode driver");
 MODULE_DEVICE_TABLE (pci, ids);

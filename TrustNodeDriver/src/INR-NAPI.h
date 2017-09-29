@@ -1,5 +1,5 @@
 /**
-*@file 
+*@file INR-NAPI.h
 *@brief settings and definitions NAPI
 *@author  M.Ulbricht 2015
 **/
@@ -24,6 +24,5 @@ int INR_NAPI_poll_13 (struct napi_struct *napi, int budget);
 int INR_NAPI_poll_14 (struct napi_struct *napi, int budget);
 int INR_NAPI_poll_15 (struct napi_struct *napi, int budget);
 
-
-#define NAPI_enable		1	/*enable new Network API */
-#define INR_NAPI_maxpoll	128/*NAPI maxpoll value*/	//64
+#define NAPI_enable	1
+#define INR_NAPI_maxpoll	128

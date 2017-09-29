@@ -1,5 +1,5 @@
 /**
-*@file 
+*@file
 *@brief settings and definitions PCI communication
 *@author M.Ulbricht 2015
 **/
@@ -20,11 +20,9 @@ void set_rx_dbg(uint8_t rxdbg);
 uint8_t get_rx_dbg(void);
 uint8_t get_tx_dbg(void);
 
-#define INR_PCI_TX_maxfragments 16	/*<maximum number of segments the hardware supports */
-//#define TX_DBG_mod 0		/*<TX debug mode, if enabled packet is dumped ax TX side */
-//#define RX_DBG_mod 0		/*<RX debug mode, if enabled packet is not handled to NWstack at RX-side */
-#define INR_PCI_FPGA_max_tx_length 1600	/*<number of bytes the FPGA accept in one TX packet */
-#define INR_PCI_tx_descriptor_ring_length 128 /*<number of TDESCs which can be stored in TX-Ring */	//INR_TX_Ring_length
+#define INR_PCI_TX_maxfragments 16  /*<maximum number of segments the hardware supports */
+#define INR_PCI_FPGA_max_tx_length  1600	/*<number of bytes the FPGA accept in one TX packet */
+#define INR_PCI_tx_descriptor_ring_length   128 /*<number of TDESCs which can be stored in TX-Ring */	//INR_TX_Ring_length
 #define INR_PCI_tx_descriptor_length 16/*<length of one TDESC in Bytes*/	//INR_TDESC_length
 
 #define INR_PCI_rx_descriptor_ring_length 4048 /*<number of TDESCs which can be stored in TX-Ring */	//INR_RX_Ring_lengthdia add shape
@@ -49,9 +47,9 @@ uint8_t get_tx_dbg(void);
 
 #define INR_PCI_tx_descriptor_base_address_reg 	0x6000/*<TX ring config register*/	//INR_TX_Ring_address
 #define INR_PCI_tx_descriptor_base_address_reg_h 	0x6004/*<TX ring config register high*/	//INR_TX_Ring_address
-#define INR_PCI_tx_descriptor_tail_reg		0x6018/*<TX ring bottom pointer register*/	//INR_TX_Ring_bottom
-#define INR_PCI_tx_descriptor_head_reg		0x6010/*<TX ring head pointer register*/	//INR_TX_Ring_head
-#define INR_PCI_tx_descriptor_length_reg		0x6008/*<Register for length of descriptorring*/	//INR_TDLEN
+#define INR_PCI_tx_descriptor_tail_reg  0x6018/*<TX ring bottom pointer register*/	//INR_TX_Ring_bottom
+#define INR_PCI_tx_descriptor_head_reg  0x6010/*<TX ring head pointer register*/	//INR_TX_Ring_head
+#define INR_PCI_tx_descriptor_length_reg    0x6008/*<Register for length of descriptorring*/	//INR_TDLEN
 
 #define INR_PCI_rx_descriptor_base_address_reg 	0x1000/*<RX ring config register*/	//INR_RX_Ring_address
 #define INR_PCI_rx_descriptor_base_address_reg_h 	0x1004 /*<RX ring config register high*/	//INR_RX_Ring_address
@@ -67,68 +65,58 @@ uint8_t get_tx_dbg(void);
 */
 struct INR_PCI_tx_descriptor_ring_entry
 {
-  struct sk_buf *skb;
-		   /**<store skb*/
-  uint8_t eop:1;
-	      /**<is last fragment of packet?*/
-  uint8_t paged:1;
-	      /**<is paged fragment?*/
-  uint8_t *data;
-	      /**<address of data*/
-  uint8_t *dma;
-	     /**<address of dma*/
-  uint16_t length;
-		/**<length of data*/
+    struct sk_buf *skb; /**<store skb*/
+    uint8_t eop:1;      /**<is last fragment of packet?*/
+    uint8_t paged:1;    /**<is paged fragment?*/
+    uint8_t *data;      /**<address of data*/
+    uint8_t *dma;      /**<address of dma*/
+    uint16_t length;   /**<length of data*/
 };
+
 //****************************************************************************************************************
 /**
 *RX-descriptor ring entry
 */
 struct INR_PCI_rx_descriptor_ring_entry
 {
-  uint8_t fragmentindex;
-		      /**<dindex of this fragment in the page*/
-  uint64_t data;
-	      /**<data pointer*/
-  uint64_t dma;
-	     /**<dama pointer*/
-  struct page *page;
-		  /**<page start*/
-  uint64_t dma_root;
-  uint64_t offset;
-		/**<ofset of data in page*/
+    uint8_t fragmentindex;/**<dindex of this fragment in the page*/
+    uint64_t data;        /**<data pointer*/
+    uint64_t dma;         /**<dama pointer*/
+    struct page *page;    /**<page start*/
+    uint64_t dma_root;    /**<pointer to page root*/
+    uint64_t offset;	/**<ofset of data in page*/
 };
+
 //****************************************************************************************************************
 /*
 *TX-descriptor entry, see doku
 */
 struct INR_PCI_tx_descriptor
 {
-  uint64_t buffer;/**<data-buffer*/
-  uint16_t length;/**<length of data*/
-  uint8_t CSO;
-  uint8_t CMD;/**<special commsnds: checksum etc.*/
-  uint8_t STA:4;/**<status-bits*/
-  uint8_t Rsvd:4;
-  uint8_t CSS;
-  uint16_t VLAN;/**<VLAN-control*/
+    uint64_t buffer;	/**<data-buffer*/
+    uint16_t length;	/**<length of data*/
+    uint8_t CSO;
+    uint8_t CMD;	/**<special commsnds: checksum etc.*/
+    uint8_t STA:4;	/**<status-bits*/
+    uint8_t Rsvd:4;
+    uint8_t CSS;
+    uint16_t VLAN;	/**<VLAN-control*/
 };
 __attribute__ ((__packed__));
+
 //****************************************************************************************************************
 /*
 *RX-descriptor entry, see doku
 */
 struct INR_PCI_rx_descriptor
 {
-  uint64_t buffer;
-		/**<data-buffer*/
-  uint16_t length;
-		/**<length of data*/
-  uint16_t FragmentCS;/**<fragment checksum*/
-  uint8_t Status;      /**<Status*/
-  uint8_t Errors;      /**<Errors*/
-  uint16_t VLAN;
-  /*<VLAN-control */
+    uint64_t buffer;      	/**<data-buffer*/
+    uint16_t length;      	/**<length of data*/
+    uint16_t FragmentCS;  	/**<fragment checksum*/
+    uint8_t Status;      	/**<Status*/
+    uint8_t Errors;      	/**<Errors*/
+    uint16_t VLAN;       	/*<VLAN-control */
 };
 __attribute__ ((__packed__));
+
 void INR_PCI_tx_unmapper (struct INR_PCI_tx_descriptor_ring_entry *entry);
