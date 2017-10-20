@@ -16,7 +16,7 @@ endef
 define Package/TNbar1/install
 
 	$(INSTALL_DIR) $(1)/usr/sbin/
-	$(INSTALL_CONF) ./files/TNbar1 $(1)/usr/sbin/
+	$(INSTALL_BIN) ./files/TNbar1 $(1)/usr/sbin/
 endef
 
 $(eval $(call BuildPackage,TNbar1)) 
