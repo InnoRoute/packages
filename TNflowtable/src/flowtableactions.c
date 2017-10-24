@@ -719,7 +719,7 @@ HT_EMA_del (struct arguments arguments)
 }
 
 void
-HT_EMA_clear (struct arguments arguments)
+HT_EMA_clear ()
 {
 	verblog printf ("__FUNCTION__ = %s\n", __FUNCTION__);
 	uint32_t i = 0;
@@ -910,7 +910,7 @@ RT_EMA_del (struct arguments arguments)
 @param arguments argumentes from userinterface
 */
 void
-RT_EMA_clear (struct arguments arguments)
+RT_EMA_clear ()
 {
 	verblog printf ("__FUNCTION__ = %s\n", __FUNCTION__);
 	uint16_t i = 0;
@@ -944,40 +944,40 @@ RT_EMA_print (struct arguments arguments)
 			printf ("PRIORITY:0x%x  ", entry->PRIORITY);
 			printf ("ACTION_ID:0x%x  ", entry->ACTION_ID);
 			if (entry->TYPE_ID & (1 << ID_INPORT)) {
-				printf (":0x%x  ", entry->INGRESS_PORT);
+				printf ("INGRESS_PORT:0x%x  ", entry->INGRESS_PORT);
 			}
 			if (entry->TYPE_ID & (1 << ID_MAC_SRC)) {
-				printf (":0x%x  ", entry->MAC_SRC);
+				printf ("MAC_SRC:0x%x  ", entry->MAC_SRC);
 			}
 			if (entry->TYPE_ID & (1 << ID_MAC_DST)) {
-				printf (":0x%x  ", entry->MAC_DST);
+				printf ("MAC_DST:0x%x  ", entry->MAC_DST);
 			}
 			if (entry->TYPE_ID & (1 << ID_ETHERTYPE)) {
-				printf (":0x%x  ", entry->ETHERTYPE);
+				printf ("ETHERTYPE:0x%x  ", entry->ETHERTYPE);
 			}
 			if (entry->TYPE_ID & (1 << ID_VLAN_ID)) {
-				printf (":0x%x  ", entry->VLAN_ID);
+				printf ("VLAN_ID:0x%x  ", entry->VLAN_ID);
 			}
 			if (entry->TYPE_ID & (1 << ID_VLAN_PRIO)) {
-				printf (":0x%x  ", entry->VLAN_PRIO);
+				printf ("VLAN_PRIO:0x%x  ", entry->VLAN_PRIO);
 			}
 			if (entry->TYPE_ID & (1 << ID_IPv4_SRC)) {
-				printf (":0x%x  ", entry->IPv4_SRC);
+				printf ("IPv4_SRC:0x%x  ", entry->IPv4_SRC);
 			}
 			if (entry->TYPE_ID & (1 << ID_IPv4_DST)) {
-				printf (":0x%x  ", entry->IPv4_DST);
+				printf ("IPv4_DST:0x%x  ", entry->IPv4_DST);
 			}
 			if (entry->TYPE_ID & (1 << ID_PROTOCOL)) {
-				printf (":0x%x  ", entry->PROTOCOL);
+				printf ("PROTOCOL:0x%x  ", entry->PROTOCOL);
 			}
 			if (entry->TYPE_ID & (1 << ID_TOS)) {
-				printf (":0x%x  ", entry->TOS);
+				printf ("TOS:0x%x  ", entry->TOS);
 			}
 			if (entry->TYPE_ID & (1 << ID_PORT_SRC)) {
-				printf (":0x%x  ", entry->PORT_SRC);
+				printf ("PORT_SRC:0x%x  ", entry->PORT_SRC);
 			}
 			if (entry->TYPE_ID & (1 << ID_PORT_DST)) {
-				printf (":0x%x  ", entry->PORT_DST);
+				printf ("PORT_DST:0x%x  ", entry->PORT_DST);
 			}
 			printf ("\n");
 		}	else {

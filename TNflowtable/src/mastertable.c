@@ -251,11 +251,48 @@ FC_MT_autotable (struct arguments * arguments)
       HT_EMH_add (arguments); //add to hashtable
     }
     return 0;
-  } else {      //HMA
+  } else {      //EMA
     RT_EMA_add (arguments); //add to table
     HT_EMA_add (arguments); //add to hashtable
+
   }
 }
+
+//************************************************************************************************************************************
+/**
+*sort RT/HT_EMA by priority
+*/
+void FC_MT_apply_priority(){
+verblog printf ("__FUNCTION__ = %s\n", __FUNCTION__);
+	INR_FC_set_HW_write(0);//don't touch hardware
+	HT_EMA_clear();
+	RT_EMA_clear();//clear all, and rearange from MT information
+	INR_FC_set_HW_write(1);//dont touch hardware
+  uint32_t i = 0;
+  uint16_t priority=MAXprio;
+  uint8_t match=0;
+  uint32_t lastmatch=0;
+  while(priority){//do for all priorities
+  	lastmatch=0;
+ // 	do{	
+  		match=0;
+      		for (i = lastmatch; i < MASTERTABLE_length; i++) {
+    			struct arguments *entry = (struct arguments *) INR_MasterT_get_addr (0xffff & i);
+    			if (entry != NULL)if (entry->used&&entry->TableID.EMA_RT)if(entry->PRIORITY==priority){
+    				verblog printf ("sorting match %i\n",i);
+//    				match=1;
+//    				lastmatch=i+1;//nextrun start on next entry
+    				entry->ID=1;
+    				RT_EMA_add (entry); //add to table
+   				HT_EMA_add (entry); //add to hashtable
+    			}    		
+    		}   	
+      	
+//      	}while(match);//do until no matching entry found  
+     priority--;
+  }
+}
+
 
 //************************************************************************************************************************************
 /**
@@ -271,6 +308,7 @@ FC_MasterT_add (struct arguments *arguments)
     arguments->used = 1;
     FC_MT_autotable (arguments);
     memcpy (entry, arguments, sizeof (struct arguments));
+    if(arguments->TableID.EMA_RT)FC_MT_apply_priority();
   } else {
     printf("MasterTabele full");
   }

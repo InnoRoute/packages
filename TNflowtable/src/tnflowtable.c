@@ -356,7 +356,7 @@ main (int argc, char **argv)
         HT_EMA_del (arguments);
         break;
       case 'c':
-        HT_EMA_clear (arguments);
+        HT_EMA_clear ();
         break;
       case 'p':
         HT_EMA_print (arguments);
@@ -423,7 +423,7 @@ main (int argc, char **argv)
         RT_EMA_update (arguments);
         break;
       case 'c':
-        RT_EMA_clear (arguments);
+        RT_EMA_clear ();
         break;
       case 'p':
         RT_EMA_print (arguments);

@@ -11,7 +11,7 @@ define Package/tnflowtable
 	SECTION:=InnoRoute
 	CATEGORY:=InnoRoute
 	TITLE:=Trustnode flowtable config tool
-	DEPENDS:=+libc +argp-standalone
+	DEPENDS:=+libc
 endef
 
 define Build/Prepare

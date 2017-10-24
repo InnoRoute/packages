@@ -24,10 +24,30 @@ uint64_t FCbase_EMH_shadow = 0;
 uint64_t FCbase_EMA = 0;
 uint64_t FCbase_EMA_shadow = 0;
 uint8_t verbose = 0;
+uint8_t touch_HW=1;//this switch allows to disable hardware writng.
+
 
 //************************************************************************************************************************************
 /**
-*int Flowcache
+*set hardware write bit
+*@param value to set
+*/
+void INR_FC_set_HW_write(uint8_t value){
+touch_HW=value;
+}
+
+//************************************************************************************************************************************
+/**
+*set hardware write bit
+*@param value to set
+*/
+uint8_t INR_FC_get_HW_write(){
+return touch_HW;
+}
+
+//************************************************************************************************************************************
+/**
+*init Flowcache
 *@param baseaddr pointer to Flowcache-root
 */
 void
@@ -177,7 +197,7 @@ INR_RuleTable_EMH_clear_entry (uint64_t id)
   } else {  //can't get address
     entry_shadow->VALID_BIT = 0;  //clear entry
   }
-  FCmemcpy (entry, entry_shadow, INR_FC_EMH_RuleTable_entry_length_memcpy); //copy shadow to mmi (wordwise)
+  THW{FCmemcpy (entry, entry_shadow, INR_FC_EMH_RuleTable_entry_length_memcpy);} //copy shadow to mmi (wordwise)
   return 0;
 }
 
@@ -264,7 +284,7 @@ INR_CTable_EMH_clear_entry (uint64_t id)
   } else {  //can't get address
     entry_shadow->VALID_BIT = 0;  //clear entry
   }
-  FCmemcpy (entry, entry_shadow, INR_FC_EMH_CTable_entry_length_memcpy);  //copy shadow to mmi (wordwise)
+  THW{FCmemcpy (entry, entry_shadow, INR_FC_EMH_CTable_entry_length_memcpy);}  //copy shadow to mmi (wordwise)
   return 0;
 }
 
@@ -427,24 +447,26 @@ INR_HashT_EMA_write (union INR_FC_EMA_HashTable_entry entry, uint16_t ID)
   verblog printf ("HashT_EMA id:%i base:0x%lx\n", ID, FCbase_EMA);
   uint64_t addr = FCbase_EMA + INR_FC_EMA_TCAM_base | (0x7f0 & (ID << 4));
   uint32_t *TCAM;
-  TCAM = addr;
-  verblog printf ("writing dinL:0x%x to 0x%lx\n", dinL, addr);
-  *TCAM = dinL;
+  THW{
+  	TCAM = addr;
+  	verblog printf ("writing dinL:0x%x to 0x%lx\n", dinL, addr);
+  	*TCAM = dinL;
 
-  addr = FCbase_EMA + INR_FC_EMA_TCAM_base + 0x4;
-  TCAM = addr;
-  verblog printf ("writing dinH:0x%x to 0x%lx\n", dinH, addr);
-  *TCAM = dinH;
+  	addr = FCbase_EMA + INR_FC_EMA_TCAM_base + 0x4;
+  	TCAM = addr;
+  	verblog printf ("writing dinH:0x%x to 0x%lx\n", dinH, addr);
+  	*TCAM = dinH;
 
-  addr = FCbase_EMA + INR_FC_EMA_TCAM_base + 0x8;
-  TCAM = addr;
-  verblog printf ("writing maskL:0x%x to 0x%lx\n", maskL, addr);
-  *TCAM = maskL;
+  	addr = FCbase_EMA + INR_FC_EMA_TCAM_base + 0x8;
+  	TCAM = addr;
+  	verblog printf ("writing maskL:0x%x to 0x%lx\n", maskL, addr);
+  	*TCAM = maskL;
 
-  addr = FCbase_EMA + INR_FC_EMA_TCAM_base + 0xC;
-  TCAM = addr;
-  verblog printf ("writing maskH:0x%x to 0x%lx\n", maskH, addr);
-  *TCAM = maskH;
+  	addr = FCbase_EMA + INR_FC_EMA_TCAM_base + 0xC;
+  	TCAM = addr;
+  	verblog printf ("writing maskH:0x%x to 0x%lx\n", maskH, addr);
+  	*TCAM = maskH;
+  }
   addr = FCbase_EMA_shadow + INR_FC_EMA_TCAM_base + ID * INR_FC_EMA_TCAM_entry_length;
   union INR_FC_EMA_HashTable_entry *entry2;
   entry2 = addr;
@@ -544,7 +566,7 @@ INR_ActT_clear_entry (uint64_t id)
   }
   entry_shadow->Bad_enable = 0; //clear entry
   entry_shadow->Cut_enable = 0; //clear entry
-  FCmemcpy (entry, entry_shadow, INR_FC_ActT_entry_length); //copy shadow to mmi (wordwise)
+ THW{ FCmemcpy (entry, entry_shadow, INR_FC_ActT_entry_length);} //copy shadow to mmi (wordwise)
   return 0;
 }
 

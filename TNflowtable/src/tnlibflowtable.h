@@ -23,6 +23,8 @@ uint64_t INR_ActT_get_next_free_entry (uint64_t id);
 uint64_t INR_ActT_get_addr (uint64_t id);
 uint8_t INR_ActT_clear_entry (uint64_t id);
 void FCmemcpy(void *dst, const void *src, size_t len);
+uint8_t INR_FC_get_HW_write(void);
+void INR_FC_set_HW_write(uint8_t value);
 
 uint8_t get_verbose(void);
 void set_verbose(uint8_t i);
@@ -61,6 +63,7 @@ uint32_t parseIPV4string(char* ipAddress) ;
 #define  INR_FC_EMA_RuleTable_length  128
 #define  INR_FC_EMA_RuleTable_entry_length  64 //length of entry in byte + stuffbits
 #define  INR_FC_EMA_RuleTable_entry_length_memcpy 36 //length of entry in byte
+#define  THW if(touch_HW)
 
 struct INR_FC_EMH_RULE_TYPE1
 {
