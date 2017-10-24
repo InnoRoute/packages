@@ -3,7 +3,7 @@
 *@brief basic settings and definitions
 *@author M.Ulbricht 2015
 **/
-void INR_LOG_debug (const char *strg, ...);
+//void INR_LOG_debug (const char *strg, ...);
 void INR_LOG_timelog (const char *strg, ...);
 void INR_LOG_timelog_init (void);
 void INR_STATUS_set (uint64_t stat);
@@ -23,6 +23,11 @@ void INR_zerovars(void);
 #define INR_STATUS_RX_RING 128
 #define INR_STATUS_HW_RUNNING 256
 #define INR_STATUS_DRV_INIT_done 512
+#define INR_STATUS_BAR1 1024
 
 #define MSI0_IRQ_STATUS 0x104
 #define IRQ_EOI 0x50
+#define loglevel_err KERN_ERR
+#define loglevel_warn KERN_WARNING
+#define loglevel_info KERN_INFO
+#define INR_LOG_debug printk

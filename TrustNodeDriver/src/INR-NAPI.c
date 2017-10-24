@@ -28,7 +28,7 @@ struct napi_struct INR_NAPI_rx[INR_PCI_rx_descriptor_ring_count];
 void
 INR_NAPI_init (uint8_t index)
 {
-    INR_LOG_debug ("Init NAPI for ring %i\n", index);
+    INR_LOG_debug (loglevel_info"Init NAPI for ring %i\n", index);
 
     switch (index) {
     case 0:

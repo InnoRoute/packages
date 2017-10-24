@@ -31,6 +31,7 @@ static void remove (struct pci_dev *dev);
 */
 static struct pci_device_id ids[] = {
     {PCI_DEVICE (0xAAAA, 0x7024),},
+    {PCI_DEVICE (0x10EE, 0x0000),},
     {0,}
 };
 
@@ -47,13 +48,13 @@ INR_NWDEV_init (void)
     for (i = 0; i < INR_NW_devcount; i++) {
         INR_NW = alloc_netdev (sizeof (struct INR_NW_priv), "TN%d", NET_NAME_UNKNOWN, INR_NW_init);
         if (INR_NW == NULL) {
-            INR_LOG_debug ("Cant alloc NWDEV %i !\n", i);
+            INR_LOG_debug (loglevel_err"Cant alloc NWDEV %i !\n", i);
             return 1;
         } else {
 
             if (0 == register_netdev (INR_NW))
-                INR_LOG_debug ("NWDev %i registerd, flags:%llx ", i, INR_NW->hw_features);
-            INR_LOG_debug ("flags2:%llx\n", INR_NW->hw_features);
+                INR_LOG_debug (loglevel_info"NWDev %i registerd, flags:%llx ", i, INR_NW->hw_features);
+            INR_LOG_debug (loglevel_info"flags2:%llx\n", INR_NW->hw_features);
             set_nwdev (i, INR_NW);
         }
     }
@@ -69,7 +70,7 @@ INR_NWDEV_destroi (void)
 {
     uint8_t i = 0;
     for (i = 0; i < INR_NW_devcount; i++) {
-        INR_LOG_debug ("destroy INRNWDEV %i\n",i);
+        INR_LOG_debug (loglevel_info"destroy INRNWDEV %i\n",i);
         unregister_netdev (get_nwdev(i));
         free_netdev (get_nwdev(i));
     }
@@ -82,9 +83,9 @@ INR_NWDEV_destroi (void)
 static int
 probe (struct pci_dev *dev, const struct pci_device_id *id)
 {
-    printk (KERN_ALERT "moep!\n"); //this is one of the verry important things needed to run the driver :D
+    printk (loglevel_info "moep!\n"); //this is one of the verry important things needed to run the driver :D
     if (probed) {
-        INR_LOG_debug ("driver already loaded... exit\n");
+        INR_LOG_debug (loglevel_err"driver already loaded... exit\n");
         return -1;
     }
     probed++;   //prevent driver from loaded twice
@@ -93,12 +94,12 @@ probe (struct pci_dev *dev, const struct pci_device_id *id)
     INR_zerovars();
     int result;
     INR_LOG_timelog_init ();	//safe timestamp
-    INR_LOG_debug ("Start load module\n");
+    INR_LOG_debug (loglevel_info"Start load module\n");
     if ((result = pci_enable_device (dev)) < 0) {
-        INR_LOG_debug ("device enable fail...\n");
+        INR_LOG_debug (loglevel_err"device enable fail...\n");
         return result;
     } else {
-        INR_LOG_debug ("device enabled\n");
+        INR_LOG_debug (loglevel_info"device enabled\n");
         INR_STATUS_set (INR_STATUS_DEVICE);
     }
     if (0 == INR_NWDEV_init ()) {
@@ -128,8 +129,8 @@ remove (struct pci_dev *dev)
 {
     INR_NWDEV_destroi();
     INR_CTL_remove_proc (dev);
-    INR_LOG_debug ("remove Module\n");
-    INR_LOG_debug ("Reset Logic\n");
+    INR_LOG_debug (loglevel_info"remove Module\n");
+    INR_LOG_debug (loglevel_info"Reset Logic\n");
     INR_remove_drv (dev);
     if(probed){ 
         probed--;

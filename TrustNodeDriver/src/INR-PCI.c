@@ -6,6 +6,7 @@
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/pci.h>
+#include <linux/msi.h>
 #include <linux/init.h>
 #include <linux/interrupt.h>
 #include <linux/delay.h>
@@ -28,9 +29,12 @@ volatile uint8_t TX_DBG_mod=0;		/**< verbose TX messages*/
 volatile uint8_t RX_DBG_mod=0;		/**< verbose RX messages*/
 volatile uint64_t gIrq; 		/**< interrupt id*/
 struct pci_dev *globdev;		/**< global availbele PCI dev structure*/
-void *gBaseVirt = NULL;			/**< pointer for start-address of bar0*/
-uint64_t gBaseHdwr,			/**< start-address of bar0*/
-         gBaseLen; 			/**<legth of bar0*/
+void *gBaseVirt0 = NULL;		/**< pointer for start-address of bar0*/
+void *gBaseVirt1 = NULL;		/**< pointer for start-address of bar1*/
+uint64_t gBaseHdwr0,			/**< start-address of bar0*/
+         gBaseLen0; 			/**<legth of bar0*/
+uint64_t gBaseHdwr1,			/**< start-address of bar1*/
+         gBaseLen1; 			/**<legth of bar1*/
 uint64_t INR_TX_Ring;	      		/**<Address of TX-descriptor ring*/
 uint64_t INR_RX_Ring[INR_PCI_rx_descriptor_ring_count];	      /**<Address of RX-descriptor ring*/
 uint64_t INR_PCI_tx_descriptor_ring[INR_PCI_tx_descriptor_ring_length] = { 0 };/**<Saving the addresses of TX descriptors*/
@@ -126,7 +130,7 @@ void
 INR_PCI_tx_unmapper (struct INR_PCI_tx_descriptor_ring_entry *entry)//currently unused
 {
 
-    INR_LOG_debug ("Unmapper: wr:%i re:%i addr:%x\n", tx_unmap_queue_write_pointer, tx_unmap_queue_read_pointer, entry->dma);
+    INR_LOG_debug (loglevel_warn"Unmapper: wr:%i re:%i addr:%x\n", tx_unmap_queue_write_pointer, tx_unmap_queue_read_pointer, entry->dma);
     memcpy (&tx_descriptor_unmap_queue[tx_unmap_queue_write_pointer], entry, sizeof (entry));	//put tx-descriptor in the queue
 
     if (tx_descriptor_unmap_queue[tx_unmap_queue_read_pointer].dma) {	//if not empty, unmap
@@ -135,7 +139,7 @@ INR_PCI_tx_unmapper (struct INR_PCI_tx_descriptor_ring_entry *entry)//currently 
             kfree_skb (tx_descriptor_unmap_queue[tx_unmap_queue_read_pointer].skb);	//if last fragment of skb->free skb
         if (!tx_descriptor_unmap_queue[tx_unmap_queue_read_pointer].paged)
             kfree (tx_descriptor_unmap_queue[tx_unmap_queue_read_pointer].data);	//if not paged free kmalloc mem
-        INR_LOG_debug ("Unmapper: %i freeed\n", tx_unmap_queue_read_pointer);
+        INR_LOG_debug (loglevel_warn"Unmapper: %i freeed\n", tx_unmap_queue_read_pointer);
     }
 
 
@@ -171,6 +175,7 @@ void set_tx_dbg(uint8_t txdbg)
 {
 
     TX_DBG_mod=txdbg;
+    INR_PCI_disable_error_LED
 }
 
 //*****************************************************************************************************************
@@ -181,6 +186,7 @@ void set_rx_dbg(uint8_t rxdbg)
 {
 
     RX_DBG_mod=rxdbg;
+    INR_PCI_disable_error_LED
 }
 
 //*****************************************************************************************************************
@@ -217,7 +223,8 @@ INR_PCI_rx_descriptor_pool_refill (uint8_t index)
         if (down_trylock (&INR_PCI_rx_pageallocator_sem)) {//ry to get a preallocated page, if not, try self
             INR_PCI_rx_descriptor_pool_root[index] = alloc_page (GFP_ATOMIC);
             if (unlikely (INR_PCI_rx_descriptor_pool_root[index] == NULL)) {
-                INR_LOG_debug ("RX Page alloc faild\n");
+                INR_LOG_debug (loglevel_err"RX Page alloc faild\n");
+                INR_PCI_enable_error_LED
                 return 1;
             }
         }
@@ -231,12 +238,15 @@ INR_PCI_rx_descriptor_pool_refill (uint8_t index)
     else
         INR_PCI_rx_descriptor_pool_root[index] = alloc_page (GFP_ATOMIC);
     if (!INR_PCI_rx_descriptor_pool_root[index]) {
-        INR_LOG_debug ("RX Page alloc faild(noprealloc)\n");
+        INR_LOG_debug (loglevel_err"RX Page alloc faild(noprealloc)\n");
+        INR_PCI_enable_error_LED
         return 1;
     }
     INR_PCI_rx_descriptor_pool_dma_root[index] = dma_map_page (&globdev->dev, INR_PCI_rx_descriptor_pool_root[index], 0, pagesize, DMA_FROM_DEVICE);	//gen new root dma
-    if (dma_mapping_error (&globdev->dev, INR_PCI_rx_descriptor_pool_dma_root[index]))
-        INR_LOG_debug ("RX page mappng error! \n");
+    if (dma_mapping_error (&globdev->dev, INR_PCI_rx_descriptor_pool_dma_root[index])){
+    	INR_PCI_enable_error_LED
+        INR_LOG_debug (loglevel_err"RX page mappng error! \n");
+        }
     rx_descriptor_pool_free[index] = 0;	//reset pool counter
     return 0;
 }
@@ -261,12 +271,18 @@ INR_PCI_get_new_rx_descriptor_ring_entry (uint8_t index)
     tmp_rx_desc->dma = INR_PCI_rx_descriptor_pool_dma_root[index] + tmp_rx_desc->offset;
     tmp_rx_desc->dma_root = INR_PCI_rx_descriptor_pool_dma_root[index];
     tmp_rx_desc->fragmentindex = rx_descriptor_pool_free[index];
-    if (!INR_PCI_rx_descriptor_pool_root[index])
-        INR_LOG_debug ("error: zero rx descriptor pool root\n");
-    if (!page_address (INR_PCI_rx_descriptor_pool_root[index]))
-        INR_LOG_debug ("error: zero page_address (INR_PCI_rx_descriptor_pool_root[index])\n");
-    if (!INR_PCI_rx_descriptor_pool_dma_root[index])
-        INR_LOG_debug ("error: zero INR_PCI_rx_descriptor_pool_dma_root[index]\n");
+    if (!INR_PCI_rx_descriptor_pool_root[index]){
+        INR_LOG_debug (loglevel_err"error: zero rx descriptor pool root\n");
+        INR_PCI_enable_error_LED
+        }
+    if (!page_address (INR_PCI_rx_descriptor_pool_root[index])){
+        INR_LOG_debug (loglevel_err"error: zero page_address (INR_PCI_rx_descriptor_pool_root[index])\n");
+        INR_PCI_enable_error_LED
+        }
+    if (!INR_PCI_rx_descriptor_pool_dma_root[index]){
+        INR_LOG_debug (loglevel_err"error: zero INR_PCI_rx_descriptor_pool_dma_root[index]\n");
+        INR_PCI_enable_error_LED
+        }
     rx_descriptor_pool_free[index] += 1;//incement page usage counter
     return tmp_rx_desc;
 }
@@ -279,7 +295,7 @@ INR_PCI_get_new_rx_descriptor_ring_entry (uint8_t index)
 void
 print_pci_version (uint32_t ver)
 {
-    INR_LOG_debug ("Hardware version:%i  Date:%i.%i\n", 0xff & ver, (0xff00 & ver) >> 8, (0xffff0000 & ver) >> 16);
+    INR_LOG_debug (loglevel_warn"Hardware version:%i  Date:%i.%i\n", 0xff & ver, (0xff00 & ver) >> 8, (0xffff0000 & ver) >> 16);
 
 }
 
@@ -290,7 +306,7 @@ print_pci_version (uint32_t ver)
 void
 INR_PCI_reset ()
 {
-    writel (1 << 26, (gBaseVirt + (4 * 0)));	//reset device
+    writel (1 << 26, (gBaseVirt0 + (4 * 0)));	//reset device
 }
 
 //*****************************************************************************************************************
@@ -315,27 +331,30 @@ INR_PCI_process_rx_descriptor_ring (uint8_t index)
         volatile struct INR_PCI_rx_descriptor *RX_descriptor = INR_PCI_rx_descriptor_ring[INR_PCI_rx_descriptor_current[index]][index];	//get address of descriptor
         dma_sync_single_range_for_cpu (&globdev->dev, data_rx[INR_PCI_rx_descriptor_current[index]][index]->dma_root, data_rx[INR_PCI_rx_descriptor_current[index]][index]->offset, data_size_rx, DMA_FROM_DEVICE);	//sync memory of descriptor to CPU
         if (RX_DBG_mod)
-            INR_LOG_debug ("RX-Descriptor-dump RX_Current:%i DescrBase:0x%x Status:%x Length:%i Index:%i FirstPKG:%i Buffer:%llx DMA:%llx MEM:%llx offset:0x%i page:%llx, fragmentindex:%i\n", INR_PCI_rx_descriptor_current[index], INR_PCI_rx_descriptor_ring[INR_PCI_rx_descriptor_current[index]][index], RX_descriptor->Status, RX_descriptor->length, index, firstpkg[index], RX_descriptor->buffer, data_rx[INR_PCI_rx_descriptor_current[index]][index]->dma, data_rx[INR_PCI_rx_descriptor_current[index]][index]->data, data_rx[INR_PCI_rx_descriptor_current[index]][index]->offset, page_address (data_rx[INR_PCI_rx_descriptor_current[index]][index]->page), data_rx[INR_PCI_rx_descriptor_current[index]][index]->fragmentindex);	//long debug print
+            INR_LOG_debug (loglevel_warn"RX-Descriptor-dump RX_Current:%i DescrBase:0x%x Status:%x Length:%i Index:%i FirstPKG:%i Buffer:%llx DMA:%llx MEM:%llx offset:0x%i page:%llx, fragmentindex:%i\n", INR_PCI_rx_descriptor_current[index], INR_PCI_rx_descriptor_ring[INR_PCI_rx_descriptor_current[index]][index], RX_descriptor->Status, RX_descriptor->length, index, firstpkg[index], RX_descriptor->buffer, data_rx[INR_PCI_rx_descriptor_current[index]][index]->dma, data_rx[INR_PCI_rx_descriptor_current[index]][index]->data, data_rx[INR_PCI_rx_descriptor_current[index]][index]->offset, page_address (data_rx[INR_PCI_rx_descriptor_current[index]][index]->page), data_rx[INR_PCI_rx_descriptor_current[index]][index]->fragmentindex);	//long debug print
         if ((RX_descriptor->Errors & (0x1))) {	//handle descriptor error flag
-            INR_LOG_debug ("error received fragment with error flag\n");
+            INR_LOG_debug (loglevel_err"error received fragment with error flag\n");
             dropmode[index] = 1;
         }
         if ((RX_descriptor->Status & (0x3)) == 0) {	//hand bad status value
-            INR_LOG_debug ("error received fragment with clear dd flag\n");
+            INR_LOG_debug (loglevel_err"error received fragment with clear dd flag\n");
+            INR_PCI_enable_error_LED
             dropmode[index] = 1;
         }
 //##############################FIRST FRAGMENT handling
         if (firstpkg[index]) {	//first fragment of packet
             firstpkg[index] = 0;
             if (RX_descriptor->length < ETH_HLEN) {	//handle to short framents
-                INR_LOG_debug ("error received to short first fragment\n");
+                INR_LOG_debug (loglevel_err"error received to short first fragment\n");
+                INR_PCI_enable_error_LED
                 dropmode[index] = 1;
                 return 0;
             }
             if (zerocopy_rx) {	//if zerocopy alloc small SKB and copy just first part
                 rx_skb[index] = netdev_alloc_skb (get_nwdev (index), ETH_HLEN + 2);
                 if (!rx_skb[index]) {
-                    INR_LOG_debug ("Cant alloc RX SKB\n");
+                    INR_LOG_debug (loglevel_err"Cant alloc RX SKB\n");
+                    INR_PCI_enable_error_LED
                     dropmode[index] = 1;
                     return 0;
                 }
@@ -348,7 +367,8 @@ INR_PCI_process_rx_descriptor_ring (uint8_t index)
             else {			//if no zerocopy alloc big skb and coppy whole fragment into
                 rx_skb[index] = netdev_alloc_skb (get_nwdev (index), 1800 + 2);
                 if (!rx_skb[index]) {
-                    INR_LOG_debug ("Cant alloc RX SKB\n");
+                    INR_LOG_debug (loglevel_err"Cant alloc RX SKB\n");
+                    INR_PCI_enable_error_LED
                     dropmode[index] = 1;
                     return 0;
                 }
@@ -371,12 +391,18 @@ INR_PCI_process_rx_descriptor_ring (uint8_t index)
 //##############################OTHER FRAGMENT handling
         else {			//some other fragment of packet
             if (zerocopy_rx) {
-                if (!rx_skb[index])
-                    INR_LOG_debug ("rx skb nullpointer!\n");
-                if (!data_rx[INR_PCI_rx_descriptor_current[index]][index]->page)
-                    INR_LOG_debug ("rx page nullpointer!\n");
-                if (!RX_descriptor->length)
-                    INR_LOG_debug ("rx length nullpointer!\n");
+                if (!rx_skb[index]){
+                    INR_LOG_debug (loglevel_err"rx skb nullpointer!\n");
+                    INR_PCI_enable_error_LED
+                    }
+                if (!data_rx[INR_PCI_rx_descriptor_current[index]][index]->page){
+                    INR_LOG_debug (loglevel_err"rx page nullpointer!\n");
+                    INR_PCI_enable_error_LED
+                    }
+                if (!RX_descriptor->length){
+                    INR_LOG_debug (loglevel_err"rx length nullpointer!\n");
+                    INR_PCI_enable_error_LED
+                    }
 
                 if (data_rx[INR_PCI_rx_descriptor_current[index]][index]->fragmentindex == 0) {	//fragment are start of new page
                     skb_add_rx_frag (rx_skb[index], skb_shinfo (rx_skb[index])->nr_frags, data_rx[INR_PCI_rx_descriptor_current[index]][index]->page,
@@ -403,7 +429,7 @@ INR_PCI_process_rx_descriptor_ring (uint8_t index)
         if (RX_DBG_mod) {		//debug output
             uint8_t *tmpdata = data_rx[INR_PCI_rx_descriptor_current[index]][index]->data;
             uint16_t tmp;
-            INR_LOG_debug ("RX skb skb-len:%i offset:%i len:%i page:%llx ring:%i\n", rx_skb[index]->len,
+            INR_LOG_debug (loglevel_warn"RX skb skb-len:%i offset:%i len:%i page:%llx ring:%i\n", rx_skb[index]->len,
                            data_rx[INR_PCI_rx_descriptor_current[index]][index]->offset, RX_descriptor->length,
                            data_rx[INR_PCI_rx_descriptor_current[index]][index]->data, index);
             printk ("RXdump:");
@@ -435,7 +461,7 @@ INR_PCI_process_rx_descriptor_ring (uint8_t index)
                     if (rx_skb[index]->dev->flags & IFF_UP)	//check if interface is up
                         if (NET_RX_DROP == netif_receive_skb (rx_skb[index])) {
                             if (RX_DBG_mod)
-                                INR_LOG_debug ("PKT dropped RX :/\n");
+                                INR_LOG_debug (loglevel_err"PKT dropped RX :/\n");
                             priv->stats.rx_dropped++;
                             //kfree_skb(rx_skb[index]);//free skb because nw-stack don''t do this now ;)
                         }
@@ -450,7 +476,8 @@ INR_PCI_process_rx_descriptor_ring (uint8_t index)
             kfree (data_rx[INR_PCI_rx_descriptor_current[index]][index]);	//free descriptor
         INR_PCI_alloc_new_rx_skb (INR_PCI_rx_descriptor_current[index], index);	//alloc new skb
         if (!data_rx[INR_PCI_rx_descriptor_current[index]][index]) {
-            INR_LOG_debug ("error pci alloc zeropointer, rxprocess ring:%i\n", index);
+            INR_LOG_debug (loglevel_err"error pci alloc zeropointer, rxprocess ring:%i\n", index);
+            INR_PCI_enable_error_LED
             return 0;
         }
         RX_descriptor->buffer = data_rx[INR_PCI_rx_descriptor_current[index]][index]->dma;	// save memory address in descriptor
@@ -485,9 +512,9 @@ exit_rxloop:
 static irqreturn_t
 XPCIe_IRQHandler (int irq, void *dev_id, struct pt_regs *regs)
 {
-    uint64_t intcause = 0xffff & 0xffff;	//INR_PCI_BAR0_read(INR_PCI_interrupt_cause_reg); //not implemented yet :/ -> read all rings
-    if (RX_DBG_mod)INR_LOG_debug("Int cause:%lx\n",INR_PCI_BAR0_read(INR_PCI_interrupt_cause_reg));
-    INR_PCI_BAR0_write (1, INR_PCI_interrupt_cause_reg); //reset inte couse register
+    uint64_t intcause = 0xffff;//INR_PCI_BAR0_read(INR_PCI_interrupt_cause_reg); //not implemented yet :/ -> read all rings
+    if (RX_DBG_mod)INR_LOG_debug(loglevel_warn"Int cause:0x%lx\n",INR_PCI_BAR0_read(INR_PCI_interrupt_cause_reg));
+   
     uint8_t i = 0;
     for (i = 0; i < INR_PCI_rx_descriptor_ring_count; i++)
         if ((get_nwdev (i)->flags) & IFF_UP)
@@ -498,6 +525,21 @@ XPCIe_IRQHandler (int irq, void *dev_id, struct pt_regs *regs)
                 else
                     INR_PCI_process_rx_descriptor_ring (i); //handle descriptor ring self if no NAPI used
             }
+    if(intcause&(1<<16)){
+    	if (RX_DBG_mod){
+    		INR_LOG_debug(loglevel_warn"MMI interrupt\n");
+    	}
+    }
+    if(intcause&(1<<17)){
+    	if (TX_DBG_mod){
+    		INR_LOG_debug(loglevel_warn"TX interrupt\n");
+    	}
+    }
+    if(intcause>=(1<<18)){
+    	if (RX_DBG_mod)INR_LOG_debug(loglevel_warn"unknown Interrupt\n");
+    	if (RX_DBG_mod)INR_PCI_enable_error_LED
+    } 
+    //INR_PCI_BAR0_write(intcause,INR_PCI_interrupt_cause_reg);//writing back int register
     return IRQ_HANDLED;
 }
 
@@ -509,23 +551,25 @@ XPCIe_IRQHandler (int irq, void *dev_id, struct pt_regs *regs)
 int
 INR_int_enable (struct pci_dev *dev)
 {
-    INR_LOG_debug ("ISR Setup..starting\n");
-    int intcount = pci_enable_msi_range (dev, 1, 255);
-    INR_LOG_debug ("ISR range requested..\n");
+    INR_LOG_debug (loglevel_info"ISR Setup..starting\n");
+    int intcount = pci_enable_msi_range (dev, 1, 32);
+    INR_LOG_debug (loglevel_info"theoretical int count:%i\n",pci_msi_vec_count(dev));
+//    int intcount = pci_alloc_irq_vectors(dev,1,255,PCI_IRQ_ALL_TYPES);
+    INR_LOG_debug (loglevel_info"ISR range requested..\n");
     if (intcount > 0) {
         INR_STATUS_set (INR_STATUS_MSI);
-        INR_LOG_debug ("%i MSIs enabled\n", intcount);	//enable MSI
+        INR_LOG_debug (loglevel_info"%i MSIs enabled\n", intcount);	//enable MSI
         gIrq = dev->irq;		//get irq from device
-        INR_LOG_debug (" Init: Device IRQ: %lli\n", gIrq);
-        INR_LOG_debug ("ISR Setup..\n");
+        INR_LOG_debug (loglevel_info" Init: Device IRQ: %lli\n", gIrq);
+        INR_LOG_debug (loglevel_info"ISR Setup..\n");
         if (0 > request_irq (gIrq, XPCIe_IRQHandler, 0, "INRBusmaster", dev))	//SA_INTERRUPT
         {
-            INR_LOG_debug ("Init: Unable to allocate IRQ\n");
+            INR_LOG_debug (loglevel_info"Init: Unable to allocate IRQ\n");
             return (1);
         }
     }
     else
-        INR_LOG_debug ("MSI error\n");
+        INR_LOG_debug (loglevel_err"MSI error\n");
 }
 //*****************************************************************************************************************
 /**
@@ -547,29 +591,29 @@ INR_PCI_alloc_new_rx_skb (uint16_t current_descriptor, uint16_t ringindex)
 void
 INR_RX_RING_init (struct pci_dev *dev, uint8_t index)
 {
-    INR_LOG_debug ("Init RX-Ring %i\n", index);
+    INR_LOG_debug (loglevel_info"Init RX-Ring %i\n", index);
     INR_PCI_rx_descriptor_base[index] = pci_alloc_consistent (dev, INR_PCI_rx_descriptor_ring_length * INR_PCI_rx_descriptor_length, &INR_RX_Ring[index]);	//allocate TX-Ring in DMA
-    INR_LOG_debug ("RX-Ring: cpu_adress:0x%llx  dma-adress:0x%llx\n", INR_PCI_rx_descriptor_base[index], INR_RX_Ring[index]);
+    INR_LOG_debug (loglevel_info"RX-Ring: cpu_adress:0x%llx  dma-adress:0x%llx\n", INR_PCI_rx_descriptor_base[index], INR_RX_Ring[index]);
     uint32_t tmpaddr_h, tmpaddr_l;
     tmpaddr_l = INR_RX_Ring[index] & 0xffffffff;
     tmpaddr_h = (INR_RX_Ring[index] >> 32) & 0xffffffff;
-    INR_LOG_debug ("addh:%x addrl:%x\n", tmpaddr_h, tmpaddr_l);
+    INR_LOG_debug (loglevel_info"addh:%x addrl:%x\n", tmpaddr_h, tmpaddr_l);
     if (!INR_PCI_rx_descriptor_base[index])
-        INR_LOG_debug ("error cant alloc rx-ring %i\n", index);
+        INR_LOG_debug (loglevel_info"error cant alloc rx-ring %i\n", index);
     INR_STATUS_set (INR_STATUS_RX_RING);
     INR_PCI_BAR0_write (0, INR_PCI_rx_descriptor_tail_reg + (64 * index));	//set bottom-pointer =0
     INR_PCI_BAR0_write64 (INR_RX_Ring[index], INR_PCI_rx_descriptor_base_address_reg + (64 * index));
-    INR_LOG_debug ("write RX_Ring_address %llx to 0x%llx\n",INR_PCI_BAR0_read64 (INR_PCI_rx_descriptor_base_address_reg + (64 * index)), INR_PCI_rx_descriptor_base_address_reg + (64 * index));
+    INR_LOG_debug (loglevel_info"write RX_Ring_address %llx to 0x%llx\n",INR_PCI_BAR0_read64 (INR_PCI_rx_descriptor_base_address_reg + (64 * index)), INR_PCI_rx_descriptor_base_address_reg + (64 * index));
     uint64_t i = 0;
     INR_PCI_rx_descriptor_ring[0][index] = INR_PCI_rx_descriptor_base[index];
     for (i = 1; i < INR_PCI_rx_descriptor_ring_length; i++) {	//fill descriptor-ring with dma-addresses
         INR_PCI_rx_descriptor_ring[i][index] = INR_PCI_rx_descriptor_ring[i - 1][index] + INR_PCI_rx_descriptor_length;
     }
-    INR_LOG_debug ("alloc RX-SKBs and fill them width descriptors\n");
+    INR_LOG_debug (loglevel_info"alloc RX-SKBs and fill them width descriptors\n");
     for (i = 0; i < INR_PCI_rx_descriptor_ring_length; i++) {
         INR_PCI_alloc_new_rx_skb (i, index);	//alloc skb and map dma
         if (!data_rx[i][index]) {
-            INR_LOG_debug ("error pci alloc zeropointer\n");
+            INR_LOG_debug (loglevel_err"error pci alloc zeropointer\n");
             return 0;
         }
         struct INR_PCI_rx_descriptor *RX_descriptor = INR_PCI_rx_descriptor_ring[i][index];
@@ -589,7 +633,7 @@ void
 INR_PCI_ringtailtest (void *nix)
 {
     DECLARE_WAITQUEUE (wait3, current);
-    INR_LOG_debug ("reading RDT_0 and RDT_1...\n");
+    INR_LOG_debug (loglevel_info"reading RDT_0 and RDT_1...\n");
     allow_signal (SIGKILL);
     add_wait_queue (&INR_tailtest, &wait3);
     while (1) {
@@ -597,9 +641,9 @@ INR_PCI_ringtailtest (void *nix)
         if (signal_pending (current))
             break;			//exit on thermination
         if (INR_PCI_BAR0_read (INR_PCI_rx_descriptor_tail_reg) % INR_PCI_rx_descriptor_length)
-            INR_LOG_debug ("Error: RDT_0 is %x :/\n", INR_PCI_BAR0_read (INR_PCI_rx_descriptor_tail_reg));
+            INR_LOG_debug (loglevel_err"Error: RDT_0 is %x :/\n", INR_PCI_BAR0_read (INR_PCI_rx_descriptor_tail_reg));
         if (INR_PCI_BAR0_read (INR_PCI_rx_descriptor_tail_reg + 64) % INR_PCI_rx_descriptor_length)
-            INR_LOG_debug ("Error: RDT_1 is %x :/\n", INR_PCI_BAR0_read (INR_PCI_rx_descriptor_tail_reg + 64));
+            INR_LOG_debug (loglevel_err"Error: RDT_1 is %x :/\n", INR_PCI_BAR0_read (INR_PCI_rx_descriptor_tail_reg + 64));
     }
     remove_wait_queue (&INR_tailtest, &wait3);
 }
@@ -623,7 +667,7 @@ INR_PCI_rx_pageallocator (void *nix)// contains empirical thesholds..but it work
             down (&INR_PCI_rx_pageallocator_sem);
             //INR_LOG_debug("Pageallocator\n");
             if (page_prealloc_current < (INR_PCI_page_prealloc_count / 4)) {
-                INR_LOG_debug ("Refill all pages\n");
+                INR_LOG_debug (loglevel_info"Refill all pages\n");
                 while (page_prealloc_current < (INR_PCI_page_prealloc_count - 1)) {
                     set_current_state (TASK_UNINTERRUPTIBLE);
                     INR_PCI_rx_preallocated_page[page_prealloc_current++] = alloc_page (GFP_ATOMIC);	//if less then half fill whole buffer
@@ -660,7 +704,7 @@ INR_TX_unmap_d (void *nix) //deactivated
     allow_signal (SIGKILL);
     add_wait_queue (&INR_PCI_TX_unmapd_waittingqueu, &wait);
     while (1) {
-        INR_LOG_debug ("möp!\n");
+        INR_LOG_debug (loglevel_info"möp!\n");
         set_current_state (TASK_INTERRUPTIBLE);
         schedule ();
         if (signal_pending (current))
@@ -677,7 +721,7 @@ INR_TX_unmap_d (void *nix) //deactivated
             struct INR_PCI_tx_descriptor *TX_descriptor = INR_PCI_tx_descriptor_ring[INR_PCI_tx_descriptor_unmap_current];	//create temp. TDESC-structure
             if ((TX_descriptor->STA & 0x1) == 0)	//look for DD-Bit
             {
-                INR_LOG_debug ("Unmapd-error descriptor not free\n");   //descriptor is not free, abort
+                INR_LOG_debug (loglevel_err"Unmapd-error descriptor not free\n");   //descriptor is not free, abort
             }
             else if (TX_descriptor->buffer) {	//if there is an address stored, first unmap before override
                 dma_unmap_single (&globdev->dev, TX_descriptor->buffer, TX_descriptor->length, DMA_TO_DEVICE);	//unmap DMA
@@ -698,22 +742,22 @@ INR_TX_unmap_d (void *nix) //deactivated
 void
 INR_TX_RING_init (struct pci_dev *dev)
 {
-    INR_LOG_debug ("Init TX-Ring\n");
+    INR_LOG_debug (loglevel_info"Init TX-Ring\n");
     INR_PCI_tx_descriptor_base = pci_alloc_consistent (dev, INR_PCI_tx_descriptor_ring_length * INR_PCI_tx_descriptor_length, &INR_TX_Ring);	//allocate TX-Ring in DMA
-    INR_LOG_debug ("TX-Ring: cpu_adress:0x%llx  dma-adress:0x%llx\n", INR_PCI_tx_descriptor_base, INR_TX_Ring);
+    INR_LOG_debug (loglevel_info"TX-Ring: cpu_adress:0x%llx  dma-adress:0x%llx\n", INR_PCI_tx_descriptor_base, INR_TX_Ring);
     if (!INR_PCI_tx_descriptor_base)
-        INR_LOG_debug ("error cant alloc tx-ring\n");
+        INR_LOG_debug (loglevel_err"error cant alloc tx-ring\n");
     INR_STATUS_set (INR_STATUS_TX_RING);
     INR_PCI_BAR0_write (0, INR_PCI_tx_descriptor_tail_reg);	//set bottom-pointer =0
-    INR_LOG_debug ("write TX_Ring_bottom %i to 0x%x\n", INR_PCI_BAR0_read (INR_PCI_tx_descriptor_tail_reg), INR_PCI_tx_descriptor_tail_reg);
+    INR_LOG_debug (loglevel_info"write TX_Ring_bottom %i to 0x%x\n", INR_PCI_BAR0_read (INR_PCI_tx_descriptor_tail_reg), INR_PCI_tx_descriptor_tail_reg);
     INR_PCI_BAR0_write (INR_PCI_tx_descriptor_length * INR_PCI_tx_descriptor_ring_length, INR_PCI_tx_descriptor_length_reg);	//write length of descriptorring
-    INR_LOG_debug ("write TX_Ring_length %i to 0x%x\n", INR_PCI_BAR0_read (INR_PCI_tx_descriptor_length_reg), INR_PCI_tx_descriptor_length_reg);
+    INR_LOG_debug (loglevel_info"write TX_Ring_length %i to 0x%x\n", INR_PCI_BAR0_read (INR_PCI_tx_descriptor_length_reg), INR_PCI_tx_descriptor_length_reg);
     INR_PCI_BAR0_write (INR_TX_Ring & 0xffffffff, INR_PCI_tx_descriptor_base_address_reg);	//write TX-Ring-address to bar0
     INR_PCI_BAR0_write (INR_TX_Ring >> 32, INR_PCI_tx_descriptor_base_address_reg_h);	//write TX-Ring-address to bar0
-    INR_LOG_debug ("write TX_Ring_address %x to 0x%llx\n", (((uint64_t) INR_PCI_tx_descriptor_base_address_reg_h) << 32)
+    INR_LOG_debug (loglevel_info"write TX_Ring_address %x to 0x%llx\n", (((uint64_t) INR_PCI_tx_descriptor_base_address_reg_h) << 32)
                    | INR_PCI_BAR0_read (INR_PCI_tx_descriptor_base_address_reg), INR_PCI_tx_descriptor_base_address_reg);
     uint64_t i = 0;
-    INR_LOG_debug ("fill ring with addresses\n");
+    INR_LOG_debug (loglevel_info"fill ring with addresses\n");
     INR_PCI_tx_descriptor_ring[0] = INR_PCI_tx_descriptor_base;
     for (i = 1; i < INR_PCI_tx_descriptor_ring_length; i++) {	//fill descriptor-ring with dma-addresses
         INR_PCI_tx_descriptor_ring[i] = INR_PCI_tx_descriptor_ring[i - 1] + INR_PCI_tx_descriptor_length;
@@ -738,14 +782,14 @@ void
 INR_PRINT_DESC_status (struct pci_dev *dev, uint64_t id)
 {
     struct INR_PCI_tx_descriptor *TX_descriptor = INR_PCI_tx_descriptor_ring[id];	//create temp. TDESC-structure
-    INR_LOG_debug ("Descriptor %i: Buffer:0x%x\n", id, TX_descriptor->buffer);
-    INR_LOG_debug ("  Datalength:0x%x\n", TX_descriptor->length);
-    INR_LOG_debug ("  CSO:0x%x\n", TX_descriptor->CSO);
-    INR_LOG_debug ("  CMD:0x%x\n", TX_descriptor->CMD);
-    INR_LOG_debug ("  STA:0x%x\n", TX_descriptor->STA);
-    INR_LOG_debug ("  Rsvd:0x%x\n", TX_descriptor->Rsvd);
-    INR_LOG_debug ("  CSS:0x%x\n", TX_descriptor->CSS);
-    INR_LOG_debug ("  VLAN:0x%x\n", TX_descriptor->VLAN);
+    INR_LOG_debug (loglevel_info"Descriptor %i: Buffer:0x%x\n", id, TX_descriptor->buffer);
+    INR_LOG_debug (loglevel_info"  Datalength:0x%x\n", TX_descriptor->length);
+    INR_LOG_debug (loglevel_info"  CSO:0x%x\n", TX_descriptor->CSO);
+    INR_LOG_debug (loglevel_info"  CMD:0x%x\n", TX_descriptor->CMD);
+    INR_LOG_debug (loglevel_info"  STA:0x%x\n", TX_descriptor->STA);
+    INR_LOG_debug (loglevel_info"  Rsvd:0x%x\n", TX_descriptor->Rsvd);
+    INR_LOG_debug (loglevel_info"  CSS:0x%x\n", TX_descriptor->CSS);
+    INR_LOG_debug (loglevel_info"  VLAN:0x%x\n", TX_descriptor->VLAN);
 }
 
 //*****************************************************************************************************************
@@ -757,7 +801,7 @@ void
 INR_UNMAP_all (struct pci_dev *dev)
 {
     uint64_t i = 0;
-    INR_LOG_debug ("unmap all descriptors\n");
+    INR_LOG_debug (loglevel_info"unmap all descriptors\n");
     for (i = 0; i < INR_PCI_tx_descriptor_ring_length; i++) {
         struct INR_PCI_tx_descriptor *TX_descriptor = INR_PCI_tx_descriptor_ring[i];	//create temp. TDESC-structure
         if (TX_descriptor->buffer) {	//if there is an address stored, first unmap before override
@@ -824,7 +868,8 @@ INR_TX_push (struct sk_buff *skb, uint8_t * data, uint16_t datalength, uint8_t e
         while (tx_head_backup != head) {
             volatile struct INR_PCI_tx_descriptor *TX_descriptor_headbackup = INR_PCI_tx_descriptor_ring[tx_head_backup];
             if (!TX_descriptor_headbackup->STA) {
-                INR_LOG_debug ("error: found unprocessed descriptor: tail:%i, head:%i, position:%i, headbackup:%i\n", tail, head, tx_head_backup, tmp66);
+                INR_LOG_debug (loglevel_err"error: found unprocessed descriptor: tail:%i, head:%i, position:%i, headbackup:%i\n", tail, head, tx_head_backup, tmp66);
+                INR_PCI_enable_error_LED
                 error = 1;
             }
             if (tx_head_backup == (INR_PCI_tx_descriptor_ring_length - 1)) {
@@ -838,10 +883,10 @@ INR_TX_push (struct sk_buff *skb, uint8_t * data, uint16_t datalength, uint8_t e
     tx_head_backup = head;
     if (error) {//dump ring, if error spotted
         uint32_t k = 0;
-        printk ("dumping ring:\n");
+        printk (loglevel_info"dumping ring:\n");
         while (k < INR_PCI_tx_descriptor_ring_length) {
             volatile struct INR_PCI_tx_descriptor *TX_descriptor_tmp = INR_PCI_tx_descriptor_ring[k];
-            INR_LOG_debug ("id:%ibuffer:0x%x, len:%i cso:0x%x, cmd:0x%x, sta:0x%x, rsvd:0x%x, css:0x%x, vlan:0x%x\n", k, TX_descriptor_tmp->buffer,
+            INR_LOG_debug (loglevel_info"id:%ibuffer:0x%x, len:%i cso:0x%x, cmd:0x%x, sta:0x%x, rsvd:0x%x, css:0x%x, vlan:0x%x\n", k, TX_descriptor_tmp->buffer,
                            TX_descriptor_tmp->length, TX_descriptor_tmp->CSO, TX_descriptor_tmp->CMD, TX_descriptor_tmp->STA, TX_descriptor_tmp->Rsvd,
                            TX_descriptor_tmp->CSS, TX_descriptor_tmp->VLAN);
             k++;
@@ -852,13 +897,15 @@ INR_TX_push (struct sk_buff *skb, uint8_t * data, uint16_t datalength, uint8_t e
         INR_PCI_BAR0_write ((head << 16) | (0xffff & tail), 0x7004);
     }
     uint64_t dma_addr = dma_map_single (&globdev->dev, data, datalength, DMA_TO_DEVICE);	//map packet  to DMA
-    if (dma_mapping_error (&globdev->dev, dma_addr))
-        INR_LOG_debug ("TX dma mappng error! current:%i \n", INR_PCI_tx_descriptor_current);
+    if (dma_mapping_error (&globdev->dev, dma_addr)){
+        INR_LOG_debug (loglevel_err"TX dma mappng error! current:%i \n", INR_PCI_tx_descriptor_current);
+        INR_PCI_enable_error_LED
+        }
     dma_sync_single_for_device (&globdev->dev, dma_addr, datalength, DMA_TO_DEVICE);
     if (TX_DBG_mod) {//dump packet content
         uint16_t tmp;
-        INR_LOG_debug ("TX-packet len:%i eop:%i port:%i ll:%i\n", datalength, eof, port,ll);
-        printk ("TXdump:");
+        INR_LOG_debug (loglevel_info"TX-packet len:%i eop:%i port:%i ll:%i\n", datalength, eof, port,ll);
+        printk (loglevel_info"TXdump:");
         for (tmp = 0; tmp < datalength; tmp++) {
             if ((tmp % 40) == 0)
                 printk ("\n");
@@ -914,7 +961,7 @@ INR_TX_push (struct sk_buff *skb, uint8_t * data, uint16_t datalength, uint8_t e
 void
 INR_PROBE_dma (struct pci_dev *dev)
 {
-    INR_LOG_debug ("probing DMA_BIT_MASK\n");
+    INR_LOG_debug (loglevel_info"probing DMA_BIT_MASK\n");
     uint64_t j = 64;
     for (j = 64; j > 0; j--) {
         INR_LOG_debug ("%i ", j);
@@ -922,32 +969,32 @@ INR_PROBE_dma (struct pci_dev *dev)
             break;
     }
     if (j)
-        INR_LOG_debug ("set dma-mask to %i\n", j);
+        INR_LOG_debug (loglevel_info"set dma-mask to %i\n", j);
     else
-        INR_LOG_debug ("fail to set DMA-Mask!\n");
+        INR_LOG_debug (loglevel_err"fail to set DMA-Mask!\n");
 
-    INR_LOG_debug ("probing DMA_BIT_MASK\n");
+    INR_LOG_debug (loglevel_info"probing DMA_BIT_MASK\n");
 
     for (j = 64; j > 0; j--) {
-        INR_LOG_debug ("%i ", j);
+        INR_LOG_debug (loglevel_info"%i ", j);
         if (0 == dma_set_coherent_mask (&dev->dev, DMA_BIT_MASK (j)))
             break;
     }
     if (j)
-        INR_LOG_debug ("dma_set_coherent_mask to %i\n", j);
+        INR_LOG_debug (loglevel_info"dma_set_coherent_mask to %i\n", j);
     else
-        INR_LOG_debug ("fail to set DMA_coherent-Mask!\n");
+        INR_LOG_debug (loglevel_err"fail to set DMA_coherent-Mask!\n");
 
-    INR_LOG_debug ("probing DMA_BIT_MASK\n");
+    INR_LOG_debug (loglevel_info"probing DMA_BIT_MASK\n");
     for (j = 64; j > 0; j--) {
         INR_LOG_debug ("%i ", j);
         if (0 == pci_set_dma_mask (dev, DMA_BIT_MASK (j)))
             break;
     }
     if (j)
-        INR_LOG_debug ("set pci_set_dma_mask to %i\n", j);
+        INR_LOG_debug (loglevel_info"set pci_set_dma_mask to %i\n", j);
     else
-        INR_LOG_debug ("fail to set PCI-DMA-Mask!\n");
+        INR_LOG_debug (loglevel_err"fail to set PCI-DMA-Mask!\n");
 }
 
 //*****************************************************************************************************************
@@ -962,7 +1009,9 @@ INR_remove_drv (struct pci_dev *dev)
     if (INR_STATUS_get (INR_STATUS_BUSMASTER))
         pci_clear_master (dev);	//enable Master
     if (INR_STATUS_get (INR_STATUS_BAR0))
-        release_mem_region (gBaseHdwr, REGISTER_SIZE);	//release bar0
+        release_mem_region (gBaseHdwr0, REGISTER_SIZE);	//release bar0
+    if (INR_STATUS_get (INR_STATUS_BAR1))
+        release_mem_region (gBaseHdwr1, REGISTER_SIZE);	//release bar1
     if (INR_STATUS_get (INR_STATUS_TX_RING))
         pci_free_consistent (dev, INR_PCI_tx_descriptor_ring_length * INR_PCI_tx_descriptor_length, INR_PCI_tx_descriptor_base, INR_TX_Ring);	//release DMA-mem
     if (INR_STATUS_get (INR_STATUS_INT1))
@@ -971,7 +1020,7 @@ INR_remove_drv (struct pci_dev *dev)
         pci_disable_msi (dev);
     if (INR_STATUS_get (INR_STATUS_DEVICE))
         pci_disable_device (dev);	//disable device
-    INR_LOG_debug ("device disabled\n\n");
+    INR_LOG_debug (loglevel_info"device disabled\n\n");
 }
 
 //*****************************************************************************************************************
@@ -984,47 +1033,61 @@ INR_init_drv (struct pci_dev *dev)
 {
     globdev = dev;
     pagesize = PAGE_SIZE;		//getpagesize();//get pagesze
-    INR_LOG_debug ("Pagesize:%lli\n", pagesize);
-    INR_LOG_debug ("Zerocopy: TX:%i RX:%i\n", zerocopy_tx, zerocopy_rx);
-    INR_LOG_debug ("DEBUGMOD: TX:%i RX:%i\n", TX_DBG_mod, RX_DBG_mod);
-    INR_LOG_debug ("AutorepeatonTXdrop: %i\n", INR_NW_repeatonbusy);
+    INR_LOG_debug (loglevel_info"Pagesize:%lli\n", pagesize);
+    INR_LOG_debug (loglevel_info"Zerocopy: TX:%i RX:%i\n", zerocopy_tx, zerocopy_rx);
+    INR_LOG_debug (loglevel_info"DEBUGMOD: TX:%i RX:%i\n", TX_DBG_mod, RX_DBG_mod);
+    INR_LOG_debug (loglevel_info"AutorepeatonTXdrop: %i\n", INR_NW_repeatonbusy);
     rx_descriptor_pool_length = (pagesize / data_size_rx);	//count of descriptor in one page , pool is empty at start
     uint64_t i = 0;
     for (i = 0; i < INR_PCI_rx_descriptor_ring_count; i++)
         rx_descriptor_pool_free[i] = rx_descriptor_pool_length;
-    gBaseHdwr = pci_resource_start (dev, 0);
+    gBaseHdwr0 = pci_resource_start (dev, 0);
     // Print Base Address to kernel log
-    INR_LOG_debug ("Init: Base hw val %x\n", (unsigned int) gBaseHdwr);   // Get the Base Address Length
-    gBaseLen = pci_resource_len (dev, 0);    // Print the Base Address Length to Kernel Log
-    INR_LOG_debug ("Init: Base hw len %i\n", (unsigned int) gBaseLen);
-    gBaseVirt = pci_iomap (dev, 0, 0);    //gBaseVirt = ioremap (gBaseHdwr, gBaseLen);  //prepare bar0 for access
-    INR_LOG_debug ("Init: Bar0 mapped\n");
-    if (!gBaseVirt) {
-        INR_LOG_debug ("Init: Could not remap memory.\n");
+    INR_LOG_debug (loglevel_info"Init: Base hw val %x\n", (unsigned int) gBaseHdwr0);   // Get the Base Address Length
+    gBaseLen0 = pci_resource_len (dev, 0);    // Print the Base Address Length to Kernel Log
+    INR_LOG_debug (loglevel_info"Init: Base hw len %i\n", (unsigned int) gBaseLen0);
+    gBaseVirt0 = pci_iomap (dev, 0, 0);    //gBaseVirt = ioremap (gBaseHdwr, gBaseLen);  //prepare bar0 for access
+    INR_LOG_debug (loglevel_info"Init: Bar0 mapped\n");
+    if (!gBaseVirt0) {
+        INR_LOG_debug (loglevel_err"Init: Could not remap memory.\n");
         return (1);
     }
-    INR_LOG_debug ("Init: mem region checked\n");
+    
+    INR_LOG_debug (loglevel_info"Init: Base hw val %x\n", (unsigned int) gBaseHdwr1);   // Get the Base Address Length
+    gBaseLen1 = pci_resource_len (dev, 1);    // Print the Base Address Length to Kernel Log
+    INR_LOG_debug (loglevel_info"Init: Base hw len %i\n", (unsigned int) gBaseLen1);
+    gBaseVirt1 = pci_iomap (dev, 1, 0);    //gBaseVirt = ioremap (gBaseHdwr, gBaseLen);  //prepare bar1 for access
+    INR_LOG_debug (loglevel_info"Init: Bar1 mapped\n");
+    if (!gBaseVirt1) {
+        INR_LOG_debug (loglevel_err"Init: Could not remap memory.\n");
+        return (1);
+    }
+    if (request_mem_region (gBaseHdwr1, REGISTER_SIZE, "INR_mem"))
+        INR_STATUS_set (INR_STATUS_BAR1);
+    
+    INR_LOG_debug (loglevel_info"Init: mem region checked\n");
     pci_set_master (dev);		//enable Master
-    INR_LOG_debug ("Init: device mastered\n");
+    INR_LOG_debug (loglevel_info"Init: device mastered\n");
     INR_STATUS_set (INR_STATUS_BUSMASTER);
     INR_PROBE_dma (dev);
-    INR_LOG_debug ("Init: try to get dma acces\n");    // Try to gain exclusive control of memory 
-    if (request_mem_region (gBaseHdwr, REGISTER_SIZE, "INR_mem"))
+    INR_LOG_debug (loglevel_info"Init: try to get dma acces\n");    // Try to gain exclusive control of memory 
+    if (request_mem_region (gBaseHdwr0, REGISTER_SIZE, "INR_mem"))
         INR_STATUS_set (INR_STATUS_BAR0);
-    INR_LOG_debug ("Init: dma mem requested\n");
+    INR_LOG_debug (loglevel_info"Init: dma mem requested\n");
     if (INR_int_enable (dev))
         return 1;
     else
         INR_STATUS_set (INR_STATUS_INT1);
     kthread_run (&INR_PCI_rx_pageallocator, NULL, "INR_rx_pageallocator");
     wake_up_interruptible (&INR_PCI_rx_pageallocator_waittingqueu);	//wakeop preallocator
-    INR_LOG_debug ("Page preallocator is running.\n");
+    INR_LOG_debug (loglevel_info"Page preallocator is running.\n");
     INR_TX_RING_init (dev);
     for (i = 0; i < INR_PCI_rx_descriptor_ring_count; i++)
         INR_RX_RING_init (dev, i);	//init all RX-Rings
     if (NAPI_enable)
         for (i = 0; i < INR_PCI_rx_descriptor_ring_count; i++)
             INR_NAPI_init (i);
-    INR_LOG_debug ("Hardware setup done\n");
+    INR_LOG_debug (loglevel_info"Hardware setup done\n");
     INR_STATUS_set (INR_STATUS_HW_RUNNING);
+    INR_PCI_disable_error_LED
 }

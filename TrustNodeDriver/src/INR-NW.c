@@ -81,7 +81,7 @@ get_send2cpu ()
 void
 INR_NW_rx (struct net_device *nwdev, struct INR_NW_packet *pkt)
 {
-    INR_LOG_debug ("rx called\n");
+    INR_LOG_debug (loglevel_info"rx called\n");
     struct sk_buff *skb;
     struct INR_NW_priv *priv = netdev_priv (nwdev);
     skb = dev_alloc_skb (pkt->datalen + 2);
@@ -109,7 +109,7 @@ INR_NW_rx (struct net_device *nwdev, struct INR_NW_packet *pkt)
 int
 INR_NW_config (struct net_device *nwdev, struct ifmap *map)
 {
-    INR_LOG_debug ("NW-config called\n");
+    INR_LOG_debug (loglevel_info"NW-config called\n");
     return 0;
 }
 
@@ -121,7 +121,7 @@ INR_NW_config (struct net_device *nwdev, struct ifmap *map)
 int
 INR_NW_open (struct net_device *nwdev)
 {
-    INR_LOG_debug ("NWDev open\n");
+    INR_LOG_debug (loglevel_info "NWDev open\n");
     memcpy (nwdev->dev_addr, "\0SNUL1", ETH_ALEN);
     memcpy (nwdev->broadcast, "\0\0\0\0\0\0", ETH_ALEN);
     struct INR_NW_priv *priv = netdev_priv (nwdev);
@@ -130,7 +130,7 @@ INR_NW_open (struct net_device *nwdev)
     for (i = 0; i < ETH_ALEN; i++) {
         nwdev->broadcast[i] = (uint8_t) 0xff;
     }
-    INR_LOG_debug ("HW-addr:%x Broadcast-addr:%x\n", nwdev->dev_addr, nwdev->broadcast);
+    INR_LOG_debug (loglevel_info"HW-addr:%x Broadcast-addr:%x\n", nwdev->dev_addr, nwdev->broadcast);
     netif_start_queue (nwdev);
     return 0;
 }
@@ -143,7 +143,7 @@ INR_NW_open (struct net_device *nwdev)
 int
 INR_NW_stop (struct net_device *nwdev)
 {
-    INR_LOG_debug ("NWDev stop\n");
+    INR_LOG_debug (loglevel_info"NWDev stop\n");
     netif_stop_queue (nwdev);
 }
 
@@ -220,7 +220,7 @@ INR_NW_tx (struct sk_buff *skb, struct net_device *nwdev)
                     }
                     uint8_t *skb_data = kmalloc (nextfrag, GFP_DMA | GFP_ATOMIC);
                     if (!skb_data){
-                        INR_LOG_debug ("Cant alloc tx data\n");
+                        INR_LOG_debug (loglevel_err"Cant alloc tx data\n");
                     } else {
                         memcpy (skb_data, skb->data + offset, nextfrag);
                         error = INR_TX_push (skb, skb_data, nextfrag, last, toport, get_send2cpu(), 0, (skb->len / INR_PCI_FPGA_max_tx_length) + 1 - countfrag);
@@ -236,11 +236,11 @@ INR_NW_tx (struct sk_buff *skb, struct net_device *nwdev)
             } else {//
                 uint8_t *skb_data;  
                 if (0) {
-                    INR_LOG_debug ("Cant alloc tx data\n");
+                    INR_LOG_debug (loglevel_err"Cant alloc tx data\n");
                 } else {
                     skb_data = kmemdup (skb->data, skb->len, GFP_DMA);
                     if (!skb_data) {
-                        INR_LOG_debug ("Cant alloc tx data\n");
+                        INR_LOG_debug (loglevel_err"Cant alloc tx data\n");
                         goto errorhandling;
                     }
                     error = INR_TX_push (skb, skb_data, skb->len, 1, toport, get_send2cpu(), 0, 1);
@@ -306,7 +306,7 @@ INR_NW_stats (struct net_device *nwdev)
 int
 INR_NW_change_mtu (struct net_device *nwdev, int new_mtu)
 {
-    INR_LOG_debug ("change_mtu called\n");
+    INR_LOG_debug (loglevel_info"change_mtu called\n");
     return 0;
 }
 
@@ -318,7 +318,7 @@ INR_NW_change_mtu (struct net_device *nwdev, int new_mtu)
 void
 INR_NW_tx_timeout (struct net_device *nwdev)
 {
-    INR_LOG_debug ("tx_timeour called\n");
+    INR_LOG_debug (loglevel_info"tx_timeour called\n");
     return;
 }
 
@@ -341,7 +341,7 @@ INR_NW_init (struct net_device *nwdev)
     nwdev->features |= INR_NWDEV_features;
     nwdev->hw_features |= nwdev->features;
     ether_setup (nwdev);
-    INR_LOG_debug ("Init NWDev %i done\n", priv->port);
+    INR_LOG_debug (loglevel_info"Init NWDev %i done\n", priv->port);
     return 0;
 }
 

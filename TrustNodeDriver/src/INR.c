@@ -37,9 +37,9 @@ INR_CHECK_fpga_read_val (uint64_t val, const char *msg, uint8_t bit64)
     if (fpga_read_check) {
         if (bit64) {
             if (val == 0xffffffffffffffff) {
-                INR_LOG_debug ("FPGA read check faild: %s", msg);
+                INR_LOG_debug (loglevel_err"FPGA read check faild: %s", msg);
             } else if (val == 0xffffffff) {
-                INR_LOG_debug ("FPGA read check faild: %s", msg);
+                INR_LOG_debug (loglevel_err"FPGA read check faild: %s", msg);
             }
         }
     }
@@ -109,17 +109,17 @@ INR_LOG_timelog_init ()
 *central debug print
 *@param strg message
 */
-void
+/*void
 INR_LOG_debug (const char *strg, ...)
 {
     va_list format;
     va_start (format, strg);
     if (debug_enable) {
-        printk ("INR:");
-        vprintk (strg, format);
+        printk (KERN_WARNING "INR:");
+        vprintk (KERN_WARNING strg, format);
     }
 }
-
+*
 //*****************************************************************************************************************
 /**
 *central timelog print

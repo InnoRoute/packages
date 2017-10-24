@@ -44,7 +44,7 @@ TNsend2cpu_write (struct file *file, const char *buffer, unsigned long count, vo
     }
     uint32_t tmp = 0;
     sscanf (procfs_buffer, "%d", &tmp);
-    INR_LOG_debug ("write %d to send2cpu\n", tmp);
+    INR_LOG_debug (loglevel_info"write %d to send2cpu\n", tmp);
     set_send2cpu(tmp);
     return procfs_buffer_size;
 }
@@ -89,7 +89,7 @@ TXdbg_write (struct file *file, const char *buffer, unsigned long count, void *d
     }
     uint32_t tmp = 0;
     sscanf (procfs_buffer, "%d", &tmp);
-    INR_LOG_debug ("write %d to TXdbg\n", tmp);
+    INR_LOG_debug (loglevel_info"write %d to TXdbg\n", tmp);
     set_tx_dbg(tmp);
     return procfs_buffer_size;
 }
@@ -133,7 +133,7 @@ RXdbg_write (struct file *file, const char *buffer, unsigned long count, void *d
     }
     uint32_t tmp = 0;
     sscanf (procfs_buffer, "%d", &tmp);
-    INR_LOG_debug ("write %d to RXdbg\n", tmp);
+    INR_LOG_debug (loglevel_info"write %d to RXdbg\n", tmp);
     set_rx_dbg(tmp);
     return procfs_buffer_size;
 }

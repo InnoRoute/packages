@@ -31,11 +31,13 @@ uint8_t get_tx_dbg(void);
 
 #define INR_PCI_version 7000	/*<Register for hardware version */
 
-#define INR_PCI_BAR0_read(addr)		readl(gBaseVirt+addr)	/*<read from bar0 */
-#define INR_PCI_BAR0_write(content, addr)	writel(content, (gBaseVirt + addr))	/*<write to bar0 */
+#define INR_PCI_BAR0_read(addr)		readl(gBaseVirt0+addr)	/*<read from bar0 */
+#define INR_PCI_BAR0_write(content, addr)	writel(content, (gBaseVirt0 + addr))	/*<write to bar0 */
+#define INR_PCI_BAR1_read(addr)		readl(gBaseVirt1+addr)	/*<read from bar0 */
+#define INR_PCI_BAR1_write(content, addr)	writel(content, (gBaseVirt1 + addr))	/*<write to bar0 */
 
-#define INR_PCI_BAR0_read64(addr)		((((uint64_t)readl(gBaseVirt+addr+0x4))<<32)|((uint64_t)readl(gBaseVirt+addr)))	/*<read from bar0 */
-#define INR_PCI_BAR0_write64(content, addr)	writel(content&0xffffffff, (gBaseVirt + addr));writel((content>>32)&0xffffffff, (gBaseVirt + addr+0x4));	/*<write to bar0 */
+#define INR_PCI_BAR0_read64(addr)		((((uint64_t)readl(gBaseVirt0+addr+0x4))<<32)|((uint64_t)readl(gBaseVirt0+addr)))	/*<read from bar0 */
+#define INR_PCI_BAR0_write64(content, addr)	writel(content&0xffffffff, (gBaseVirt0 + addr));writel((content>>32)&0xffffffff, (gBaseVirt0 + addr+0x4));	/*<write to bar0 */
 
 #define testdate_size 	300	/*<size of the dma-test packet in byte */
 #define data_size_rx 	64/*<size of the rx descriptors in byte*/	//das ist zu wenig...!
@@ -58,6 +60,10 @@ uint8_t get_tx_dbg(void);
 #define INR_PCI_rx_descriptor_length_reg	0x1008/*<Register for length of descriptorring*/	//INR_RDLEN
 #define INR_PCI_rx_descriptor_ring_count 	16	/*<cout of RX-Descriptor-rings */
 #define INR_PCI_interrupt_cause_reg		0x0800	/*<which rx queue trigger interrupt */
+#define INR_PCI_error_LED_addr			0xC0008 /*address of error LED on BAR1*/
+
+#define INR_PCI_enable_error_LED INR_PCI_BAR1_write(((INR_PCI_BAR1_read(INR_PCI_error_LED_addr))|(1<<10)),INR_PCI_error_LED_addr);
+#define INR_PCI_disable_error_LED INR_PCI_BAR1_write(((INR_PCI_BAR1_read(INR_PCI_error_LED_addr))&(~(1<<10))),INR_PCI_error_LED_addr);
 
 //****************************************************************************************************************
 /**
