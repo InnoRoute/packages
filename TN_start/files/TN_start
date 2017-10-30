@@ -7,6 +7,7 @@ START=99
 start() {
 echo "configuring TrustNode..."
 sensors -c /usr/share/InnoRoute/INRsensor.conf -s > /usr/share/InnoRoute/TNstart.log 2>&1
+stty -F /dev/ttyS1 115200 #set FPGA terminal baudrate
 #/usr/share/InnoRoute/inr_slide.sh &
 echo "done"
 }
