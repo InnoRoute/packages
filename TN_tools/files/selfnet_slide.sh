@@ -4,47 +4,47 @@ while true;
 do
 /usr/share/InnoRoute/text2display.sh "               SELFnEt"
 sleep 1
-/usr/share/SELFnEt/text2display.sh "              SELFnEt"
+/usr/share/InnoRoute/text2display.sh "              SELFnEt"
 sleep 1
-/usr/share/SELFnEt/text2display.sh "             SELFnEt"
+/usr/share/InnoRoute/text2display.sh "             SELFnEt"
 sleep 1
-/usr/share/SELFnEt/text2display.sh "            SELFnEt"
+/usr/share/InnoRoute/text2display.sh "            SELFnEt"
 sleep 1
-/usr/share/SELFnEt/text2display.sh "           SELFnEt"
+/usr/share/InnoRoute/text2display.sh "           SELFnEt"
 sleep 1
-/usr/share/SELFnEt/text2display.sh "          SELFnEt"
+/usr/share/InnoRoute/text2display.sh "          SELFnEt"
 sleep 1
-/usr/share/SELFnEt/text2display.sh "         SELFnEt"
+/usr/share/InnoRoute/text2display.sh "         SELFnEt"
 sleep 1
-/usr/share/SELFnEt/text2display.sh "        SELFnEt"
+/usr/share/InnoRoute/text2display.sh "        SELFnEt"
 sleep 1
-/usr/share/SELFnEt/text2display.sh "       SELFnEt"
+/usr/share/InnoRoute/text2display.sh "       SELFnEt"
 sleep 1
-/usr/share/SELFnEt/text2display.sh "      SELFnEt"
+/usr/share/InnoRoute/text2display.sh "      SELFnEt"
 sleep 1
-/usr/share/SELFnEt/text2display.sh "     SELFnEt"
+/usr/share/InnoRoute/text2display.sh "     SELFnEt"
 sleep 1
-/usr/share/SELFnEt/text2display.sh "    SELFnEt"
+/usr/share/InnoRoute/text2display.sh "    SELFnEt"
 sleep 1
-/usr/share/SELFnEt/text2display.sh "   SELFnEt"
+/usr/share/InnoRoute/text2display.sh "   SELFnEt"
 sleep 1
-/usr/share/SELFnEt/text2display.sh "  SELFnEt"
+/usr/share/InnoRoute/text2display.sh "  SELFnEt"
 sleep 1
-/usr/share/SELFnEt/text2display.sh " SELFnEt"
+/usr/share/InnoRoute/text2display.sh " SELFnEt"
 sleep 1
-/usr/share/SELFnEt/text2display.sh "SELFnEt"
+/usr/share/InnoRoute/text2display.sh "SELFnEt"
 sleep 1
-/usr/share/SELFnEt/text2display.sh "ELFnEt"
+/usr/share/InnoRoute/text2display.sh "ELFnEt"
 sleep 1
-/usr/share/SELFnEt/text2display.sh "LFnEt"
+/usr/share/InnoRoute/text2display.sh "LFnEt"
 sleep 1
-/usr/share/SELFnEt/text2display.sh "FnEt"
+/usr/share/InnoRoute/text2display.sh "FnEt"
 sleep 1
-/usr/share/SELFnEt/text2display.sh "nEt"
+/usr/share/InnoRoute/text2display.sh "nEt"
 sleep 1
-/usr/share/SELFnEt/text2display.sh "Et"
+/usr/share/InnoRoute/text2display.sh "Et"
 sleep 1
-/usr/share/SELFnEt/text2display.sh "t"
+/usr/share/InnoRoute/text2display.sh "t"
 sleep 1
 
 done

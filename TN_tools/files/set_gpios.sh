@@ -14,4 +14,4 @@ fi
 printf "Setting GPIO headers to drive 0x%04x\n" $gpio
 
 # Sets the output values of the GPIO headers: bis0-9=UserGPIO, bits10-13=Artix-PMod
-TNbar1 $(($TN_BASE_ADDR_PERIPHERIALS+0x0C)) w $gpio
+TNbar1 $(($C_BASE_ADDR_PERIPH*256+0x0C)) w $gpio

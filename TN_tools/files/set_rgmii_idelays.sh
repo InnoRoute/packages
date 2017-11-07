@@ -35,15 +35,15 @@ else
 fi
 
 # write data range: 0-31
-TNbar1 $((TN_BASE_ADDR_RGMII+ 0*0x100)) w $idelay1
-TNbar1 $((TN_BASE_ADDR_RGMII+ 1*0x100)) w $idelay2
-TNbar1 $((TN_BASE_ADDR_RGMII+ 2*0x100)) w $idelay3
-TNbar1 $((TN_BASE_ADDR_RGMII+ 3*0x100)) w $idelay4
-TNbar1 $((TN_BASE_ADDR_RGMII+ 4*0x100)) w $idelay5
-TNbar1 $((TN_BASE_ADDR_RGMII+ 5*0x100)) w $idelay6
-TNbar1 $((TN_BASE_ADDR_RGMII+ 6*0x100)) w $idelay7
-TNbar1 $((TN_BASE_ADDR_RGMII+ 7*0x100)) w $idelay8
-TNbar1 $((TN_BASE_ADDR_RGMII+ 8*0x100)) w $idelay9
-TNbar1 $((TN_BASE_ADDR_RGMII+ 9*0x100)) w $idelay10
-TNbar1 $((TN_BASE_ADDR_RGMII+10*0x100)) w $idelay11
-TNbar1 $((TN_BASE_ADDR_RGMII+11*0x100)) w $idelay12
+TNbar1 $((C_BASE_ADDR_RGMII*256+ 0*0x100)) w $idelay1
+TNbar1 $((C_BASE_ADDR_RGMII*256+ 1*0x100)) w $idelay2
+TNbar1 $((C_BASE_ADDR_RGMII*256+ 2*0x100)) w $idelay3
+TNbar1 $((C_BASE_ADDR_RGMII*256+ 3*0x100)) w $idelay4
+TNbar1 $((C_BASE_ADDR_RGMII*256+ 4*0x100)) w $idelay5
+TNbar1 $((C_BASE_ADDR_RGMII*256+ 5*0x100)) w $idelay6
+TNbar1 $((C_BASE_ADDR_RGMII*256+ 6*0x100)) w $idelay7
+TNbar1 $((C_BASE_ADDR_RGMII*256+ 7*0x100)) w $idelay8
+TNbar1 $((C_BASE_ADDR_RGMII*256+ 8*0x100)) w $idelay9
+TNbar1 $((C_BASE_ADDR_RGMII*256+ 9*0x100)) w $idelay10
+TNbar1 $((C_BASE_ADDR_RGMII*256+10*0x100)) w $idelay11
+TNbar1 $((C_BASE_ADDR_RGMII*256+11*0x100)) w $idelay12

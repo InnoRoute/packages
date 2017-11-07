@@ -14,4 +14,4 @@ fi
 printf "Setting LEDs to 0x%04x\n" $leds
 
 # Set LEDs (all active-high): bits0-7=UserLEDs, bits8-9=AlaskaUserLed(right)
-TNbar1 $(($TN_BASE_ADDR_PERIPHERIALS+0x08)) w $leds
+TNbar1 $(($C_BASE_ADDR_PERIPH*256+0x08)) w $leds

@@ -47,7 +47,7 @@ if [[ $(( $clkbuf & 32 )) -eq 32 ]]; then
 fi
 
 let biterr=`i2cget -y 0 4 0x02`
-printf  "*  2: Bitstream Error (ID-ERR+ID & CONF-ERR; ??) 0x%02x\n" $biterr
+printf  "*  2: Bitstream Error (ID-ERR+ID & CONF-ERR (R); OPTO (W)) 0x%02x\n" $biterr
 if [[ $(( $biterr & 140 )) -eq 0 ]]; then
   printf "*     -> Currently no error\n";
 fi
@@ -82,16 +82,16 @@ fi
 let pll=`i2cget -y 0 4 0x04`
 printf  "*  4: PLL (Current M Pins value; RO)             0x%02x\n" $pll
 if [[ $(( $pll & 16 )) -eq 16 ]]; then
-  echo "*     -> Currently Ref A valid (SyncE Port A)";
+  echo "*     -> Possible encoding: currently Ref A valid (SyncE Port A, if default config)";
 fi
 if [[ $(( $pll & 32 )) -eq 32 ]]; then
-  echo "*     -> Currently Ref B valid (SyncE Port B)";
+  echo "*     -> Possible encoding: currently Ref B valid (SyncE Port B, if default config)";
 fi
 if [[ $(( $pll & 64 )) -eq 64 ]]; then
-  echo "*     -> Currently Ref C valid (BNC In)";
+  echo "*     -> Possible encoding: currently Ref C valid (BNC In, if default config)";
 fi
 if [[ $(( $pll & 128 )) -eq 128 ]]; then
-  echo "*     -> Currently Ref D valid (Artix FPGA)";
+  echo "*     -> Possible encoding: currently Ref D valid (Artix FPGA, if default config)";
 fi
 
 let dutycycle=`i2cget -y 0 4 0x05`
@@ -104,6 +104,11 @@ printf  "*  6: Fan Speed (RPM; RO)                        %d\n" $fanspeed
 printf  "*  7: Board Pinout ID (RO)                       %d\n" `i2cget -y 0 4 0x07`
 
 printf  "*  8: Successful Artix Program Count (RO)        %d\n" `i2cget -y 0 4 0x08`
+echo    "*     (incl. successful flash loads after failed OPTO/JTAG/LPC configuration)"
+
+if [[ $firmware > 11 ]]; then
+  printf  "*     Failed Artix Program Count (DONE/INITB;RO) %d\n" `i2cget -y 0 4 0x1b`;
+fi
 
 printf  "*  9: Front buttons (RO)                         0x%02x%02x\n" `i2cget -y 0 4 0x0a` `i2cget -y 0 4 0x09`
 
@@ -257,20 +262,58 @@ let rtc_mins=$rtc_sec/60-$rtc_days*1440-$rtc_hours*60;
 let rtc_sec_rem=$rtc_sec-$rtc_days*86400-$rtc_hours*3600-$rtc_mins*60;
 printf "*           -> %03dd, %02dh:%02dm:%02ds\n" $rtc_days $rtc_hours $rtc_mins $rtc_sec_rem;
 
-let rtc_qns0=`i2cget -y 0 4 0x10`
-let rtc_qns1=`i2cget -y 0 4 0x11`
-let rtc_qns2=`i2cget -y 0 4 0x12`
-let rtc_qns3=`i2cget -y 0 4 0x13`
-let rtc_qns=`printf "0x%02x%02x%02x%02x" $rtc_qns3 $rtc_qns2 $rtc_qns1 $rtc_qns0`
-printf "*     -> Currently number of quarter ns: %d\n" $rtc_qns;
-let rtc_ms=$rtc_qns/4000000;
-let rtc_us=$rtc_qns/4000-$rtc_ms*1000;
-let rtc_ns=$rtc_qns/4-$rtc_ms*1000000-$rtc_us*1000;
-let rtc_ps_rem=$rtc_qns*250-$rtc_ms*4000000*250-$rtc_us*4000*250-$rtc_ns*4*250;
-printf "*           -> %03dms:%03dus:%03dns:%03dps\n" $rtc_ms $rtc_us $rtc_ns $rtc_ps_rem;
+# The following does not make sense, because the serial SMBus accesses take too long:
+#let rtc_qns0=`i2cget -y 0 4 0x10`
+#let rtc_qns1=`i2cget -y 0 4 0x11`
+#let rtc_qns2=`i2cget -y 0 4 0x12`
+#let rtc_qns3=`i2cget -y 0 4 0x13`
+#let rtc_qns=`printf "0x%02x%02x%02x%02x" $rtc_qns3 $rtc_qns2 $rtc_qns1 $rtc_qns0`
+#printf "*     -> Currently number of quarter ns: %d\n" $rtc_qns;
+#let rtc_ms=$rtc_qns/4000000;
+#let rtc_us=$rtc_qns/4000-$rtc_ms*1000;
+#let rtc_ns=$rtc_qns/4-$rtc_ms*1000000-$rtc_us*1000;
+#let rtc_ps_rem=$rtc_qns*250-$rtc_ms*4000000*250-$rtc_us*4000*250-$rtc_ns*4*250;
+#printf "*           -> %03dms:%03dus:%03dns:%03dps\n" $rtc_ms $rtc_us $rtc_ns $rtc_ps_rem;
 
 printf  "* 12: Status register (RO)                       0x%02x\n" `i2cget -y 0 4 0x18`
 
-printf  "* 13: Debug 0 (??)                               0x%02x\n" `i2cget -y 0 4 0x19`
-
-printf  "* 14: Debug 1 (??)                               0x%02x\n" `i2cget -y 0 4 0x1a`
+if [[ $firmware > 11 ]]; then
+  printf  "* 13: PHY Resets (RW)                            0x%02x\n" `i2cget -y 0 4 0x19`;
+  let sysmon=`i2cget -y 0 4 0x1a`;
+  printf  "* 14: System Monitor (RO)                        0x%02x\n" $sysmon;  
+  if [[ $(( $sysmon & 1 )) -eq 1 ]]; then
+    echo "*     -> Internal FSM Reset";
+  fi
+  if [[ $(( $sysmon & 2 )) -eq 2 ]]; then
+    echo "*     -> Artix PROGRAM_B";
+  fi
+  if [[ $(( $sysmon & 4 )) -eq 4 ]]; then
+    echo "*     -> FPGA-ID PROGRAM_B";
+  fi
+  if [[ $(( $sysmon & 8 )) -eq 8 ]]; then
+    echo "*     -> Atom WDT";
+  fi
+  if [[ $(( $sysmon & 16 )) -eq 16 ]]; then
+    echo "*     -> Atom Reset Button";
+  fi
+  if [[ $(( $sysmon & 32 )) -eq 32 ]]; then
+    echo "*     -> FPGA Restart";
+  fi
+  if [[ $(( $sysmon & 64 )) -eq 64 ]]; then
+    echo "*     -> Unknown Flag";
+  fi
+  if [[ $(( $sysmon & 128 )) -eq 128 ]]; then
+    echo "*     -> Unknown Flag";
+  fi
+  let pmod=`i2cget -y 0 4 0x1c`;
+  printf  "* 15: System Controller PMod function (RW)       0x%02x\n" $pmod;
+  if [[ $pmod == 0 ]]; then
+    echo "*     -> Default: Clock Output";
+  elif [[ $pmod == 1 ]]; then
+    echo "*     -> FPGA UART";
+  elif [[ $pmod == 2 ]]; then
+    echo "*     -> Second Atom UART";
+  else
+    echo "*     -> High-Z";
+  fi 
+fi
