@@ -1,5 +1,5 @@
-obj-m := TN_MMI.o
-trustnode-objs	:= main.o
+obj-m := INR_TN_MMI.o
+INR_TN_MMI-objs	:= main.o TN_MMI.o TN_MDIO.o
 
 all:
 	$(MAKE)  -C ${KERNEL}  M=$(PWD) modules

@@ -2,7 +2,6 @@
 *@mainpage  TrustNode MMI functions
 *@author M.Ulbricht
 *
-*This is the documentation for the TrustNode Ethernet driver. The code is mainly structured in PCI and NetWork communication. You should start browsing the <a href="files.html">filelist</a> first.<br>Questions and bugs please report to <a href="mailto:ulbricht@innoroute.de">ulbricht@innoroute.de</a>
 **/
 /**
 *@file
@@ -16,23 +15,25 @@
 #include <linux/interrupt.h>
 #include <linux/delay.h>
 #include "tn_env.h"
-#include "main.h"
+#include "TN_MMI.h"
 
-
-
+EXPORT_SYMBOL(INR_MMI_interrupt_handler);
+EXPORT_SYMBOL(INR_MMI_init);
 
 //*****************************************************************************************************************
 static int __init
 skel_init (void)
 {
-    
+
+    return 0;
 }
 
 //*****************************************************************************************************************
 static void __exit
 skel_exit (void)
 {
-    
+    INR_MMI_exit();
+    return 0;
 }
 
 //*****************************************************************************************************************
