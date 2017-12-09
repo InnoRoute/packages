@@ -1,5 +1,5 @@
 obj-m := trustnode.o
-trustnode-objs	:= main.o INR.o INR-NW.o INR-PCI.o INR-ctl.o INR-NAPI.o
+trustnode-objs	:= main.o INR.o INR-NW.o INR-PCI.o INR-ctl.o INR-NAPI.o INR-MMI.o
 
 all:
 	$(MAKE)  -C ${KERNEL}  M=$(PWD) modules

@@ -23,11 +23,13 @@
 #include <asm/signal.h>
 #include <linux/semaphore.h>
 #include <asm/cacheflush.h>
+#include "INR-MMI.h"
 
 volatile uint32_t tx_head_backup = 0;	/**< Storage for tx_headpointer, to spot cluttering of the FPGA*/
 volatile uint8_t TX_DBG_mod=0;		/**< verbose TX messages*/
 volatile uint8_t RX_DBG_mod=0;		/**< verbose RX messages*/
 volatile uint64_t gIrq; 		/**< interrupt id*/
+uint8_t TNrussian=0;			/**< russian mode, allow everything without valid. check*/
 struct pci_dev *globdev;		/**< global availbele PCI dev structure*/
 void *gBaseVirt0 = NULL;		/**< pointer for start-address of bar0*/
 void *gBaseVirt1 = NULL;		/**< pointer for start-address of bar1*/
@@ -78,23 +80,7 @@ static DECLARE_WAIT_QUEUE_HEAD (INR_PCI_rx_pageallocator_waittingqueu);		/**<wai
 static DECLARE_WAIT_QUEUE_HEAD (INR_tailtest);					/**<waiting lock for rx tailtest*/
 uint64_t lastbot[INR_PCI_rx_descriptor_ring_count] = { (INR_PCI_rx_descriptor_ring_length - 1) * INR_PCI_rx_descriptor_length };	/**<store last bottom value*/
 DEFINE_SEMAPHORE (INR_PCI_rx_pageallocator_sem);
-DEFINE_SEMAPHORE (INR_PCI_tx_ring_sem);
-DEFINE_SEMAPHORE (INR_PCI_rx_ring_sem0);
-DEFINE_SEMAPHORE (INR_PCI_rx_ring_sem1);
-DEFINE_SEMAPHORE (INR_PCI_rx_ring_sem2);
-DEFINE_SEMAPHORE (INR_PCI_rx_ring_sem3);
-DEFINE_SEMAPHORE (INR_PCI_rx_ring_sem4);
-DEFINE_SEMAPHORE (INR_PCI_rx_ring_sem5);
-DEFINE_SEMAPHORE (INR_PCI_rx_ring_sem6);
-DEFINE_SEMAPHORE (INR_PCI_rx_ring_sem7);
-DEFINE_SEMAPHORE (INR_PCI_rx_ring_sem8);
-DEFINE_SEMAPHORE (INR_PCI_rx_ring_sem9);
-DEFINE_SEMAPHORE (INR_PCI_rx_ring_sem10);
-DEFINE_SEMAPHORE (INR_PCI_rx_ring_sem11);
-DEFINE_SEMAPHORE (INR_PCI_rx_ring_sem12);
-DEFINE_SEMAPHORE (INR_PCI_rx_ring_sem13);
-DEFINE_SEMAPHORE (INR_PCI_rx_ring_sem14);
-DEFINE_SEMAPHORE (INR_PCI_rx_ring_sem15);
+EXPORT_SYMBOL(gBaseVirt1); //export for use in MMI module
 /**
 *setts all global variables to zero
 */
@@ -208,7 +194,25 @@ uint8_t get_rx_dbg(void)
 
     return RX_DBG_mod;
 }
+//*****************************************************************************************************************
+/**
+*activate russian mode for PCI , accept everything without valid check
+*/
+void set_russian(uint8_t mode)
+{
 
+    TNrussian=mode;
+}
+
+//*****************************************************************************************************************
+/**
+*ret russian mode for PCI 
+*/
+uint8_t get_russian(void)
+{
+
+    return TNrussian;
+}
 //*****************************************************************************************************************
 /**
 *refill rx-descriptor pool
@@ -332,11 +336,12 @@ INR_PCI_process_rx_descriptor_ring (uint8_t index)
         dma_sync_single_range_for_cpu (&globdev->dev, data_rx[INR_PCI_rx_descriptor_current[index]][index]->dma_root, data_rx[INR_PCI_rx_descriptor_current[index]][index]->offset, data_size_rx, DMA_FROM_DEVICE);	//sync memory of descriptor to CPU
         if (RX_DBG_mod)
             INR_LOG_debug (loglevel_warn"RX-Descriptor-dump RX_Current:%i DescrBase:0x%x Status:%x Length:%i Index:%i FirstPKG:%i Buffer:%llx DMA:%llx MEM:%llx offset:0x%i page:%llx, fragmentindex:%i\n", INR_PCI_rx_descriptor_current[index], INR_PCI_rx_descriptor_ring[INR_PCI_rx_descriptor_current[index]][index], RX_descriptor->Status, RX_descriptor->length, index, firstpkg[index], RX_descriptor->buffer, data_rx[INR_PCI_rx_descriptor_current[index]][index]->dma, data_rx[INR_PCI_rx_descriptor_current[index]][index]->data, data_rx[INR_PCI_rx_descriptor_current[index]][index]->offset, page_address (data_rx[INR_PCI_rx_descriptor_current[index]][index]->page), data_rx[INR_PCI_rx_descriptor_current[index]][index]->fragmentindex);	//long debug print
-        if ((RX_descriptor->Errors & (0x1))) {	//handle descriptor error flag
+        IfNotRuss if ((RX_descriptor->Errors & (0x1))) {	//handle descriptor error flag
             INR_LOG_debug (loglevel_err"error received fragment with error flag\n");
+            INR_PCI_enable_error_LED
             dropmode[index] = 1;
         }
-        if ((RX_descriptor->Status & (0x3)) == 0) {	//hand bad status value
+        IfNotRuss if ((RX_descriptor->Status & (0x1)) == 0) {	//hand bad status value
             INR_LOG_debug (loglevel_err"error received fragment with clear dd flag\n");
             INR_PCI_enable_error_LED
             dropmode[index] = 1;
@@ -344,7 +349,7 @@ INR_PCI_process_rx_descriptor_ring (uint8_t index)
 //##############################FIRST FRAGMENT handling
         if (firstpkg[index]) {	//first fragment of packet
             firstpkg[index] = 0;
-            if (RX_descriptor->length < ETH_HLEN) {	//handle to short framents
+            IfNotRuss if (RX_descriptor->length < ETH_HLEN) {	//handle to short framents
                 INR_LOG_debug (loglevel_err"error received to short first fragment\n");
                 INR_PCI_enable_error_LED
                 dropmode[index] = 1;
@@ -391,15 +396,15 @@ INR_PCI_process_rx_descriptor_ring (uint8_t index)
 //##############################OTHER FRAGMENT handling
         else {			//some other fragment of packet
             if (zerocopy_rx) {
-                if (!rx_skb[index]){
+                IfNotRuss if (!rx_skb[index]){
                     INR_LOG_debug (loglevel_err"rx skb nullpointer!\n");
                     INR_PCI_enable_error_LED
                     }
-                if (!data_rx[INR_PCI_rx_descriptor_current[index]][index]->page){
+                IfNotRuss if (!data_rx[INR_PCI_rx_descriptor_current[index]][index]->page){
                     INR_LOG_debug (loglevel_err"rx page nullpointer!\n");
                     INR_PCI_enable_error_LED
                     }
-                if (!RX_descriptor->length){
+                IfNotRuss if (!RX_descriptor->length){
                     INR_LOG_debug (loglevel_err"rx length nullpointer!\n");
                     INR_PCI_enable_error_LED
                     }
@@ -512,7 +517,7 @@ exit_rxloop:
 static irqreturn_t
 XPCIe_IRQHandler (int irq, void *dev_id, struct pt_regs *regs)
 {
-    uint64_t intcause = 0xffff;//INR_PCI_BAR0_read(INR_PCI_interrupt_cause_reg); //not implemented yet :/ -> read all rings
+    uint64_t intcause = INR_PCI_BAR0_read(INR_PCI_interrupt_cause_reg); //not implemented yet :/ -> read all rings  0xffff;//
     if (RX_DBG_mod)INR_LOG_debug(loglevel_warn"Int cause:0x%lx\n",INR_PCI_BAR0_read(INR_PCI_interrupt_cause_reg));
    
     uint8_t i = 0;
@@ -529,17 +534,20 @@ XPCIe_IRQHandler (int irq, void *dev_id, struct pt_regs *regs)
     	if (RX_DBG_mod){
     		INR_LOG_debug(loglevel_warn"MMI interrupt\n");
     	}
-    }
+    	INR_MMI_interrupt();
+    	}
+    	
+//    }
     if(intcause&(1<<17)){
     	if (TX_DBG_mod){
     		INR_LOG_debug(loglevel_warn"TX interrupt\n");
     	}
     }
-    if(intcause>=(1<<18)){
+    IfNotRuss if(intcause>=(1<<18)){
     	if (RX_DBG_mod)INR_LOG_debug(loglevel_warn"unknown Interrupt\n");
     	if (RX_DBG_mod)INR_PCI_enable_error_LED
     } 
-    //INR_PCI_BAR0_write(intcause,INR_PCI_interrupt_cause_reg);//writing back int register
+    INR_PCI_BAR0_write(intcause,INR_PCI_interrupt_cause_reg);//writing back int register
     return IRQ_HANDLED;
 }
 
@@ -858,7 +866,7 @@ INR_TX_push (struct sk_buff *skb, uint8_t * data, uint16_t datalength, uint8_t e
     uint64_t head, tail;
     head = INR_PCI_BAR0_read (INR_PCI_tx_descriptor_head_reg) / INR_PCI_tx_descriptor_length;
     tail = INR_PCI_BAR0_read (INR_PCI_tx_descriptor_tail_reg) / INR_PCI_tx_descriptor_length;
-    if ((INR_PCI_pointerdistance (tail, head, INR_PCI_tx_descriptor_ring_length)) <= fragcount + 5) {//no free space in TX ring
+    IfNotRuss if ((INR_PCI_pointerdistance (tail, head, INR_PCI_tx_descriptor_ring_length)) <= fragcount + 5) {//no free space in TX ring
         txsemophore = 0;
         return 1;
     }
@@ -893,12 +901,12 @@ INR_TX_push (struct sk_buff *skb, uint8_t * data, uint16_t datalength, uint8_t e
         }
     }
     volatile struct INR_PCI_tx_descriptor *TX_descriptor = INR_PCI_tx_descriptor_ring[INR_PCI_tx_descriptor_current];	//create temp. TDESC-structure
-    if ((TX_descriptor->STA & 0x1) == 0) {
+    /*if ((TX_descriptor->STA & 0x1) == 0) {
         INR_PCI_BAR0_write ((head << 16) | (0xffff & tail), 0x7004);
-    }
+    }*/
     uint64_t dma_addr = dma_map_single (&globdev->dev, data, datalength, DMA_TO_DEVICE);	//map packet  to DMA
     if (dma_mapping_error (&globdev->dev, dma_addr)){
-        INR_LOG_debug (loglevel_err"TX dma mappng error! current:%i \n", INR_PCI_tx_descriptor_current);
+        INR_LOG_debug (loglevel_err"TX dma mapping error! current:%i \n", INR_PCI_tx_descriptor_current);
         INR_PCI_enable_error_LED
         }
     dma_sync_single_for_device (&globdev->dev, dma_addr, datalength, DMA_TO_DEVICE);
@@ -1043,7 +1051,7 @@ INR_init_drv (struct pci_dev *dev)
         rx_descriptor_pool_free[i] = rx_descriptor_pool_length;
     gBaseHdwr0 = pci_resource_start (dev, 0);
     // Print Base Address to kernel log
-    INR_LOG_debug (loglevel_info"Init: Base hw val %x\n", (unsigned int) gBaseHdwr0);   // Get the Base Address Length
+    INR_LOG_debug (loglevel_info"Init: Base hw val 0x%lx\n", (unsigned int) gBaseHdwr0);   // Get the Base Address Length
     gBaseLen0 = pci_resource_len (dev, 0);    // Print the Base Address Length to Kernel Log
     INR_LOG_debug (loglevel_info"Init: Base hw len %i\n", (unsigned int) gBaseLen0);
     gBaseVirt0 = pci_iomap (dev, 0, 0);    //gBaseVirt = ioremap (gBaseHdwr, gBaseLen);  //prepare bar0 for access
@@ -1053,11 +1061,11 @@ INR_init_drv (struct pci_dev *dev)
         return (1);
     }
     
-    INR_LOG_debug (loglevel_info"Init: Base hw val %x\n", (unsigned int) gBaseHdwr1);   // Get the Base Address Length
+    INR_LOG_debug (loglevel_info"Init: Base hw val 0x%lx\n", (unsigned int) gBaseHdwr1);   // Get the Base Address Length
     gBaseLen1 = pci_resource_len (dev, 1);    // Print the Base Address Length to Kernel Log
     INR_LOG_debug (loglevel_info"Init: Base hw len %i\n", (unsigned int) gBaseLen1);
     gBaseVirt1 = pci_iomap (dev, 1, 0);    //gBaseVirt = ioremap (gBaseHdwr, gBaseLen);  //prepare bar1 for access
-    INR_LOG_debug (loglevel_info"Init: Bar1 mapped\n");
+    INR_LOG_debug (loglevel_info"Init: Bar1 mapped :0x%lx\n",gBaseVirt1);
     if (!gBaseVirt1) {
         INR_LOG_debug (loglevel_err"Init: Could not remap memory.\n");
         return (1);
@@ -1088,6 +1096,7 @@ INR_init_drv (struct pci_dev *dev)
         for (i = 0; i < INR_PCI_rx_descriptor_ring_count; i++)
             INR_NAPI_init (i);
     INR_LOG_debug (loglevel_info"Hardware setup done\n");
+    INR_MMI_interrupt_start(gBaseVirt1);
     INR_STATUS_set (INR_STATUS_HW_RUNNING);
     INR_PCI_disable_error_LED
 }

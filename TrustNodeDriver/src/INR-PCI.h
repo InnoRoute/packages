@@ -19,6 +19,10 @@ void set_tx_dbg(uint8_t txdbg);
 void set_rx_dbg(uint8_t rxdbg);
 uint8_t get_rx_dbg(void);
 uint8_t get_tx_dbg(void);
+void set_russian(uint8_t mode);
+uint8_t get_russian(void);
+
+#define IfNotRuss if(TNrussian==0)  
 
 #define INR_PCI_TX_maxfragments 16  /*<maximum number of segments the hardware supports */
 #define INR_PCI_FPGA_max_tx_length  1600	/*<number of bytes the FPGA accept in one TX packet */
