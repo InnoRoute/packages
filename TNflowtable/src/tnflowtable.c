@@ -85,6 +85,7 @@ parse_opt (int key, char *arg, struct argp_state *state)
   case 'v':
     arguments->verbose = 1;
     set_verbose(1);
+    printallconst();
     break;
   case 'a':
     arguments->HASH.gauto = 1;

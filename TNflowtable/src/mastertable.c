@@ -47,6 +47,10 @@ FC_MT_have_action (struct arguments *arguments)
   uint64_t i = 0;
   uint8_t match = 0;
   struct arguments *entry = NULL;
+  switch(arguments->ACTION_ID){//hande id exeptions
+  	case 0x155	:return 0x155; break;//pass to cpu
+    	default		:break;
+  	}
   do {
     match = 1;
     entry = (struct arguments *) INR_MasterT_get_addr (i++);
@@ -225,7 +229,7 @@ FC_MT_autotable (struct arguments * arguments)
   verblog printf ("__FUNCTION__ = %s\n", __FUNCTION__);
   arguments->ID = 1;  //override automatic switches
   arguments->autoaction = 0;
-  arguments->ACTION_ID = 0;
+  //arguments->ACTION_ID = 0; removed to pass actionselection to mastertable
   arguments->HASH.gauto = 0;
   arguments->TYPE_ID = 0; //reset type for self finding
   if (entry_is_EMH1 (arguments)) {

@@ -17,7 +17,7 @@
 #endif
 
 #include "tnlibflowtable.h"
-
+#include "tn_env.h"
 
 uint64_t FCbase_EMH = 0;
 uint64_t FCbase_EMH_shadow = 0;
@@ -589,7 +589,7 @@ INR_ActT_get_next_free_entry (uint64_t id)
   do {
     entry = (struct INR_FC_ActT_RULE *) INR_ActT_shadow_get_addr (i);
     i++;
-  } while ((i < INR_FC_ActT_length) && (entry->OutPort_enable || entry->Bad_enable || entry->Cut_enable));
+  } while ((i < INR_FC_ActT_length) && (entry->OutPort_enable || entry->Bad_enable || entry->Cut_enable||(i==0x155)));
   if (i == INR_FC_ActT_length) {
     return 0;
   }
@@ -602,6 +602,53 @@ INR_ActT_get_next_free_entry (uint64_t id)
 *@param verbose value
 */
 void set_verbose(uint8_t i) {verbose = i;};
+
+//************************************************************************************************************************************
+/**
+*set verbode
+*@param verbose value
+*/
+void printallconst() {
+printconst(C_SUB_ADDR_COMMON_TN_MAJOR_REV);
+printconst(C_SUB_ADDR_COMMON_TN_MINOR_REV);
+printconst(C_SUB_ADDR_COMMON_USER_REV);
+printconst(C_SUB_ADDR_COMMON_ADDR_MAP_REV);
+
+printconst(INR_FC_ActT_entry_length);
+printconst(INR_FC_ActT_entry_length);
+printconst(INR_FC_ActT_entry_length_memcpy);
+printconst(INR_FC_ActT_base);
+printconst(INR_FC_ActT_length);
+
+printconst(INR_FC_EMH_HashTable_entry_length);
+printconst(INR_FC_EMH_HashTable_entry_length_memcpy);
+printconst(INR_FC_EMH_HashTable_base);
+printconst(INR_FC_EMH_HashTable_length);
+
+printconst(INR_FC_EMH_RuleTable_entry_length);
+printconst(INR_FC_EMH_RuleTable_entry_length_memcpy);
+printconst(INR_FC_EMH_RuleTable_base);
+printconst(INR_FC_EMH_RuleTable_length);
+
+printconst(INR_FC_EMH_CTable_entry_length_memcpy);
+printconst(INR_FC_EMH_CTable_entry_length);
+printconst(INR_FC_EMH_CTable_base);
+printconst(INR_FC_EMH_CTable_length);
+
+printconst(INR_FC_EMA_TCAM_base);
+printconst(INR_FC_EMA_TCAM_length);
+printconst(INR_FC_EMA_TCAM_entry_length);
+
+printconst(INR_FC_EMA_RuleTable_entry_length);
+printconst(INR_FC_EMA_RuleTable_entry_length_memcpy);
+printconst(INR_FC_EMA_RuleTable_base);
+printconst(INR_FC_EMA_RuleTable_length);
+
+
+
+};
+
+
 //************************************************************************************************************************************
 /**
 *get verbode

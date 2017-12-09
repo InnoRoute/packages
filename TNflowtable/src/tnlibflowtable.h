@@ -1,3 +1,5 @@
+#include "tn_env.h"
+
 void FCinit_EMH (uint64_t * baseaddr, uint64_t * baseaddr_shadow);
 uint8_t INR_HashTable_EMH_clear_entry (uint64_t id);
 uint64_t INR_RuleTable_EMH_get_addr (uint64_t id);
@@ -25,6 +27,7 @@ uint8_t INR_ActT_clear_entry (uint64_t id);
 void FCmemcpy(void *dst, const void *src, size_t len);
 uint8_t INR_FC_get_HW_write(void);
 void INR_FC_set_HW_write(uint8_t value);
+void printallconst(void);
 
 uint8_t get_verbose(void);
 void set_verbose(uint8_t i);
@@ -35,35 +38,41 @@ uint32_t parseIPV4string(char* ipAddress) ;
 #define verblog if(get_verbose()) //macro for checking verbose bit
 //base addresses:
 //hashtable with hardcoded fields
-#define  INR_FC_ActT_base 458752
-#define  INR_FC_ActT_length 512
 #define  INR_FC_ActT_entry_length 4 //length of entry in byte
 #define  INR_FC_ActT_entry_length_memcpy  4 //length of entry in byte
+#define  INR_FC_ActT_base (C_BASE_ADDR_NOC_ACTION_LOWER<<8)
+#define  INR_FC_ActT_length ((((C_BASE_ADDR_NOC_ACTION_UPPER+1)<<8)-(C_BASE_ADDR_NOC_ACTION_LOWER<<8))/INR_FC_ActT_entry_length) 
+
 //hashtable with hardcoded fields
-#define  INR_FC_EMH_HashTable_base  65536
-#define  INR_FC_EMH_HashTable_length  0x16384
 #define  INR_FC_EMH_HashTable_entry_length  4 //length of entry in byte
 #define  INR_FC_EMH_HashTable_entry_length_memcpy 4 //length of entry in byte
+#define  INR_FC_EMH_HashTable_base  (C_BASE_ADDR_FLOW_CACHE_HASH_LOWER<<8)
+#define  INR_FC_EMH_HashTable_length  ((((C_BASE_ADDR_FLOW_CACHE_HASH_UPPER+1)<<8)-(C_BASE_ADDR_FLOW_CACHE_HASH_LOWER<<8))/INR_FC_EMH_HashTable_entry_length) 
+
 //ruletable with hardcoded fields
-#define  INR_FC_EMH_RuleTable_base  196608
-#define  INR_FC_EMH_RuleTable_length  512
 #define  INR_FC_EMH_RuleTable_entry_length  64 //length of entry in byte + stuffbits
 #define  INR_FC_EMH_RuleTable_entry_length_memcpy 36 //length of entry in byte
+#define  INR_FC_EMH_RuleTable_base  (C_BASE_ADDR_FLOW_CACHE_FIELD_LOWER<<8)
+#define  INR_FC_EMH_RuleTable_length  ((((C_BASE_ADDR_FLOW_CACHE_FIELD_UPPER+1)<<8)-(C_BASE_ADDR_FLOW_CACHE_FIELD_LOWER<<8))/INR_FC_EMH_RuleTable_entry_length)
+
 //collision table with hardcoded fields
-#define  INR_FC_EMH_CTable_base 327680
-#define  INR_FC_EMH_CTable_length 8
 #define  INR_FC_EMH_CTable_entry_length_memcpy  36 //length of entry in byte
 #define  INR_FC_EMH_CTable_entry_length 64 //length of entry in byte + stuffbits
+#define  INR_FC_EMH_CTable_base (C_BASE_ADDR_FLOW_CACHE_LINEAR_LOWER<<8)
+#define  INR_FC_EMH_CTable_length ((((C_BASE_ADDR_FLOW_CACHE_LINEAR_UPPER+1)<<8)-(C_BASE_ADDR_FLOW_CACHE_LINEAR_LOWER<<8))/INR_FC_EMH_CTable_entry_length)
+
 //hashtable with flexible fields
-#define  INR_FC_EMA_TCAM_base 131072
-#define  INR_FC_EMA_TCAM_length 128
+#define  INR_FC_EMA_TCAM_base (C_BASE_ADDR_FLOW_CACHE_EMA_CAM<<8)
+#define  INR_FC_EMA_TCAM_length 0x80
 #define  INR_FC_EMA_TCAM_entry_length 16
 //ruletable with flexible fields
-#define  INR_FC_EMA_RuleTable_base  393216
-#define  INR_FC_EMA_RuleTable_length  128
 #define  INR_FC_EMA_RuleTable_entry_length  64 //length of entry in byte + stuffbits
 #define  INR_FC_EMA_RuleTable_entry_length_memcpy 36 //length of entry in byte
+#define  INR_FC_EMA_RuleTable_base  (C_BASE_ADDR_FLOW_CACHE_EMA_LOWER<<8)
+#define  INR_FC_EMA_RuleTable_length  ((((C_BASE_ADDR_FLOW_CACHE_EMA_UPPER+1)<<8)-(C_BASE_ADDR_FLOW_CACHE_EMA_LOWER<<8))/INR_FC_EMA_RuleTable_entry_length)
+
 #define  THW if(touch_HW)
+
 
 struct INR_FC_EMH_RULE_TYPE1
 {
@@ -190,15 +199,15 @@ struct INR_FC_ActT_RULE
   /**<outputport assignment  */
   uint8_t Bad_enable: 1;
   /**<bad enable  */
-  uint8_t BadValue: 1;
+  //uint8_t BadValue: 1; //removed 08.12.2017
   /**<bad assignment  */
-  uint8_t BadReason: 5;
+  //uint8_t BadReason: 5;//removed 08.12.2017
   /**<bad reason  */
-  uint8_t Cut_enable: 1;
+  uint8_t Cut_enable: 1; // is diable now, but lets keep the name
   /**<cut through enable  */
-  uint8_t CutValue: 1;
+  //uint8_t CutValue: 1; //removed 08.12.2017
   /**<cut through assignment  */
-  uint32_t unused: 17;
+  uint32_t unused: 24;
   /**<fill bits  */
 } __attribute__ ((__packed__));
 

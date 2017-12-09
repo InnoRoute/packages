@@ -1008,10 +1008,10 @@ AT_add (struct arguments *arguments)
 			entry_shadow->OutPort_enable = 1 & arguments->OutPort_enable;	//Outputport enable 
 			entry_shadow->OutPort = 0x1f & arguments->OutPort;	//outputport assignment 
 			entry_shadow->Bad_enable = 1 & arguments->Bad_enable;	//bad enable 
-			entry_shadow->BadValue = 1 & arguments->BadValue;	//bad assignment 
-			entry_shadow->BadReason = 0x1f & arguments->BadReason;	//bad reason  
+			//entry_shadow->BadValue = 1 & arguments->BadValue;	//bad assignment 
+			//entry_shadow->BadReason = 0x1f & arguments->BadReason;	//bad reason  
 			entry_shadow->Cut_enable = 1 & arguments->Cut_enable;	//cut through enable  
-			entry_shadow->CutValue = 1 & arguments->CutValue;	//cut through assignment 
+			//entry_shadow->CutValue = 1 & arguments->CutValue;	//cut through assignment 
 			entry_shadow->unused = 0xffffffffffffffff;
 			FCmemcpy (entry, entry_shadow, INR_FC_ActT_entry_length_memcpy);	//copy shadow to mmi (wordwise)
 		}
@@ -1036,10 +1036,10 @@ AT_update (struct arguments arguments)
 		entry_shadow->OutPort_enable = 1 & arguments.OutPort_enable;  //Outputport enable 
 		entry_shadow->OutPort = 0x1f & arguments.OutPort;  //outputport assignment 
 		entry_shadow->Bad_enable = 1 & arguments.Bad_enable;  //bad enable  
-		entry_shadow->BadValue = 1 & arguments.BadValue;  //bad assignment  
-		entry_shadow->BadReason = 0x1f & arguments.BadReason;  //bad reason  
+		//entry_shadow->BadValue = 1 & arguments.BadValue;  //bad assignment  
+		//entry_shadow->BadReason = 0x1f & arguments.BadReason;  //bad reason  
 		entry_shadow->Cut_enable = 1 & arguments.Cut_enable;  //cut through enable  
-		entry_shadow->CutValue = 1 & arguments.CutValue;  //cut through assignment 
+		//entry_shadow->CutValue = 1 & arguments.CutValue;  //cut through assignment 
 		FCmemcpy (entry, entry_shadow, INR_FC_ActT_entry_length_memcpy);	//copy shadow to mmi (wordwise)
 	}	else {
 		verblog printf ("no free space\n");
@@ -1099,10 +1099,10 @@ AT_print (struct arguments arguments)
 			printf ("OutPort_enable:%i  ", entry->OutPort_enable);
 			printf ("OutPort:0x%x  ", entry->OutPort);
 			printf ("Bad_enable:%i  ", entry->Bad_enable);
-			printf ("BadValue:%i  ", entry->BadValue);
-			printf ("BadReason:0x%x  ", entry->BadReason);
+			//printf ("BadValue:%i  ", entry->BadValue);
+			//printf ("BadReason:0x%x  ", entry->BadReason);
 			printf ("CutTrough_enable:%i  ", entry->Cut_enable);
-			printf ("CutTroughValue:%i  ", entry->CutValue);
+			//printf ("CutTroughValue:%i  ", entry->CutValue);
 			printf ("\n");
 		} else {
 			printf ("ID not valid\n");
