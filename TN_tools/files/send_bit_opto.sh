@@ -21,7 +21,7 @@ echo "Sending bitstream '$bitstream' via OPTO/Fast Serial"
 i2cset -y 0 4 2 1
 
 # Wait for SMBus accesses to be executed (might be skipped)
-i2cget -y 0 4 2
+let wait=`i2cget -y 0 4 2`
 
 # Linux image version 0.6+ (before it was ftdi_opto_tool):
 # Send bitstream via FT2232H OPTO/Fast Serial mode (bin file -> synthesized with CONFIG_MODE=S_SERIAL and unset BITSTREAM.CONFIG.SPI_BUSWIDTH)
@@ -34,9 +34,31 @@ time INR_ftdi_opto_tool $bitstream
 i2cset -y 0 4 2 2
 
 # Wait for SMBus accesses to be executed (might be skipped)
-i2cget -y 0 4 2
+let wait=`i2cget -y 0 4 2`
 
 # Reset SMBus FSM (might be skipped)
 i2cset -y 0 4 2 0
 
-echo "Updates of the PCIe core require a Linux restart, not a power down"
+echo "Check programming results:"
+let biterr=`i2cget -y 0 4 2`
+if [[ $(( $biterr & 140 )) -eq 0 ]]; then
+  echo "-> No error";
+fi
+if [[ $(( $biterr & 128 )) -eq 128 ]]; then
+  echo "-> ID warning";
+fi
+if [[ $(( $biterr & 3 )) -eq 1 ]]; then
+  echo "-> Flash Error";
+fi
+if [[ $(( $biterr & 3 )) -eq 2 ]]; then
+  echo "-> LPC Error";
+fi
+if [[ $(( $biterr & 3 )) -eq 3 ]]; then
+  echo "-> OPTO Error";
+fi
+if [[ $(( $biterr & 4 )) -gt 0 ]]; then
+  echo "-> INIT_B went low";
+fi
+if [[ $(( $biterr & 8 )) -gt 0 ]]; then
+  echo "-> DONE timeout";
+fi

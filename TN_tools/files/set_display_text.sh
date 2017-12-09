@@ -97,14 +97,15 @@ case $# in
 esac
 printf "Setting display to 0x%04x, 0x%04x, 0x%04x, and 0x%04x (left to right)\n" $display1 $display2 $display3 $display4
 
+C_BASE_ADDR_FACTOR=256
+TNbar1 $(($C_BASE_ADDR_PERIPH*$C_BASE_ADDR_FACTOR+0x24)) w 0x3 #set brigthness
+
 # writes to display window left
-TNbar1 $(($TN_BASE_ADDR_PERIPHERIALS+0x10)) w $display1
+TNbar1 $(($C_BASE_ADDR_PERIPH*$C_BASE_ADDR_FACTOR+0x10)) w $display1
 
 # writes to display window middle left
-TNbar1 $(($TN_BASE_ADDR_PERIPHERIALS+0x14)) w $display2
+TNbar1 $(($C_BASE_ADDR_PERIPH*$C_BASE_ADDR_FACTOR+0x14)) w $display2
 
 # writes to display window middle right
-TNbar1 $(($TN_BASE_ADDR_PERIPHERIALS+0x18)) w $display3
-
-# writes to display window right
-TNbar1 $(($TN_BASE_ADDR_PERIPHERIALS+0x1C)) w $display4
+TNbar1 $(($C_BASE_ADDR_PERIPH*$C_BASE_ADDR_FACTOR+0x1C)) w $display4
+TNbar1 $(($C_BASE_ADDR_PERIPH*$C_BASE_ADDR_FACTOR+0x18)) w $display3

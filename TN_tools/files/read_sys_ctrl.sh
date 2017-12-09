@@ -27,7 +27,7 @@ case $firmware in
   echo "*     -> FW1.7";;
 13)
   echo "*     -> FW1.8";;
-14)
+[14-15])
   echo "*     -> FW1.9";;
 esac
 
@@ -81,18 +81,30 @@ fi
 
 let pll=`i2cget -y 0 4 0x04`
 printf  "*  4: PLL (Current M Pins value; RO)             0x%02x\n" $pll
-if [[ $(( $pll & 16 )) -eq 16 ]]; then
-  echo "*     -> Possible encoding: currently Ref A valid (SyncE Port A, if default config)";
-fi
-if [[ $(( $pll & 32 )) -eq 32 ]]; then
-  echo "*     -> Possible encoding: currently Ref B valid (SyncE Port B, if default config)";
-fi
-if [[ $(( $pll & 64 )) -eq 64 ]]; then
-  echo "*     -> Possible encoding: currently Ref C valid (BNC In, if default config)";
-fi
-if [[ $(( $pll & 128 )) -eq 128 ]]; then
-  echo "*     -> Possible encoding: currently Ref D valid (Artix FPGA, if default config)";
-fi
+#if [[ $(( $pll & 1 )) -eq 1 ]]; then
+#  echo "*     -> M0 is high";
+#fi
+#if [[ $(( $pll & 2 )) -eq 2 ]]; then
+#  echo "*     -> M1 is high";
+#fi
+#if [[ $(( $pll & 4 )) -eq 4 ]]; then
+#  echo "*     -> M2 is high";
+#fi
+#if [[ $(( $pll & 8 )) -eq 8 ]]; then
+#  echo "*     -> M3 is high";
+#fi
+#if [[ $(( $pll & 16 )) -eq 16 ]]; then
+#  echo "*     -> M4 is high"; # "Possible encoding: currently Ref A valid (SyncE Port A, if default config)";
+#fi
+#if [[ $(( $pll & 32 )) -eq 32 ]]; then
+#  echo "*     -> M5 is high"; # "Possible encoding: currently Ref B valid (SyncE Port B, if default config)";
+#fi
+#if [[ $(( $pll & 64 )) -eq 64 ]]; then
+#  echo "*     -> M6 is high"; # "Possible encoding: currently Ref C valid (BNC In, if default config)";
+#fi
+#if [[ $(( $pll & 128 )) -eq 128 ]]; then
+#  echo "*     -> M7 is high"; # "Possible encoding: currently Ref D valid (Artix FPGA, if default config)";
+#fi
 
 let dutycycle=`i2cget -y 0 4 0x05`
 let dutycyclepercent=$dutycycle*25/16
@@ -104,10 +116,11 @@ printf  "*  6: Fan Speed (RPM; RO)                        %d\n" $fanspeed
 printf  "*  7: Board Pinout ID (RO)                       %d\n" `i2cget -y 0 4 0x07`
 
 printf  "*  8: Successful Artix Program Count (RO)        %d\n" `i2cget -y 0 4 0x08`
-echo    "*     (incl. successful flash loads after failed OPTO/JTAG/LPC configuration)"
+echo    "*     (incl. successful flash loads after failed OPTO/LPC configuration)"
 
 if [[ $firmware > 11 ]]; then
   printf  "*     Failed Artix Program Count (DONE/INITB;RO) %d\n" `i2cget -y 0 4 0x1b`;
+  echo    "*     (OPTO/LPC/flash, but not JTAG)"
 fi
 
 printf  "*  9: Front buttons (RO)                         0x%02x%02x\n" `i2cget -y 0 4 0x0a` `i2cget -y 0 4 0x09`
@@ -249,7 +262,7 @@ if [[ $(( $event4 & 128 )) -eq 128 ]]; then
   echo "*     -> PLL-M7 low";
 fi
 
-printf  "* 11: RTC (RO)                                   0x%02x%02x%02x%02x%02x%02x%02x%02x\n" `i2cget -y 0 4 0x17` `i2cget -y 0 4 0x16` `i2cget -y 0 4 0x15` `i2cget -y 0 4 0x14` `i2cget -y 0 4 0x13` `i2cget -y 0 4 0x12` `i2cget -y 0 4 0x11` `i2cget -y 0 4 0x10`
+printf  "* 11: Uptime (RO;serially read)                  0x%02x%02x%02x%02x%02x%02x%02x%02x\n" `i2cget -y 0 4 0x17` `i2cget -y 0 4 0x16` `i2cget -y 0 4 0x15` `i2cget -y 0 4 0x14` `i2cget -y 0 4 0x13` `i2cget -y 0 4 0x12` `i2cget -y 0 4 0x11` `i2cget -y 0 4 0x10`
 let rtc_sec0=`i2cget -y 0 4 0x14`
 let rtc_sec1=`i2cget -y 0 4 0x15`
 let rtc_sec2=`i2cget -y 0 4 0x16`
@@ -261,6 +274,7 @@ let rtc_hours=$rtc_sec/3600-$rtc_days*24;
 let rtc_mins=$rtc_sec/60-$rtc_days*1440-$rtc_hours*60;
 let rtc_sec_rem=$rtc_sec-$rtc_days*86400-$rtc_hours*3600-$rtc_mins*60;
 printf "*           -> %03dd, %02dh:%02dm:%02ds\n" $rtc_days $rtc_hours $rtc_mins $rtc_sec_rem;
+echo    "*     (serial reading leads to inconsistent values at counter lapse)"
 
 # The following does not make sense, because the serial SMBus accesses take too long:
 #let rtc_qns0=`i2cget -y 0 4 0x10`

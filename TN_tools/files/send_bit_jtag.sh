@@ -10,12 +10,11 @@ else
   export bitstream=$1
 fi
 echo "Sending bitstream '$bitstream' via JTAG"
+echo "The message 'No JTAG CHain found' means that a JTAG cable is currently plugged."
 
 # JTAG programming (any bitstream)
 # If access fails, either the FT2232H EEPROM was overwritten or a JTAG cable is connected
 
 time xc3sprog -c ftdi -v -J 1500000 -p0 $bitstream
-
-echo "Updates of the PCIe core require a Linux restart, not a power down"
 
 # for programming the flash add: -I<ISF file>

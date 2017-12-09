@@ -11,7 +11,7 @@ else
   # If a parameter is given, it is assumed that this is the leds value
   let leds=$1
 fi
-printf "Setting LEDs to 0x%04x\n" $leds
+printf "Setting LEDs (SyncE processor message/SyncE LEDs, internal LEDs) to 0x%04x\n" $leds
 
 # Set LEDs (all active-high): bits0-7=UserLEDs, bits8-9=AlaskaUserLed(right)
-TNbar1 $(($C_BASE_ADDR_PERIPH*256+0x08)) w $leds
+TNbar1 $(($C_BASE_ADDR_PERIPH*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_PERIPH_LEDS)) w $leds > /dev/null

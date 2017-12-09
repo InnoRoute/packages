@@ -98,13 +98,13 @@ esac
 printf "Setting display to 0x%04x, 0x%04x, 0x%04x, and 0x%04x (left to right)\n" $display1 $display2 $display3 $display4
 
 # writes to display window left
-TNbar1 $(($C_BASE_ADDR_PERIPH*256+0x10)) w $display1
+let window0=`TNbar1 $(($C_BASE_ADDR_PERIPH*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_PERIPH_DISPLAY0)) w $display1`
 
 # writes to display window middle left
-TNbar1 $(($C_BASE_ADDR_PERIPH*256+0x14)) w $display2
+let window1=`TNbar1 $(($C_BASE_ADDR_PERIPH*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_PERIPH_DISPLAY1)) w $display2`
 
 # writes to display window middle right
-TNbar1 $(($C_BASE_ADDR_PERIPH*256+0x18)) w $display3
+let window2=`TNbar1 $(($C_BASE_ADDR_PERIPH*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_PERIPH_DISPLAY2)) w $display3`
 
 # writes to display window right
-TNbar1 $(($C_BASE_ADDR_PERIPH*256+0x1C)) w $display4
+let window3=`TNbar1 $(($C_BASE_ADDR_PERIPH*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_PERIPH_DISPLAY3)) w $display4`

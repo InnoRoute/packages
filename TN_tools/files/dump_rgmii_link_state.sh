@@ -2,22 +2,29 @@
 
 source /usr/share/InnoRoute/tn_env.sh
 
-echo "Reading link state from all RGMIIs"
-
-# Result: Bit0=LinkUp, Bit4=FullDuplex, Bits8-9=Speed (0=10Mbps, 1=100Mbps, 2=1Gbps) -> Expected 0x211 (1Gbps, full duplex, LinkUp)
-# Unconnected PHYs deliver default values: GPHY->0x301 (illegal speed value, half duplex, LinkUp) and Alaska->0x200 (1Gbps, half duplex (illegal for 1Gbps), LinkUp)
-# -> The speed-duplex-combination shows, if a cable is connected
-
-TNbar1 $(($C_BASE_ADDR_RGMII*256+ 0*0x100+4))
-TNbar1 $(($C_BASE_ADDR_RGMII*256+ 1*0x100+4))
-TNbar1 $(($C_BASE_ADDR_RGMII*256+ 2*0x100+4))
-TNbar1 $(($C_BASE_ADDR_RGMII*256+ 3*0x100+4))
-TNbar1 $(($C_BASE_ADDR_RGMII*256+ 4*0x100+4))
-TNbar1 $(($C_BASE_ADDR_RGMII*256+ 5*0x100+4))
-TNbar1 $(($C_BASE_ADDR_RGMII*256+ 6*0x100+4))
-TNbar1 $(($C_BASE_ADDR_RGMII*256+ 7*0x100+4))
-TNbar1 $(($C_BASE_ADDR_RGMII*256+ 8*0x100+4))
-TNbar1 $(($C_BASE_ADDR_RGMII*256+ 9*0x100+4))
-
-TNbar1 $(($C_BASE_ADDR_RGMII*256+10*0x100+4))
-TNbar1 $(($C_BASE_ADDR_RGMII*256+11*0x100+4))
+for gphy in `seq 0 9`; do
+  if [[ `TNbar1 $((($C_BASE_ADDR_RGMII+$gphy)*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_RGMII_CLK_SPEED)) | cut -d ":" -f 2 | cut -d " " -f 2` -eq 3 ]]; then
+    echo -e "GPHY $gphy is down"
+  else
+    let speed=`TNbar1 $((($C_BASE_ADDR_RGMII+$gphy)*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_RGMII_CLK_SPEED)) | cut -d ":" -f 2 | cut -d " " -f 2`+1
+    let duplex=`TNbar1 $((($C_BASE_ADDR_RGMII+$gphy)*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_RGMII_DPX_STAT)) | cut -d ":" -f 2 | cut -d " " -f 2`
+	if [[ $duplex -eq 1 ]]; then
+      echo -e "GPHY $gphy is up: 10^$speed Mbps, Full Duplex";
+	else
+      echo -e "GPHY $gphy is up: 10^$speed Mbps, Half Duplex";
+	fi
+  fi
+done
+for alaska in `seq 10 11`; do
+  if [[ `TNbar1 $((($C_BASE_ADDR_RGMII+$alaska)*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_RGMII_LINK_STAT)) | cut -d ":" -f 2 | cut -d " " -f 2` -eq 0 ]]; then
+    echo -e "Alaska $alaska is down"
+  else
+    let speed=`TNbar1 $((($C_BASE_ADDR_RGMII+$alaska)*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_RGMII_CLK_SPEED)) | cut -d ":" -f 2 | cut -d " " -f 2`+1
+    let duplex=`TNbar1 $((($C_BASE_ADDR_RGMII+$alaska)*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_RGMII_DPX_STAT)) | cut -d ":" -f 2 | cut -d " " -f 2`
+	if [[ $duplex -eq 1 ]]; then
+      echo -e "Alaska $alaska is up: 10^$speed Mbps, Full Duplex";
+	else
+      echo -e "Alaska $alaska is up: 10^$speed Mbps, Half Duplex";
+	fi
+  fi
+done

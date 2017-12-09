@@ -1,5 +1,5 @@
 #!/bin/bash
-#TrustNode tool to display charakters on the display
+#TrustNode tool to display characters on the display
 word=$1
 text=''
 for i in {1..16}

@@ -35,15 +35,15 @@ else
 fi
 
 # write data range: 0-31
-TNbar1 $((C_BASE_ADDR_RGMII*256+ 0*0x100)) w $idelay1
-TNbar1 $((C_BASE_ADDR_RGMII*256+ 1*0x100)) w $idelay2
-TNbar1 $((C_BASE_ADDR_RGMII*256+ 2*0x100)) w $idelay3
-TNbar1 $((C_BASE_ADDR_RGMII*256+ 3*0x100)) w $idelay4
-TNbar1 $((C_BASE_ADDR_RGMII*256+ 4*0x100)) w $idelay5
-TNbar1 $((C_BASE_ADDR_RGMII*256+ 5*0x100)) w $idelay6
-TNbar1 $((C_BASE_ADDR_RGMII*256+ 6*0x100)) w $idelay7
-TNbar1 $((C_BASE_ADDR_RGMII*256+ 7*0x100)) w $idelay8
-TNbar1 $((C_BASE_ADDR_RGMII*256+ 8*0x100)) w $idelay9
-TNbar1 $((C_BASE_ADDR_RGMII*256+ 9*0x100)) w $idelay10
-TNbar1 $((C_BASE_ADDR_RGMII*256+10*0x100)) w $idelay11
-TNbar1 $((C_BASE_ADDR_RGMII*256+11*0x100)) w $idelay12
+TNbar1 $((($C_BASE_ADDR_RGMII+ 0)*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_RGMII_TAP)) w $idelay1 > /dev/null
+TNbar1 $((($C_BASE_ADDR_RGMII+ 1)*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_RGMII_TAP)) w $idelay2 > /dev/null
+TNbar1 $((($C_BASE_ADDR_RGMII+ 2)*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_RGMII_TAP)) w $idelay3 > /dev/null
+TNbar1 $((($C_BASE_ADDR_RGMII+ 3)*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_RGMII_TAP)) w $idelay4 > /dev/null
+TNbar1 $((($C_BASE_ADDR_RGMII+ 4)*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_RGMII_TAP)) w $idelay5 > /dev/null
+TNbar1 $((($C_BASE_ADDR_RGMII+ 5)*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_RGMII_TAP)) w $idelay6 > /dev/null
+TNbar1 $((($C_BASE_ADDR_RGMII+ 6)*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_RGMII_TAP)) w $idelay7 > /dev/null
+TNbar1 $((($C_BASE_ADDR_RGMII+ 7)*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_RGMII_TAP)) w $idelay8 > /dev/null
+TNbar1 $((($C_BASE_ADDR_RGMII+ 8)*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_RGMII_TAP)) w $idelay9 > /dev/null
+TNbar1 $((($C_BASE_ADDR_RGMII+ 9)*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_RGMII_TAP)) w $idelay10 > /dev/null
+TNbar1 $((($C_BASE_ADDR_RGMII+10)*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_RGMII_TAP)) w $idelay11 > /dev/null
+TNbar1 $((($C_BASE_ADDR_RGMII+11)*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_RGMII_TAP)) w $idelay12 > /dev/null
