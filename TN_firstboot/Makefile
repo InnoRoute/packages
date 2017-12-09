@@ -8,8 +8,9 @@ define Package/TN_firstboot
  SECTION:=TN_firstboot
  CATEGORY:=InnoRoute
  TITLE:=TN_firstboot
- DEPENDS:=+INR_ftdi_eeprom +ftdi_opto_tool +TNpllctl +lm-sensors +openssh-keygen
- endef
+ DEPENDS:=+ftdi_opto_tool +TNpllctl +lm-sensors +openssh-keygen
+endef
+ 
 define Build/Prepare
 #mkdir ‐p $(PKG_BUILD_DIR)
 	$(CP) ./src/* $(PKG_BUILD_DIR)/
