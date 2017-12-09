@@ -8,23 +8,23 @@
 include $(TOPDIR)/rules.mk
 include $(INCLUDE_DIR)/kernel.mk
 
-PKG_NAME:=INR_TN_MMI
+PKG_NAME:=INR_TN_int
 PKG_VERSION:=0.1
 PKG_RELEASE:=1
 
 include $(INCLUDE_DIR)/package.mk
 
-define KernelPackage/INR_TN_MMI
+define KernelPackage/INR_TN_int
   SUBMENU:=InnoRoute
   TITLE:=TrustNode mmi control functions
   FILES:=$(PKG_BUILD_DIR)/INR_TN_MMI.ko
-  AUTOLOAD:=$(call AutoLoad,50,INR_TN_MMI)
+  AUTOLOAD:=$(call AutoLoad,50,INR_TN_int)
   DEPENDS:=+TN_tools
 #+kmod-openvswitch
 #+openvswitch-dev +kmod-TNopenvswitch
 endef
 
-define KernelPackage/INR_TN_MMI/description
+define KernelPackage/INR_TN_int/description
 special mmi control functions
 endef
 
@@ -49,4 +49,4 @@ endef
 #	$(INSTALL_DIR) $(1)/etc/trustnode
 #endef
 
-$(eval $(call KernelPackage,INR_TN_MMI,+libsflow,+libofproto,+libovsdb,TN_tools))
+$(eval $(call KernelPackage,INR_TN_int,+libsflow,+libofproto,+libovsdb,TN_tools))
