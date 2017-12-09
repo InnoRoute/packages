@@ -44,6 +44,7 @@
 #include <sys/types.h>
 #include <sys/mman.h>
 #include "TN6tree.h"
+#include "tn_env.h"
 
 uint64_t map_base; /**<global mapped base address of mmi*/
 
@@ -65,7 +66,6 @@ MMIread (uint64_t target)
 @param netfork interface id
 */
 uint32_t get_PHY_base(uint8_t index){
-
 switch(index){
 		case 0:return PHY0_base;break;
 		case 1:return PHY1_base;break; 
@@ -106,6 +106,10 @@ uint8_t
 printentry ()
 {uint8_t i=0;
 uint64_t baseaddress=0;
+printconst(C_SUB_ADDR_COMMON_TN_MAJOR_REV);
+printconst(C_SUB_ADDR_COMMON_TN_MINOR_REV);
+printconst(C_SUB_ADDR_COMMON_USER_REV);
+printconst(C_SUB_ADDR_COMMON_ADDR_MAP_REV);
 for(i=0;i<12;i++){
   baseaddress=get_PHY_base(i);
   printf ("Interface:%i 6Treeprefix:AF%06lx%08lx bytecount_src:%i bytecount_dst:%i\n",i, MMIread (baseaddress+INR_6T_ADDR_H), MMIread (baseaddress+INR_6T_ADDR_L),MMIread(baseaddress+INR_6T_SRC_PTR),MMIread(baseaddress+INR_6T_DST_PTR));
