@@ -3,7 +3,8 @@
 *@brief settings and definitions Netork communication
 *@author M.Ulbricht 2015
 **/
-#define INR_NWDEV_features NETIF_F_SG | NETIF_F_IP_CSUM | NETIF_F_FRAGLIST
+#define INR_NWDEV_features NETIF_F_SG | NETIF_F_FRAGLIST
+//no, we dont support TCP-checsum.. NETIF_F_IP_CSUM
 /**
 *Network packet structure
 */
