@@ -2,7 +2,7 @@
 
 # TODO: Move from ifconfig to ip. Initially remove all TN* and br0
 
-echo "Looping back TN0 and TN1"
+echo "Adding br0 to loop connect all virtual TN ports ..."
 
 #insmod trustnode.ko
 ifconfig TN0 up
@@ -46,3 +46,5 @@ ifconfig br0 up
 #ifconfig -a
 #tcpdump -i TN0
 #tcpdump -i TN1
+
+bwm-ng -T sum -u packets

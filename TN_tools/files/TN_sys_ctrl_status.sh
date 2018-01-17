@@ -322,7 +322,7 @@ if [[ $firmware > 11 ]]; then
   let pmod=`i2cget -y 0 4 0x1c`;
   printf  "* 15: System Controller PMod function (RW)       0x%02x\n" $pmod;
   if [[ $pmod == 0 ]]; then
-    echo "*     -> Default: Clock Output";
+    echo "*     -> Clock Output";
   elif [[ $pmod == 1 ]]; then
     echo "*     -> FPGA UART";
   elif [[ $pmod == 2 ]]; then

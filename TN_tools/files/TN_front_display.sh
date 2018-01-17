@@ -63,10 +63,10 @@ case $# in
 
     # If parameters are given, it is assumed that they are the display values
     # Convert to 4-parameter mode
-    let display1=$digit1+$digit2*0x100+$digit3*0x10000+$digit4*0x1000000
-    let display2=$digit5+$digit6*0x100+$digit7*0x10000+$digit8*0x1000000
-    let display3=$digit9+$digit10*0x100+$digit11*0x10000+$digit12*0x1000000
-    let display4=$digit13+$digit14*0x100+$digit15*0x10000+$digit16*0x1000000
+    let display1=$digit4+$digit3*0x100+$digit2*0x10000+$digit1*0x1000000
+    let display2=$digit8+$digit7*0x100+$digit6*0x10000+$digit5*0x1000000
+    let display3=$digit12+$digit11*0x100+$digit10*0x10000+$digit9*0x1000000
+    let display4=$digit16+$digit15*0x100+$digit14*0x10000+$digit13*0x1000000
     ;;
   *)
     echo "Sixteen-parameter mode: "
@@ -97,15 +97,14 @@ case $# in
 esac
 printf "Setting display to 0x%04x, 0x%04x, 0x%04x, and 0x%04x (left to right)\n" $display1 $display2 $display3 $display4
 
-C_BASE_ADDR_FACTOR=256
-TNbar1 $(($C_BASE_ADDR_PERIPH*$C_BASE_ADDR_FACTOR+0x24)) w 0x3 #set brigthness
-
 # writes to display window left
-TNbar1 $(($C_BASE_ADDR_PERIPH*$C_BASE_ADDR_FACTOR+0x10)) w $display1
+TNbar1 $(($C_BASE_ADDR_PERIPH*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_PERIPH_DISPLAY0)) w $display1 > /dev/null
 
 # writes to display window middle left
-TNbar1 $(($C_BASE_ADDR_PERIPH*$C_BASE_ADDR_FACTOR+0x14)) w $display2
+TNbar1 $(($C_BASE_ADDR_PERIPH*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_PERIPH_DISPLAY1)) w $display2 > /dev/null
 
 # writes to display window middle right
-TNbar1 $(($C_BASE_ADDR_PERIPH*$C_BASE_ADDR_FACTOR+0x1C)) w $display4
-TNbar1 $(($C_BASE_ADDR_PERIPH*$C_BASE_ADDR_FACTOR+0x18)) w $display3
+TNbar1 $(($C_BASE_ADDR_PERIPH*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_PERIPH_DISPLAY2)) w $display3 > /dev/null
+
+# writes to display window right
+TNbar1 $(($C_BASE_ADDR_PERIPH*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_PERIPH_DISPLAY3)) w $display4 > /dev/null

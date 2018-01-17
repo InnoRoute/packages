@@ -2,7 +2,7 @@
 
 let plladdr=0x69
 
-echo "Dumping PLL rester contents:"
+echo "Dumping PLL register contents:"
 
 echo "Serial Control Port Configuration and Device Identification"
 for regaddr in 0x0000\

@@ -19,5 +19,4 @@ printf "Setting GPIO headers to mask/drive 0x%04x\n" $gpio
 #   Reading external signals is only possible, if tristate is active,
 #   but driving the output data is only possible, if tristate is inactive
 
-let     gpio=TNbar1 $(($C_BASE_ADDR_PERIPH*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_PERIPH_GPIOS)) w $gpio
-printf "Current GPIO PIN State: 0x%08x\n" $gpio
+TNbar1 $(($C_BASE_ADDR_PERIPH*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_PERIPH_GPIOS)) w $gpio > /dev/null
