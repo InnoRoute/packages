@@ -16,8 +16,10 @@ define Build/Prepare
 endef
 define Package/TN_tools/install
 	$(INSTALL_DIR) $(1)/usr/share/InnoRoute
-	$(INSTALL_BIN) ./files/*.sh $(1)/usr/share/InnoRoute/
+	$(INSTALL_BIN) ./files/tn*.sh $(1)/usr/share/InnoRoute/
+	$(INSTALL_BIN) ./files/TN*.sh $(1)/usr/share/InnoRoute/
 	$(INSTALL_CONF) ./files/*.conf $(1)/usr/share/InnoRoute/
+	$(INSTALL_CONF) ./files/*.stp $(1)/usr/share/InnoRoute/
 	$(INSTALL_DIR) $(STAGING_DIR)/usr/include
 	$(INSTALL_CONF) ./files/*.h $(STAGING_DIR)/usr/include/
 endef
