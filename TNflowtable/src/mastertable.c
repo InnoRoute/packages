@@ -286,7 +286,7 @@ verblog printf ("__FUNCTION__ = %s\n", __FUNCTION__);
     				verblog printf ("sorting match %i\n",i);
 //    				match=1;
 //    				lastmatch=i+1;//nextrun start on next entry
-    				entry->ID=1;
+    				entry->ID=1;//search next free space from start of table
     				RT_EMA_add (entry); //add to table
    				HT_EMA_add (entry); //add to hashtable
     			}    		
@@ -359,6 +359,7 @@ FC_MasterT_del (uint64_t ID)
     }
     entry->used = 0;
   }
+  FC_MT_apply_priority();
   return ID;
 }
 

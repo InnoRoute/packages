@@ -29,6 +29,7 @@ struct tabid
 	uint64_t EMA_RT;	/**ruletable*/
 	uint64_t EMA_HT;	/**hashtable*/
 	uint64_t ActT;	/**Action table*/
+	uint64_t ACCDP;	/**ACCDP*/
 } __attribute__ ((__packed__));
 
 struct arguments
@@ -36,6 +37,8 @@ struct arguments
 	char *args[1];	/* filename */
 	uint8_t used;	/**<entry used */
 	int verbose;	/* The -v flag */
+	uint8_t numberout;/* print number of table after outosearch */
+	uint8_t dohave_numberout;/* print number of table after outosearch */
 	uint64_t MAC_SRC;	/**<source MAC*/
 	uint8_t dohave_MAC_SRC;/**<source MAC was set by user*/
 	uint64_t MAC_DST;	/**<destination MAC*/
@@ -56,6 +59,8 @@ struct arguments
 	uint8_t dohave_PORT_DST;/**<TCP/UDP destination port was set by user*/
 	uint16_t ETHERTYPE;/**<Ethertype*/
 	uint8_t dohave_ETHERTYPE;/**<Ethertype was set by user*/
+	uint16_t NAL_ID;/**<NAL_ID of videolayer used by Acceleration Datapath*/
+	uint8_t dohave_NAL_ID;/**<NAL_ID was set by user*/
 	uint16_t TOS;/**<Type of service*/
 	uint8_t dohave_TOS;/**<Type of service was set by user*/
 	uint8_t INPORT;/**<physical input port*/

@@ -18,6 +18,8 @@
 
 #include "tnlibflowtable.h"
 #include "tn_env.h"
+#include "tnlibaccdp.h"
+#include "accdpactions.h"
 
 uint64_t FCbase_EMH = 0;
 uint64_t FCbase_EMH_shadow = 0;
@@ -69,9 +71,9 @@ FCmemcpy(void *dst, const void *src, size_t len)
   size_t i;
   uint32_t *d = dst;
   uint32_t *s = src;
-  for (i = 0; i < len / sizeof(uint32_t); i++) {
+  THW {for (i = 0; i < len / sizeof(uint32_t); i++) {
     d[i] = s[i];
-  }
+  }}
   return dst;
 }
 
@@ -226,6 +228,27 @@ INR_RuleTable_EMH_get_next_free_entry (uint64_t id)
   }
   return i - 1;
 }
+//************************************************************************************************************************************
+/**
+*returns number of used entrys
+*
+*/
+uint16_t
+INR_RuleTable_EMH_get_used ()
+{
+  uint16_t i =0; 
+  uint16_t c=0;
+  if (i == 0) {
+    i++;
+  }
+  struct INR_FC_EMH_RULE *entry= NULL;
+  for(i=0;i<INR_FC_EMH_RuleTable_length;i++){
+    entry = (struct INR_FC_EMH_RULE *) INR_RuleTable_EMH_shadow_get_addr (i);
+		if(entry->VALID_BIT)c++;
+  } 
+  
+  return c;
+}
 
 //************************************************************************************************************************************
 /**
@@ -310,6 +333,27 @@ INR_CTable_EMH_get_next_free_entry (uint64_t id)
   }
   return i - 1;
 }
+//************************************************************************************************************************************
+/**
+*returns number of used entrys
+*
+*/
+uint16_t
+INR_CTable_EMH_get_used ()
+{
+  uint16_t i =0; 
+  uint16_t c=0;
+  if (i == 0) {
+    i++;
+  }
+  struct INR_FC_EMH_RULE *entry = NULL;
+  for(i=0;i<INR_FC_EMH_CTable_length;i++){
+    entry = (struct INR_FC_EMH_RULE *) INR_CTable_EMH_shadow_get_addr (i);
+		if(entry->VALID_BIT)c++;
+  } 
+  
+  return c;
+}
 
 //************************************************************************************************************************************
 /**
@@ -369,7 +413,7 @@ INR_RuleTable_EMA_clear_entry (uint64_t id)
   } else {  //can't get address
     entry_shadow->VALID_BIT = 0;  //clear entry
   }
-  FCmemcpy (entry, entry_shadow, INR_FC_EMA_RuleTable_entry_length_memcpy); //copy shadow to mmi (wordwise)
+  THW FCmemcpy (entry, entry_shadow, INR_FC_EMA_RuleTable_entry_length_memcpy); //copy shadow to mmi (wordwise)
   return 0;
 }
 
@@ -398,6 +442,27 @@ INR_RuleTable_EMA_get_next_free_entry (uint64_t id)
   }
   return i - 1;
 }
+//************************************************************************************************************************************
+/**
+*returns number of used entrys
+*
+*/
+uint16_t
+INR_RuleTable_EMA_get_used ()
+{
+  uint16_t i =0; 
+  uint16_t c=0;
+  if (i == 0) {
+    i++;
+  }
+  struct INR_FC_EMA_RULE *entry = NULL;
+  for(i=0;i<INR_FC_EMA_RuleTable_length;i++){
+    entry = (struct INR_FC_EMA_RULE *) INR_RuleTable_EMA_shadow_get_addr (i);
+		if(entry->VALID_BIT)c++;
+  } 
+  
+  return c;
+}
 
 //************************************************************************************************************************************
 /**
@@ -419,11 +484,32 @@ INR_HashTable_EMA_get_next_free_entry (uint64_t id)
   do {
     entry = (union INR_FC_EMA_HashTable_entry *) (FCbase_EMA_shadow + INR_FC_EMA_TCAM_base + i * INR_FC_EMA_TCAM_entry_length);
     i++;
-  } while ((i < INR_FC_EMA_TCAM_length) && (entry->fields.mask.reserved));
+  } while ((i < INR_FC_EMA_TCAM_length) && (entry->fields.mask.reserved)); 
   if (i == INR_FC_EMA_TCAM_length) {
     return 0;
   }
   return i - 1;
+}
+//************************************************************************************************************************************
+/**
+*returns number of used entrys
+*
+*/
+uint16_t
+INR_HashTable_EMA_get_used ()
+{
+  uint16_t i =0; 
+  uint16_t c=0;
+  if (i == 0) {
+    i++;
+  }
+  union INR_FC_EMA_HashTable_entry *entry = NULL;
+  for(i=0;i<INR_FC_EMA_TCAM_length;i++){
+    entry = (union INR_FC_EMA_HashTable_entry *) (FCbase_EMA_shadow + INR_FC_EMA_TCAM_base + i * INR_FC_EMA_TCAM_entry_length);
+		if(entry->fields.mask.reserved)c++;
+  } 
+  
+  return c;
 }
 
 //************************************************************************************************************************************
@@ -595,6 +681,27 @@ INR_ActT_get_next_free_entry (uint64_t id)
   }
   return i - 1;
 }
+//************************************************************************************************************************************
+/**
+*returns zumber of used entrys
+*
+*/
+uint16_t
+INR_ActT_get_used ()
+{
+  uint16_t i =0; 
+  uint16_t c=0;
+  if (i == 0) {
+    i++;
+  }
+  struct INR_FC_ActT_RULE *entry = NULL;
+  for(i=0;i<INR_FC_ActT_length;i++){
+    entry = (struct INR_FC_ActT_RULE *) INR_ActT_shadow_get_addr (i);
+		if(entry->OutPort_enable || entry->Bad_enable || entry->Cut_enable)c++;
+  } 
+  
+  return c;
+}
 
 //************************************************************************************************************************************
 /**
@@ -609,6 +716,10 @@ void set_verbose(uint8_t i) {verbose = i;};
 *@param verbose value
 */
 void printallconst() {
+#ifndef __KERNEL__ //not allowed for kmods
+	printf("Compiled %s %s\n", __DATE__, __TIME__);
+#endif
+printconst(C_MMI_ADDR_MAP_REVISION);
 printconst(C_SUB_ADDR_COMMON_TN_MAJOR_REV);
 printconst(C_SUB_ADDR_COMMON_TN_MINOR_REV);
 printconst(C_SUB_ADDR_COMMON_USER_REV);
@@ -643,6 +754,13 @@ printconst(INR_FC_EMA_RuleTable_entry_length);
 printconst(INR_FC_EMA_RuleTable_entry_length_memcpy);
 printconst(INR_FC_EMA_RuleTable_base);
 printconst(INR_FC_EMA_RuleTable_length);
+
+printconst(INR_ACCDP_available);
+printconst(INR_ACC_FIELD_TABLE_0);
+printconst(INR_ACC_FIELD_TABLE_1);
+
+printconst(INR_ACCDP_entry_length);
+printconst(INR_ACCDP_length);
 
 
 
@@ -714,4 +832,18 @@ parseIPV4string(char* ipAddress)
   char ipbytes[4];
   sscanf(ipAddress, "%uhh.%uhh.%uhh.%uhh", &ipbytes[3], &ipbytes[2], &ipbytes[1], &ipbytes[0]);
   return ipbytes[0] | ipbytes[1] << 8 | ipbytes[2] << 16 | ipbytes[3] << 24;
+}
+//************************************************************************************************************************************
+/**
+*print flowtable usage statistics
+*
+*/
+void FC_statistics_print(){
+printf("ActT, used:%i total:%i\n",INR_ActT_get_used(),INR_FC_ActT_length);
+printf("HashTable_EMA, used:%i total:%i\n",INR_HashTable_EMA_get_used(),INR_FC_EMA_TCAM_length);
+printf("RuleTable_EMA, used:%i total:%i\n",INR_RuleTable_EMA_get_used(),INR_FC_EMA_RuleTable_length);
+printf("CTable_EMH, used:%i total:%i\n",INR_CTable_EMH_get_used(),INR_FC_EMH_CTable_length);
+printf("RuleTable_EMH, used:%i total:%i\n",INR_RuleTable_EMH_get_used(),INR_FC_EMH_RuleTable_length);
+printf("HashTable_EMH, used:%i total:%i\n",INR_RuleTable_EMH_get_used()-INR_CTable_EMH_get_used(),INR_FC_EMH_HashTable_length);
+
 }

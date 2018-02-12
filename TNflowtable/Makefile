@@ -1,6 +1,6 @@
 include	$(TOPDIR)/rules.mk
 PKG_NAME :=tnflowtable
-PKG_RELEASE := 1.5
+PKG_RELEASE := 1.6
 PKG_BUILD_DIR:=	$(BUILD_DIR)/$(PKG_NAME)
 include	$(INCLUDE_DIR)/package.mk
 include $(INCLUDE_DIR)/kernel.mk
@@ -16,6 +16,7 @@ endef
 define Build/Prepare
 	$(CP) ./src/* $(PKG_BUILD_DIR)/
 	$(CP) $(STAGING_DIR)/usr/include/tn_env.h $(PKG_BUILD_DIR)/
+	$(CP) ./src/*.h $(STAGING_DIR)/usr/include/
 	
 endef
 

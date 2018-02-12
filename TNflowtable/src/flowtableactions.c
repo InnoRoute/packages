@@ -27,8 +27,11 @@ clear_arguments (struct arguments *arguments)
 {
 	arguments->args[0] = "";
 	arguments->verbose = 0;
+	arguments->NAL_ID = 0;
 	arguments->MAC_SRC = 0;
 	arguments->MAC_DST = 0;
+	arguments->numberout=0;
+	arguments->dohave_numberout=0;
 	arguments->VLAN_ID = 0;
 	arguments->VLAN_PRIO = 0;
 	arguments->INPORT = 0;
@@ -75,6 +78,7 @@ clear_arguments (struct arguments *arguments)
 	arguments->TableID.ActT = 0;
 	arguments->used = 0;
 	arguments->dohave_MAC_SRC = 0;
+	arguments->dohave_NAL_ID = 0;
 	arguments->dohave_MAC_DST = 0;
 	arguments->dohave_VLAN_ID = 0;
 	arguments->dohave_VLAN_PRIO = 0;
@@ -314,7 +318,7 @@ RT_EMH_add (struct arguments *arguments)
 				arguments->ACTION_ID = INR_ActT_get_next_free_entry (arguments->ID);
 				AT_add (arguments);
 			}
-
+      if(arguments->numberout)printf("RuleT_EMH_ID:%i\n",arguments->RULEPOINTER);
 			entry_shadow->VALID_BIT = 1;
 			entry_shadow->TYPE_ID = 0x3f & arguments->TYPE_ID;	//& (1<<(arguments->TYPE_ID-1));
 			entry_shadow->PRIORITY = 0xff & arguments->PRIORITY;
@@ -357,6 +361,7 @@ RT_EMH_add (struct arguments *arguments)
 		}
 	} else {
 		printf ("RuleTable EMH full\n");
+		if(arguments->numberout)printf("RuleT_EMH_ID:%i\n",0);
 	}
 }
 
@@ -511,6 +516,7 @@ CT_EMH_add (struct arguments *arguments)
 				AT_add (arguments);
 			}
 			arguments->RULEPOINTER = INR_CTable_EMH_get_next_free_entry (0xffff & arguments->ID);	//save where rule is stored
+			if(arguments->numberout)printf("CT_EMH_ID:%i\n",arguments->RULEPOINTER);
 			arguments->TableID.EMH_CT = arguments->RULEPOINTER;	//store table position in arguments structure
 			entry_shadow->VALID_BIT = 1;
 			entry_shadow->TYPE_ID = 0x3f & arguments->TYPE_ID;
@@ -548,7 +554,7 @@ CT_EMH_add (struct arguments *arguments)
 			FCmemcpy (entry, entry_shadow, INR_FC_EMH_CTable_entry_length_memcpy);	//copy shadow to mmi (wordwise)
 		}
 	}	else {
-		printf ("Colliontable EMH full\n");
+		if(arguments->numberout)printf("CT_EMH_ID:%i\n",0);
 	}
 }
 
@@ -708,7 +714,8 @@ HT_EMA_add (struct arguments *arguments)
 	entry.fields.mask.PORT_SRC = arguments->MASK_PORT_SRC;
 	entry.fields.mask.PORT_DST = arguments->MASK_PORT_DST;
 	arguments->TableID.EMA_HT = INR_HashTable_EMA_get_next_free_entry (arguments->ID);	//store id of entry in arguments structure
-	INR_HashT_EMA_write (entry, INR_HashTable_EMA_get_next_free_entry (arguments->ID));
+	if(arguments->numberout)printf("HT_EMA_ID:%i\n",arguments->TableID.EMA_HT);
+	if(arguments->TableID.EMA_HT)INR_HashT_EMA_write (entry, INR_HashTable_EMA_get_next_free_entry (arguments->ID));//frite if not full
 }
 
 void
@@ -771,7 +778,7 @@ RT_EMA_add (struct arguments *arguments)
 				AT_add (arguments);
 			}
 			arguments->RULEPOINTER = INR_RuleTable_EMA_get_next_free_entry (0xffff & arguments->ID);	//save where rule is stored
-	
+	    if(arguments->numberout)printf("RuleT_EMA_ID:%i\n",arguments->RULEPOINTER);
 			entry_shadow->VALID_BIT = 1;	    //use this rule or not
 			entry_shadow->reserved = 0;
 			entry_shadow->TYPE_ID = 0xfff & arguments->TYPE_ID;	  //type of rule
@@ -799,6 +806,7 @@ RT_EMA_add (struct arguments *arguments)
 		}
 	}	else {
 		verblog printf ("RuleTable EMA full\n");
+		if(arguments->numberout)printf("RuleT_EMA_ID:%i\n",0);
 	}
 }
 
@@ -1004,7 +1012,7 @@ AT_add (struct arguments *arguments)
 			arguments->RULEPOINTER = INR_ActT_get_next_free_entry (0xffff & arguments->ID);	//save where rule is stored
 			arguments->TableID.ActT = arguments->RULEPOINTER;	//store table position in arguments structure
 			arguments->ACTION_ID = arguments->RULEPOINTER;
-
+			if(arguments->numberout)printf("ActT_ID:%i\n",arguments->ACTION_ID);
 			entry_shadow->OutPort_enable = 1 & arguments->OutPort_enable;	//Outputport enable 
 			entry_shadow->OutPort = 0x1f & arguments->OutPort;	//outputport assignment 
 			entry_shadow->Bad_enable = 1 & arguments->Bad_enable;	//bad enable 
@@ -1016,7 +1024,7 @@ AT_add (struct arguments *arguments)
 			FCmemcpy (entry, entry_shadow, INR_FC_ActT_entry_length_memcpy);	//copy shadow to mmi (wordwise)
 		}
 	}	else {
-		printf ("ActionTable full\n");
+		if(arguments->numberout)printf("ActT_ID:%i\n",0);
 	}
 }
 

@@ -28,6 +28,12 @@ void FCmemcpy(void *dst, const void *src, size_t len);
 uint8_t INR_FC_get_HW_write(void);
 void INR_FC_set_HW_write(uint8_t value);
 void printallconst(void);
+void FC_statistics_print(void);
+uint16_t INR_ActT_get_used (void);
+uint16_t INR_HashTable_EMA_get_used (void);
+uint16_t INR_RuleTable_EMA_get_used (void);
+uint16_t INR_CTable_EMH_get_used (void);
+uint16_t INR_RuleTable_EMH_get_used (void);
 
 uint8_t get_verbose(void);
 void set_verbose(uint8_t i);
@@ -63,7 +69,7 @@ uint32_t parseIPV4string(char* ipAddress) ;
 
 //hashtable with flexible fields
 #define  INR_FC_EMA_TCAM_base (C_BASE_ADDR_FLOW_CACHE_EMA_CAM<<8)
-#define  INR_FC_EMA_TCAM_length 0x80
+#define  INR_FC_EMA_TCAM_length 9 //0x80   hotfig for bug#52
 #define  INR_FC_EMA_TCAM_entry_length 16
 //ruletable with flexible fields
 #define  INR_FC_EMA_RuleTable_entry_length  64 //length of entry in byte + stuffbits

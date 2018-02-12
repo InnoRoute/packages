@@ -20,10 +20,13 @@
 #include "tnlibflowtable.h"
 #include "flowtableactions.h"
 #include "mastertable.h"
+#include "accdpactions.h"
+#include "tnlibaccdp.h"
 #include <argp.h>
 #include <arpa/inet.h>
 #include <fcntl.h>
-#define MAP_SIZE 1024000UL
+
+#define MAP_SIZE 16384000UL
 //#define MAP_MASK (MAP_SIZE - 1)
 const char *argp_program_version = "tnflowcache 0.8";
 const char filename[] = "/sys/bus/pci/devices/0000:01:00.0/resource1";
@@ -37,6 +40,7 @@ struct flock lock;
 static struct argp_option options[] = {//user interface
   {0, 0, 0, 0, "General options:", 0},
   {"verbose", 'v', 0, 0, "Produce verbose output"},
+  {"numberout", 'n', 0, 0, "Output number of tableentry"},
   {"ID", 'i', "", 0, "ID of entry"},
   {"COUNT", 'c', "", 0, "number of entrys to do something"},
   {0, 0, 0, 0, "Rule options:", 1},
@@ -70,6 +74,8 @@ static struct argp_option options[] = {//user interface
   {"AT_Bad", 'b', "", 0, "Bad assignment"},
   {"AT_Bad_reason", 'B', "", 0, "Bad reason"},
   {"AT_Cut", 'X', "", 0, "Cut through assingment"},
+  {0, 0, 0, 0, "Acceleration Datapath specific:", 8},
+  {"NAL_ID", 'N', "", 0, "H265 video layer NAL_ID"},
   {0}
 };
 
@@ -92,6 +98,10 @@ parse_opt (int key, char *arg, struct argp_state *state)
     break;
   case 'z':
     arguments->autoaction = 1;
+    break;
+  case 'n':
+    arguments->numberout = 1;
+    arguments->dohave_numberout = 1;
     break;
   case 'i':
     arguments->ID = strtoull (arg, 0, 0);
@@ -122,6 +132,10 @@ parse_opt (int key, char *arg, struct argp_state *state)
     arguments->Bad_enable = 1;
     arguments->dohave_BadReason = 1;
     arguments->dohave_Bad_enable = 1;
+    break;
+  case 'N':
+    arguments->NAL_ID = strtoul (arg, 0, 0);
+    arguments->dohave_NAL_ID = 1;
     break;
   case 'X':
     arguments->CutValue = strtoul (arg, 0, 0);
@@ -240,7 +254,7 @@ parse_opt (int key, char *arg, struct argp_state *state)
    A description of the non-option command-line arguments
      that we accept.
 */
-static char args_doc[] = "action[[[HashT_[EMH|EMA]_|ActT_|RuleT_[EMH|EMA]_|CollT_EMH_][add|del|clearall|print]]|[[RuleT_[EMH|EMA]|CollT_EMH]_update]";
+static char args_doc[] = "action[[[HashT_[EMH|EMA]_|DP_|ActT_|RuleT_[EMH|EMA]_|CollT_EMH_][add|del|clearall|print|stat]]|[[RuleT_[EMH|EMA]|CollT_EMH]_update]";
 
 /*
   DOC.  Field 4 in ARGP.
@@ -308,6 +322,7 @@ main (int argc, char **argv)
   }
   FCinit_EMH (map_base, map_base_shadow);
   FCinit_MasterTable (map_base_master);//pass the memorypointer to the flowcache libs
+  INR_ACCDP_init(map_base, map_base_shadow);
 
   switch (arguments.args[0][0]) {//parse commandline arguments
   case 'A':
@@ -390,6 +405,31 @@ main (int argc, char **argv)
         break;
       }
     break;
+  case 'D':
+      if(INR_accdp_check()){
+      switch (arguments.args[0][3]) {  //AccDP
+      case 'a':
+        ACCDP_add (&arguments);
+        break;
+      case 'd':
+        ACCDP_del (arguments);
+        break;
+//      case 'u':
+//        ACCDP_update (arguments);
+//        break;
+      case 'c':
+        ACCDP_clear ();
+        break;
+      case 'p':
+        ACCDP_print (arguments);
+        break;
+      default:
+        printf ("unknown subaction\n");
+        break;
+      }}else{
+      printf ("Acceleration Datapath not available for loaded bitstream\n");
+      }
+    break;
   case 'R':
     if (arguments.args[0][8] == 'H')
       switch (arguments.args[0][10]) { //ruletable
@@ -450,6 +490,9 @@ main (int argc, char **argv)
       break;
     case 'p':
       FC_MasterT_print (&arguments);
+      break;
+    case 's':
+      FC_statistics_print ();
       break;
     default:
       printf ("unknown subaction\n");
