@@ -8,7 +8,7 @@ define Package/TN_start
  SECTION:=TN_start
  CATEGORY:=InnoRoute
  TITLE:=TN_start
- DEPENDS:=+lm-sensors
+ DEPENDS:=+lm-sensors TN_tools
  endef
 define Build/Prepare
 #mkdir ‐p $(PKG_BUILD_DIR)
@@ -18,7 +18,9 @@ define Package/TN_start/install
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) ./files/TN_start $(1)/etc/init.d/
 	$(INSTALL_DIR) $(1)/usr/share/InnoRoute
-	$(INSTALL_CONF) ./files/INRsensor.conf $(1)/usr/share/InnoRoute/
+	$(INSTALL_DIR) $(1)/usr/share/InnoRoute/scripts
+	$(INSTALL_BIN) ./files/start_ovs.sh $(1)/usr/share/InnoRoute/scripts/
+#	$(INSTALL_CONF) ./files/INRsensor.conf $(1)/usr/share/InnoRoute/
 endef
 define Package/TN_start/postinst
 #!/bin/sh
