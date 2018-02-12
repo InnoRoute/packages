@@ -8,7 +8,7 @@ define Package/TN_firstboot
  SECTION:=TN_firstboot
  CATEGORY:=InnoRoute
  TITLE:=TN_firstboot
- DEPENDS:=+ftdi_opto_tool +TNpllctl +lm-sensors +openssh-keygen
+ DEPENDS:=+ftdi_opto_tool +TNpllctl +lm-sensors +openssh-keygen +TN_start
 endef
  
 define Build/Prepare
