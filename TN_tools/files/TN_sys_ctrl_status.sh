@@ -29,6 +29,8 @@ case $firmware in
   echo "*     -> FW1.8";;
 [14-15])
   echo "*     -> FW1.9";;
+*)
+  echo "*     -> TBD";;
 esac
 
 let clkbuf=`i2cget -y 0 4 0x01`

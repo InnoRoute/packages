@@ -4,7 +4,7 @@ echo "Configuring Artix, expecting none or one parameter"
 
 if [[ $# == 0 ]]; then
   # Set default bitstream name, if no parameter is given
-  export bitstream=tn_toplevel.bin
+  export bitstream=tn_atom_ctrl.bin
 else
   # If a parameter is given, it is assumed that this is the bitstream name
   export bitstream=$1
@@ -25,7 +25,7 @@ let wait=`i2cget -y 0 4 2`
 
 # Linux image version 0.6+ (before it was ftdi_opto_tool):
 # Send bitstream via FT2232H OPTO/Fast Serial mode (bin file -> synthesized with CONFIG_MODE=S_SERIAL and unset BITSTREAM.CONFIG.SPI_BUSWIDTH)
-time INR_ftdi_opto_tool $bitstream
+INR_ftdi_opto_tool $bitstream
 
 # Exit bitstream programming mode (via LPC)
 # echo 4 > /proc/TN_LPC_ctl

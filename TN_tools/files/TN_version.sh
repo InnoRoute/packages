@@ -6,7 +6,16 @@ source /usr/share/InnoRoute/tn_env.sh
 
 echo "### TrustNode Versions:"
 
-printf "* Main Board Version %d\n" `i2cget -y 0 4 0x07`
+let mainboard=`i2cget -y 0 4 0x07`
+case $mainboard in
+0)
+  echo "* Main Board V1.1" ;;
+1)
+  echo "* Main Board V1.2";;
+*)
+  echo "* Main Board Version unknown";;
+esac
+
 
 printf "* System Controller Firmware Version %d\n" `i2cget -y 0 4 0x00`
 

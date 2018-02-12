@@ -66,30 +66,25 @@ read_mdio_result()
   fi
 }
 
-echo "Reading all standard register values from all Ethernet PHYs"
+echo "Cleaning up"
 
-rm /tmp/gphy0.txt
-rm /tmp/gphy1.txt
-rm /tmp/gphy2.txt
-rm /tmp/gphy3.txt
-rm /tmp/gphy4.txt
-rm /tmp/gphy5.txt
-rm /tmp/gphy6.txt
-rm /tmp/gphy7.txt
-rm /tmp/gphy8.txt
-rm /tmp/gphy9.txt
-rm /tmp/gphy_mmd0.txt
-rm /tmp/gphy_mmd1.txt
-rm /tmp/gphy_mmd2.txt
-rm /tmp/gphy_mmd3.txt
-rm /tmp/gphy_mmd4.txt
-rm /tmp/gphy_mmd5.txt
-rm /tmp/gphy_mmd6.txt
-rm /tmp/gphy_mmd7.txt
-rm /tmp/gphy_mmd8.txt
-rm /tmp/gphy_mmd9.txt
-rm /tmp/alaska0.txt
-rm /tmp/alaska1.txt
+for gphy in `seq 0 9`; do
+  if [ -e /tmp/gphy$gphy.txt ]; then
+    rm /tmp/gphy$gphy.txt;
+  fi;
+done
+for gphy in `seq 0 9`; do
+  if [ -e /tmp/gphy_mmd$gphy.txt ]; then
+    rm /tmp/gphy_mmd$gphy.txt;
+  fi;
+done
+for alaska in `seq 0 1`; do
+  if [ -e /tmp/alaska$alaska.txt ]; then
+    rm /tmp/alaska$alaska.txt;
+  fi;
+done
+
+echo "Reading all standard register values from all Ethernet PHYs"
 
 let page=0
 let write_data=0x0000

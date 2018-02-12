@@ -260,7 +260,7 @@ fi
 echo -e "\n### Reading system status from peripherals module"
 
 let    peripherals_brightness=`TNbar1 $(($C_BASE_ADDR_PERIPH*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_PERIPH_BRIGHTNESS)) | cut -d " " -f 6`
-echo   "Display Brightness: $peripherals_brightness"
+echo   "Display Brightness (0..3): $peripherals_brightness"
 if [[ $peripherals_brightness -eq 0xEEEEEEEE ]]; then
   echo " ** MMI Read Timeout **"
 fi
