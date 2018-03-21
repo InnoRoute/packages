@@ -19,3 +19,4 @@ uint64_t FC_MT_FIND_entry (struct arguments *arguments);
 uint8_t FC_MasterT_del_entry(struct arguments *arguments);
 uint64_t FC_MT_count_action (uint64_t actid);
 void FC_MT_apply_priority(void);
+uint32_t INR_MasterT_get_used(void);

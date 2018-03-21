@@ -314,7 +314,7 @@ FC_MasterT_add (struct arguments *arguments)
     memcpy (entry, arguments, sizeof (struct arguments));
     if(arguments->TableID.EMA_RT)FC_MT_apply_priority();
   } else {
-    printf("MasterTabele full");
+    printf("error: MasterTabele full");
   }
   return 0;
 }
@@ -435,6 +435,28 @@ INR_MasterT_get_next_free_entry (uint64_t id)
     return 0;
   }
   return i - 1;
+}
+
+//************************************************************************************************************************************
+/**
+*returns umber of used entrys
+*
+*/
+uint32_t
+INR_MasterT_get_used ()
+{
+  uint32_t i =0; 
+  uint32_t c=0;
+  if (i == 0) {
+    i++;
+  }
+  struct arguments *entry = NULL;
+  for(i=0;i<MASTERTABLE_length;i++){
+    entry = (struct arguments *) INR_MasterT_get_addr (i);
+    if((entry->used))c++;
+  } 
+  //printf("mtcount:%lli\n",c);
+  return c;
 }
 
 //************************************************************************************************************************************

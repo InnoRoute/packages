@@ -360,7 +360,7 @@ RT_EMH_add (struct arguments *arguments)
 			}
 		}
 	} else {
-		printf ("RuleTable EMH full\n");
+		printf ("error: RuleTable EMH full\n");
 		if(arguments->numberout)printf("RuleT_EMH_ID:%i\n",0);
 	}
 }
@@ -554,7 +554,7 @@ CT_EMH_add (struct arguments *arguments)
 			FCmemcpy (entry, entry_shadow, INR_FC_EMH_CTable_entry_length_memcpy);	//copy shadow to mmi (wordwise)
 		}
 	}	else {
-		if(arguments->numberout)printf("CT_EMH_ID:%i\n",0);
+		if(arguments->numberout)printf("error: collission table EMH full\n");
 	}
 }
 
@@ -694,6 +694,7 @@ void
 HT_EMA_add (struct arguments *arguments)
 {
 	verblog printf ("__FUNCTION__ = %s\n", __FUNCTION__);
+	if(INR_HashTable_EMA_get_next_free_entry (arguments->ID)){
 	if (arguments->HASH.gauto) {
 		verblog printf ("autogenhash...\n");
 		get_HASH (arguments);
@@ -716,6 +717,11 @@ HT_EMA_add (struct arguments *arguments)
 	arguments->TableID.EMA_HT = INR_HashTable_EMA_get_next_free_entry (arguments->ID);	//store id of entry in arguments structure
 	if(arguments->numberout)printf("HT_EMA_ID:%i\n",arguments->TableID.EMA_HT);
 	if(arguments->TableID.EMA_HT)INR_HashT_EMA_write (entry, INR_HashTable_EMA_get_next_free_entry (arguments->ID));//frite if not full
+}else {
+printf("error: hashtable EMA full\n");
+
+}
+
 }
 
 void
@@ -805,7 +811,7 @@ RT_EMA_add (struct arguments *arguments)
 			}
 		}
 	}	else {
-		verblog printf ("RuleTable EMA full\n");
+		verblog printf ("error: RuleTable EMA full\n");
 		if(arguments->numberout)printf("RuleT_EMA_ID:%i\n",0);
 	}
 }
@@ -1024,7 +1030,7 @@ AT_add (struct arguments *arguments)
 			FCmemcpy (entry, entry_shadow, INR_FC_ActT_entry_length_memcpy);	//copy shadow to mmi (wordwise)
 		}
 	}	else {
-		if(arguments->numberout)printf("ActT_ID:%i\n",0);
+		if(arguments->numberout)printf("error: action table full\n");
 	}
 }
 

@@ -20,6 +20,7 @@
 #include "tn_env.h"
 #include "tnlibaccdp.h"
 #include "accdpactions.h"
+#include "mastertable.h"
 
 uint64_t FCbase_EMH = 0;
 uint64_t FCbase_EMH_shadow = 0;
@@ -233,7 +234,7 @@ INR_RuleTable_EMH_get_next_free_entry (uint64_t id)
 *returns number of used entrys
 *
 */
-uint16_t
+uint32_t
 INR_RuleTable_EMH_get_used ()
 {
   uint16_t i =0; 
@@ -844,6 +845,7 @@ printf("HashTable_EMA, used:%i total:%i\n",INR_HashTable_EMA_get_used(),INR_FC_E
 printf("RuleTable_EMA, used:%i total:%i\n",INR_RuleTable_EMA_get_used(),INR_FC_EMA_RuleTable_length);
 printf("CTable_EMH, used:%i total:%i\n",INR_CTable_EMH_get_used(),INR_FC_EMH_CTable_length);
 printf("RuleTable_EMH, used:%i total:%i\n",INR_RuleTable_EMH_get_used(),INR_FC_EMH_RuleTable_length);
-printf("HashTable_EMH, used:%i total:%i\n",INR_RuleTable_EMH_get_used()-INR_CTable_EMH_get_used(),INR_FC_EMH_HashTable_length);
+printf("HashTable_EMH, used:%lli total:%lli\n",INR_RuleTable_EMH_get_used()-INR_CTable_EMH_get_used(),INR_FC_EMH_HashTable_length);
+printf("Mastertable, used:%lli total:%lli\n",INR_MasterT_get_used(),MASTERTABLE_length);
 
 }
