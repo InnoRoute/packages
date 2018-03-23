@@ -5,12 +5,13 @@ if [[ $# -ne 1 ]] || [[ "$1" -ne "$1" ]] ;
     then echo "Please provide number of modus to change to!"
 	echo -e "\t 0:disabled"
 	echo -e "\t 1:6Tree"
-#	echo -e "\t 2:Acceleration Datapath"
+	echo -e "\t 2:Acceleration Datapath"
 #	echo -e "\t 3:Ethernet swiching "
 	echo -e "\t 4:Displaytest and loopback "
 #	echo -e "\t 5:Atom-FPGA control interface "
 #	echo -e "\t 6:Flowcache "
 	echo -e "\t 7:Combined Image: Flowcache, PCI->CPU, Ethswitch, 6Tree"
+	echo -e "\t 8:Load userbitstream from first FAT32 partition: /boot/tn_user.bit"
 	cat /usr/share/InnoRoute/TNmod.conf
 fi
 if [ $# -eq 1 ]; 
@@ -18,6 +19,6 @@ if [ $# -eq 1 ];
 	/etc/init.d/TN_imageloader enable
 	/etc/init.d/TN_imageloader start
 	sleep 1
-	/usr/share/InnoRoute/fpga_status.sh 1 #print fpga info
+	/usr/share/InnoRoute/TN_fpga_status.sh 1 #print fpga info
 fi
 

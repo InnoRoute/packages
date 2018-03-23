@@ -19,6 +19,7 @@ case $TNmod in
 	5) TN_opto_prog  /usr/share/InnoRoute/tn_atom_ctrl.bin > /usr/share/InnoRoute/imageloader.log 2>&1 && echo "done";;
 	6) TN_opto_prog  /usr/share/InnoRoute/tn_fc.bit > /usr/share/InnoRoute/imageloader.log 2>&1 && echo "done";;
 	7) TN_opto_prog  /usr/share/InnoRoute/tn_combined.bit > /usr/share/InnoRoute/imageloader.log 2>&1 && echo "done";;
+	8) TN_opto_prog  /boot/tn_user.bit > /usr/share/InnoRoute/imageloader.log 2>&1 && echo "done";;
 	*) echo "Invalid TrustNode modus or module deactivated" ;;
 esac
 }
