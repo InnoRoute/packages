@@ -565,7 +565,7 @@ TSN_apply (struct arguments *arguments)
     }				//enable TSN
     verblog printf ("Wait until pending config is done\n");
     if (1 & TSN_get_config (C_TM_SCHED_TAS_CONFIG_CHANGE_PENDING, port, 0))
-      while (1 & TSN_get_config (C_TM_SCHED_TAS_CONFIG_CHANGE_ACK, port, 0)) {
+      while ((1 & TSN_get_config (C_TM_SCHED_TAS_CONFIG_CHANGE_ACK, port, 0))==0) {
       POLLSLEEP}		//wait if config is pending
     verblog printf ("read config values and time\n");
     TAS_OPER_BASE_TIME = tick2ns (TSN_get_config (C_TM_SCHED_TAS_OPER_BASE_TIME, port, 0));
