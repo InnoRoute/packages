@@ -106,10 +106,16 @@ uint8_t
 printentry ()
 {uint8_t i=0;
 uint64_t baseaddress=0;
+printf("compiled: %s %s\n", __DATE__, __TIME__);
+printconst(C_MMI_ADDR_MAP_REVISION);
 printconst(C_SUB_ADDR_COMMON_TN_MAJOR_REV);
 printconst(C_SUB_ADDR_COMMON_TN_MINOR_REV);
 printconst(C_SUB_ADDR_COMMON_USER_REV);
 printconst(C_SUB_ADDR_COMMON_ADDR_MAP_REV);
+printconst(C_SUB_ADDR_MAC_6T_ADDR_L);
+printconst(C_SUB_ADDR_MAC_6T_ADDR_H);
+printconst(C_SUB_ADDR_MAC_6T_SRC_PTR);
+printconst(PHY0_base);
 for(i=0;i<12;i++){
   baseaddress=get_PHY_base(i);
   printf ("Interface:%i 6Treeprefix:AF%06lx%08lx bytecount_src:%i bytecount_dst:%i\n",i, MMIread (baseaddress+INR_6T_ADDR_H), MMIread (baseaddress+INR_6T_ADDR_L),MMIread(baseaddress+INR_6T_SRC_PTR),MMIread(baseaddress+INR_6T_DST_PTR));
