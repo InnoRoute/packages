@@ -48,6 +48,8 @@ clear_arguments (struct arguments *arguments)
 	arguments->RULEPOINTER = 0;
 	arguments->ID = 0;
 	arguments->COUNT = 0;
+	arguments->PQUEUE=0;
+	arguments->dohave_PQUEUE=0;
 	arguments->HASH.EMH = 0;
 	arguments->HASH.gauto = 0;
 	arguments->MASK_MAC_SRC = 0xffffffffffffffff;
@@ -119,35 +121,94 @@ clear_arguments (struct arguments *arguments)
 void
 get_HASH (struct arguments *arguments)
 {
-	switch (arguments->TYPE_ID) {
+	switch (EMH_hash_revision) {
+	default: verblog    printf ("Type not valid\n");
+		break;
 	case 1:
-		arguments->HASH.EMH = (0x3fff & (arguments->MAC_SRC >> 0)) ^
-		                      (0x3fff & (arguments->MAC_SRC >> 14)) ^
-		                      (0x3fff & (arguments->MAC_SRC >> 28)) ^
-		                      (0x3fff & (arguments->MAC_SRC >> 42)) ^
-		                      (0x3fff & (arguments->MAC_DST >> 0)) ^
-		                      (0x3fff & (arguments->MAC_DST >> 14)) ^
-		                      (0x3fff & (arguments->MAC_DST >> 28)) ^
-		                      (0x3fff & (arguments->MAC_DST >> 42)) ^
-		                      (0x3fff & (arguments->ETHERTYPE >> 0)) ^
-		                      (0x3fff & (arguments->ETHERTYPE >> 14)) ^
-		                      (0x3fff & (arguments->VLAN_ID << 0));
-		break;
+		switch (arguments->TYPE_ID) {
+		case 1:
+			arguments->HASH.EMH = (0x3fff & (arguments->MAC_SRC >> 0)) ^
+				              (0x3fff & (arguments->MAC_SRC >> 14)) ^
+				              (0x3fff & (arguments->MAC_SRC >> 28)) ^
+				              (0x3fff & (arguments->MAC_SRC >> 42)) ^
+				              (0x3fff & (arguments->MAC_DST >> 0)) ^
+				              (0x3fff & (arguments->MAC_DST >> 14)) ^
+				              (0x3fff & (arguments->MAC_DST >> 28)) ^
+				              (0x3fff & (arguments->MAC_DST >> 42)) ^
+				              (0x3fff & (arguments->ETHERTYPE >> 0)) ^
+				              (0x3fff & (arguments->ETHERTYPE >> 14)) ^
+				              (0x3fff & (arguments->VLAN_ID << 0));
+			break;
+		case 2:
+			arguments->HASH.EMH = (0x3fff & (arguments->IPv4_SRC >> 0)) ^
+				              (0x3fff & (arguments->IPv4_SRC >> 14)) ^
+				              (0x3fff & (arguments->IPv4_SRC >> 28)) ^
+				              (0x3fff & (arguments->IPv4_DST >> 0)) ^
+				              (0x3fff & (arguments->IPv4_DST >> 14)) ^
+				              (0x3fff & (arguments->IPv4_DST >> 28)) ^
+				              (0x3fff & (arguments->PROTOCOL << 0)) ^
+				              (0x3fff & (arguments->PORT_SRC >> 0)) ^
+				              (0x3fff & (arguments->PORT_DST >> 0));
+			break;
+		default:
+			verblog    printf ("Type not valid\n");
+			break;
+		}break;
 	case 2:
-		arguments->HASH.EMH = (0x3fff & (arguments->IPv4_SRC >> 0)) ^
-		                      (0x3fff & (arguments->IPv4_SRC >> 14)) ^
-		                      (0x3fff & (arguments->IPv4_SRC >> 28)) ^
-		                      (0x3fff & (arguments->IPv4_DST >> 0)) ^
-		                      (0x3fff & (arguments->IPv4_DST >> 14)) ^
-		                      (0x3fff & (arguments->IPv4_DST >> 28)) ^
-		                      (0x3fff & (arguments->PROTOCOL << 0)) ^
-		                      (0x3fff & (arguments->PORT_SRC >> 0)) ^
-		                      (0x3fff & (arguments->PORT_DST >> 0));
-		break;
-	default:
-		verblog    printf ("Type not valid\n");
-		break;
+		switch (arguments->TYPE_ID) {
+		case 1:
+			arguments->HASH.EMH = (0x3fff & (arguments->PROTOCOL << 0))^
+						(0x3fff & (arguments->IPv4_SRC >> 0)) ^
+				             	(0x3fff & (arguments->IPv4_SRC >> 14)) ^
+				           	(0x3fff & (arguments->IPv4_SRC >> 28)) ^
+				           	(0x3fff & (arguments->IPv4_DST >> 0)) ^
+				      	        (0x3fff & (arguments->IPv4_DST >> 14)) ^
+				 	        (0x3fff & (arguments->IPv4_DST >> 28)) ^
+				 	        (0x3fff & (arguments->MAC_DST >> 0)) ^
+					        (0x3fff & (arguments->MAC_DST >> 14)) ^
+					        (0x3fff & (arguments->MAC_DST >> 28)) ^
+					        (0x3fff & (arguments->MAC_DST >> 42)) ^
+					   	(0x3fff & (arguments->ETHERTYPE >> 0)) ^
+				          	(0x3fff & (arguments->ETHERTYPE >> 14));
+			break;
+		case 2:
+			arguments->HASH.EMH = (0x3fff & (arguments->PROTOCOL << 0))^
+						(0x3fff & (arguments->IPv4_DST >> 0)) ^
+				      	        (0x3fff & (arguments->IPv4_DST >> 14)) ^
+				 	        (0x3fff & (arguments->IPv4_DST >> 28)) ^
+				 	        (0x3fff & (arguments->PORT_DST >> 0))^
+				 	        (0x3fff & (arguments->MAC_DST >> 0)) ^
+					        (0x3fff & (arguments->MAC_DST >> 14)) ^
+					        (0x3fff & (arguments->MAC_DST >> 28)) ^
+					        (0x3fff & (arguments->MAC_DST >> 42)) ^
+					   	(0x3fff & (arguments->ETHERTYPE >> 0)) ^
+				          	(0x3fff & (arguments->ETHERTYPE >> 14));
+			break;
+		case 3:
+			arguments->HASH.EMH = (0x3fff & (arguments->IPv4_SRC >> 0)) ^
+				              (0x3fff & (arguments->IPv4_SRC >> 14)) ^
+				              (0x3fff & (arguments->IPv4_SRC >> 28)) ^
+				              (0x3fff & (arguments->IPv4_DST >> 0)) ^
+				              (0x3fff & (arguments->IPv4_DST >> 14)) ^
+				              (0x3fff & (arguments->IPv4_DST >> 28)) ^
+				              (0x3fff & (arguments->MAC_DST >> 0)) ^
+					      (0x3fff & (arguments->MAC_DST >> 14)) ^
+					      (0x3fff & (arguments->MAC_DST >> 28)) ^
+					      (0x3fff & (arguments->MAC_DST >> 42));
+			break;
+		case 4:
+			arguments->HASH.EMH = (0x3fff & (arguments->MAC_DST >> 0)) ^
+					      (0x3fff & (arguments->MAC_DST >> 14)) ^
+					      (0x3fff & (arguments->MAC_DST >> 28)) ^
+					      (0x3fff & (arguments->MAC_DST >> 42));
+			break;
+		default:
+			verblog    printf ("Type not valid\n");
+			break;
+		}break;
+	
 	}
+	
 
 	arguments->HASH.EMA.reserved = 0;
 
@@ -315,9 +376,10 @@ RT_EMH_add (struct arguments *arguments)
 		if (entry != NULL) {
 			arguments->RULEPOINTER = INR_RuleTable_EMH_get_next_free_entry (0xffff & arguments->ID);	//save where rule is stored
 			if (arguments->autoaction) {
+				if(arguments->dohave_PQUEUE==0){
 				arguments->ACTION_ID = INR_ActT_get_next_free_entry (arguments->ID);
 				AT_add (arguments);
-			}
+			}else {arguments->ID=arguments->PQUEUE;arguments->ACTION_ID=arguments->PQUEUE;AT_update(*arguments);}}
       if(arguments->numberout)printf("RuleT_EMH_ID:%i\n",arguments->RULEPOINTER);
 			entry_shadow->VALID_BIT = 1;
 			entry_shadow->TYPE_ID = 0x3f & arguments->TYPE_ID;	//& (1<<(arguments->TYPE_ID-1));
@@ -512,9 +574,10 @@ CT_EMH_add (struct arguments *arguments)
 		  (struct INR_FC_EMH_RULE *) INR_CTable_EMH_shadow_get_addr (INR_CTable_EMH_get_next_free_entry (0xffff & arguments->ID));
 		if (entry != NULL) {
 			if (arguments->autoaction) {
+				if(arguments->dohave_PQUEUE==0){
 				arguments->ACTION_ID = INR_ActT_get_next_free_entry (arguments->ID);
 				AT_add (arguments);
-			}
+			}else {arguments->ID=arguments->PQUEUE;arguments->ACTION_ID=arguments->PQUEUE;AT_update(*arguments);}}
 			arguments->RULEPOINTER = INR_CTable_EMH_get_next_free_entry (0xffff & arguments->ID);	//save where rule is stored
 			if(arguments->numberout)printf("CT_EMH_ID:%i\n",arguments->RULEPOINTER);
 			arguments->TableID.EMH_CT = arguments->RULEPOINTER;	//store table position in arguments structure
@@ -780,9 +843,10 @@ RT_EMA_add (struct arguments *arguments)
 		  (struct INR_FC_EMA_RULE *) INR_RuleTable_EMA_shadow_get_addr (INR_RuleTable_EMA_get_next_free_entry (0xffff & arguments->ID));
 		if (entry != NULL) {
 			if (arguments->autoaction) {
+				if(arguments->dohave_PQUEUE==0){
 				arguments->ACTION_ID = INR_ActT_get_next_free_entry (arguments->ID);
 				AT_add (arguments);
-			}
+			}else {arguments->ID=arguments->PQUEUE;arguments->ACTION_ID=arguments->PQUEUE;AT_update(*arguments);}}
 			arguments->RULEPOINTER = INR_RuleTable_EMA_get_next_free_entry (0xffff & arguments->ID);	//save where rule is stored
 	    if(arguments->numberout)printf("RuleT_EMA_ID:%i\n",arguments->RULEPOINTER);
 			entry_shadow->VALID_BIT = 1;	    //use this rule or not
@@ -1039,6 +1103,7 @@ AT_add (struct arguments *arguments)
 *update entry in ruletable
 @param arguments argumentes from userinterface
 */
+
 void
 AT_update (struct arguments arguments)
 {

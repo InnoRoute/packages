@@ -1,6 +1,17 @@
+//#include "flowtableactions.h"
 #define MASTERTABLE_length 65536
-#define entry_is_EMH1(arg) ((arg)->dohave_MAC_DST&&(arg)->dohave_MAC_SRC&&(arg)->dohave_ETHERTYPE&&(arg)->dohave_VLAN_ID)
-#define entry_is_EMH2(arg) ((arg)->dohave_IPv4_DST&&(arg)->dohave_IPv4_SRC&&(arg)->dohave_PROTOCOL&&(arg)->dohave_PORT_DST&&(arg)->dohave_PORT_SRC)
+#if EMH_hash_revision == 1
+	#define entry_is_EMH1(arg) ((arg)->dohave_MAC_DST&&(arg)->dohave_MAC_SRC&&(arg)->dohave_ETHERTYPE&&(arg)->dohave_VLAN_ID)
+	#define entry_is_EMH2(arg) ((arg)->dohave_IPv4_DST&&(arg)->dohave_IPv4_SRC&&(arg)->dohave_PROTOCOL&&(arg)->dohave_PORT_DST&&(arg)->dohave_PORT_SRC)
+	#define entry_is_EMH3(arg) 0
+	#define entry_is_EMH4(arg) 0
+#endif
+#if EMH_hash_revision == 2
+	#define entry_is_EMH1(arg) ((arg)->dohave_PROTOCOL&&(arg)->dohave_IPv4_SRC&&(arg)->dohave_IPv4_DST&&(arg)->dohave_MAC_DST&&(arg)->dohave_ETHERTYPE)
+	#define entry_is_EMH2(arg) ((arg)->dohave_PROTOCOL&&(arg)->dohave_IPv4_DST&&(arg)->dohave_PORT_DST&&(arg)->dohave_MAC_DST&&(arg)->dohave_ETHERTYPE)
+	#define entry_is_EMH3(arg) ((arg)->dohave_IPv4_DST&&(arg)->dohave_IPv4_SRC&&(arg)->dohave_MAC_DST)
+	#define entry_is_EMH4(arg) ((arg)->dohave_MAC_DST)
+#endif
 #define MT_matchfiled(entry, arguments, match, type) {if( (entry)-> type != (arguments)->type ) (match) =0;}
 #define MT_dohaveprint(entry, type) {if( entry ->dohave_ ## type )printf(#type":0x%lx ", entry -> type);}
 #define MAXprio 255

@@ -236,16 +236,30 @@ FC_MT_autotable (struct arguments * arguments)
     arguments->TYPE_ID = 1; //set type
   }
   if (entry_is_EMH2 (arguments)) {
-    arguments->TYPE_ID = 0; // set type //type2 actually deactivated  
+    arguments->TYPE_ID = 2; // set type //type2 actually deactivated  
+  }
+   if (entry_is_EMH3 (arguments)) {
+    arguments->TYPE_ID = 3; //set type
+  }
+   if (entry_is_EMH4 (arguments)) {
+    arguments->TYPE_ID = 4; //set type
   }
   if (arguments->dohave_INPORT){
     arguments->TYPE_ID = 0; //if inport is present it is EMA
   }
-  arguments->ACTION_ID = FC_MT_have_action (arguments); //try to find fitting action
-  arguments->TableID.ActT = arguments->ACTION_ID;
-  if (arguments->ACTION_ID == 0) {
-    AT_add (arguments); //add new action if not found
-  }
+  if(arguments->dohave_PQUEUE==0){
+			
+	  arguments->ACTION_ID = FC_MT_have_action (arguments); //try to find fitting action
+	  arguments->TableID.ActT = arguments->ACTION_ID;
+	  if (arguments->ACTION_ID == 0) {
+	    AT_add (arguments); //add new action if not found
+	  }}else{
+	  	arguments->ID=arguments->PQUEUE;
+	  	arguments->ACTION_ID=arguments->PQUEUE;
+	  	arguments->TableID.ActT = arguments->ACTION_ID;
+	  	AT_update(*arguments);
+	  
+	  }
   get_HASH (arguments); //calculate hashes
   if (arguments->TYPE_ID) { //EMH
     if (FC_MT_have_EMH_hash (arguments->HASH.EMH)) {

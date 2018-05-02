@@ -68,10 +68,18 @@ uint32_t parseIPV4string(char* ipAddress) ;
 #define  INR_FC_EMH_CTable_length ((((C_BASE_ADDR_FLOW_CACHE_LINEAR_UPPER+1)<<8)-(C_BASE_ADDR_FLOW_CACHE_LINEAR_LOWER<<8))/INR_FC_EMH_CTable_entry_length)
 
 //hashtable with flexible fields
-#define  INR_FC_EMA_TCAM_base (C_BASE_ADDR_FLOW_CACHE_EMA_CAM<<8)
-//#define  INR_FC_EMA_TCAM_length 9 //0x80   hotfig for bug#52
-#define  INR_FC_EMA_TCAM_length 0x80
 #define  INR_FC_EMA_TCAM_entry_length 16
+#ifndef C_BASE_ADDR_FLOW_CACHE_EMA_CAM_LOWER //backwardcompatibilty
+	#define  INR_FC_EMA_TCAM_base (C_BASE_ADDR_FLOW_CACHE_EMA_CAM<<8)  //old notation
+	////#define  INR_FC_EMA_TCAM_length 9 //0x80   hotfig for bug#52
+	#define INR_FC_EMA_TCAM_length 0x80
+	#define INR_HashT_EMA_impl 0 //version of EMA implementation (0:strange addresspace;1:continous memory layout)
+#else
+	#define  INR_FC_EMA_TCAM_base (C_BASE_ADDR_FLOW_CACHE_EMA_CAM_LOWER<<8)
+	#define  INR_FC_EMA_TCAM_length ((((C_BASE_ADDR_FLOW_CACHE_EMA_CAM_UPPER+1)<<8)-(C_BASE_ADDR_FLOW_CACHE_EMA_CAM_LOWER<<8))/INR_FC_EMA_TCAM_entry_length)
+	#define  INR_HashT_EMA_impl 1 //version of EMA implementation (0:strange addresspace;1:continous memory layout)
+#endif
+
 //ruletable with flexible fields
 #define  INR_FC_EMA_RuleTable_entry_length  64 //length of entry in byte + stuffbits
 #define  INR_FC_EMA_RuleTable_entry_length_memcpy 36 //length of entry in byte
@@ -79,6 +87,7 @@ uint32_t parseIPV4string(char* ipAddress) ;
 #define  INR_FC_EMA_RuleTable_length  ((((C_BASE_ADDR_FLOW_CACHE_EMA_UPPER+1)<<8)-(C_BASE_ADDR_FLOW_CACHE_EMA_LOWER<<8))/INR_FC_EMA_RuleTable_entry_length)
 
 #define  THW if(touch_HW)
+
 
 
 struct INR_FC_EMH_RULE_TYPE1

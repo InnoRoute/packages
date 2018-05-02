@@ -1,4 +1,5 @@
 //IDs used for finding the EMA rule type
+#include "tn_env.h"
 #define ID_MAC_SRC 1
 #define ID_MAC_DST 2
 #define ID_VLAN_ID 4
@@ -11,6 +12,10 @@
 #define ID_ETHERTYPE 3
 #define ID_INPORT 0
 #define ID_TOS 9
+#ifndef C_FLOW_CACHE_EMH_VERSION
+	#define C_FLOW_CACHE_EMH_VERSION 1 //backwardcompatibility
+#endif
+#define EMH_hash_revision C_FLOW_CACHE_EMH_VERSION //revision of EMH has implementation
 
 /* Structure to store hashes */
 struct HASH
@@ -43,6 +48,8 @@ struct arguments
 	uint8_t dohave_MAC_SRC;/**<source MAC was set by user*/
 	uint64_t MAC_DST;	/**<destination MAC*/
 	uint8_t dohave_MAC_DST;/**<destination MAC was set by user*/
+	uint8_t PQUEUE;	/**<processor queue*/
+	uint8_t dohave_PQUEUE;/**<processor queue was set by user*/
 	uint32_t VLAN_ID;	/**<VLAN_ID*/
 	uint8_t dohave_VLAN_ID;/**<VLAN_ID was set by user*/
 	uint32_t VLAN_PRIO;	/**<VLAN_PRIORITY*/
@@ -126,6 +133,7 @@ void RT_EMH_print (struct arguments arguments);
 void get_HASH (struct arguments *arguments);
 void HT_EMA_add (struct arguments *arguments);
 void HT_EMA_del (struct arguments arguments);
+void AT_update (struct arguments arguments);
 void HT_EMA_clear (void);
 void HT_EMA_print (struct arguments arguments);
 void RT_EMA_add (struct arguments *arguments);

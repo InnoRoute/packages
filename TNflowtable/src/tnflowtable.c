@@ -43,6 +43,7 @@ static struct argp_option options[] = {//user interface
   {"numberout", 'n', 0, 0, "Output number of tableentry"},
   {"ID", 'i', "", 0, "ID of entry"},
   {"COUNT", 'c', "", 0, "number of entrys to do something"},
+  {"PQUEUE", 'q', "", 0, "select a processor queue"},
   {0, 0, 0, 0, "Rule options:", 1},
   {"AUTOHASH", 'a', 0, 0, "automatic generate and write hash to hashtable"},
   {"AUTOACT", 'z', 0, 0, "automatic write action to Actiontable"},
@@ -182,6 +183,10 @@ parse_opt (int key, char *arg, struct argp_state *state)
     arguments->MASK_VLAN_ID = 0;
     arguments->dohave_VLAN_ID = 1;
     arguments->dohave_MASK_VLAN_ID = 1;
+    break;
+  case 'q':
+    arguments->PQUEUE = strtoul (arg, 0, 0);
+    arguments->dohave_PQUEUE = 1;
     break;
   case 'W':
     arguments->TOS = strtoul (arg, 0, 0);

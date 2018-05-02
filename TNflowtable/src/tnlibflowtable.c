@@ -21,6 +21,7 @@
 #include "tnlibaccdp.h"
 #include "accdpactions.h"
 #include "mastertable.h"
+#include "flowtableactions.h"
 
 uint64_t FCbase_EMH = 0;
 uint64_t FCbase_EMH_shadow = 0;
@@ -532,6 +533,8 @@ INR_HashT_EMA_write (union INR_FC_EMA_HashTable_entry entry, uint16_t ID)
   uint32_t maskL = entry.words.maskL; //invert mask, FPGA is active low
   uint32_t maskH = entry.words.maskH;
   verblog printf ("HashT_EMA id:%i base:0x%lx\n", ID, FCbase_EMA);
+  uint64_t addr=NULL;
+  if(INR_HashT_EMA_impl==0){
   uint64_t addr = FCbase_EMA + INR_FC_EMA_TCAM_base | (0x7f0 & (ID << 4));
   uint32_t *TCAM;
   THW{
@@ -553,6 +556,11 @@ INR_HashT_EMA_write (union INR_FC_EMA_HashTable_entry entry, uint16_t ID)
   	TCAM = addr;
   	verblog printf ("writing maskH:0x%x to 0x%lx\n", maskH, addr);
   	*TCAM = maskH;
+  }}
+  union INR_FC_EMA_HashTable_entry *entry_fc;
+  if(INR_HashT_EMA_impl){
+  addr = FCbase_EMA + INR_FC_EMA_TCAM_base + ID * INR_FC_EMA_TCAM_entry_length;
+  entry_fc = addr;
   }
   addr = FCbase_EMA_shadow + INR_FC_EMA_TCAM_base + ID * INR_FC_EMA_TCAM_entry_length;
   union INR_FC_EMA_HashTable_entry *entry2;
@@ -562,6 +570,7 @@ INR_HashT_EMA_write (union INR_FC_EMA_HashTable_entry entry, uint16_t ID)
   entry2->words.dinH = dinH;
   entry2->words.maskL = maskL;
   entry2->words.maskH = maskH;
+  if(INR_HashT_EMA_impl){{THW FCmemcpy (entry_fc, entry2, INR_FC_EMA_TCAM_entry_length);}} //copy shadow to mmi (wordwise)
   return 0;
 }
 
@@ -669,6 +678,7 @@ INR_ActT_get_next_free_entry (uint64_t id)
   if (i == 0) {
     i++;
   }
+  if(i<32)i=32;//don't use the 32 processor queue entrys
   struct INR_FC_ActT_RULE *entry = NULL;
   if (id >= INR_FC_ActT_length) {
     return NULL;  //error id not valid
@@ -720,6 +730,8 @@ void printallconst() {
 #ifndef __KERNEL__ //not allowed for kmods
 	printf("Compiled %s %s\n", __DATE__, __TIME__);
 #endif
+printconst(EMH_hash_revision);
+printconst(INR_HashT_EMA_impl);
 printconst(C_MMI_ADDR_MAP_REVISION);
 printconst(C_SUB_ADDR_COMMON_TN_MAJOR_REV);
 printconst(C_SUB_ADDR_COMMON_TN_MINOR_REV);
