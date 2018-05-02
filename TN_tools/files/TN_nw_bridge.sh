@@ -1,6 +1,8 @@
 #!/bin/bash
 
 # TODO: Move from ifconfig to ip. Initially remove all TN* and br0
+# TODO: Check, if interfaces already exist
+# TODO: Make bwm-ng call conditional
 
 echo "Adding br0 to loop connect all virtual TN ports ..."
 
@@ -47,4 +49,6 @@ ifconfig br0 up
 #tcpdump -i TN0
 #tcpdump -i TN1
 
-bwm-ng -T sum -u packets
+if [[ $# == 0 ]]; then
+  bwm-ng -T sum -u packets
+fi

@@ -12,9 +12,9 @@ write_alaska()
   let page_reg=22
 
   # Set page
-  TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((1*$TN_RGMII_WRITE+$alaska*$TN_RGMII_PHY+$page_reg*$TN_RGMII_REG+$page)) > /dev/null
+  TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((1*$TN_RGMII_WRITE+($alaska & 0x1F)*$TN_RGMII_PHY+$page_reg*$TN_RGMII_REG+($page & 0xFFFF))) > /dev/null
   # Execute write
-  TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((1*$TN_RGMII_WRITE+$alaska*$TN_RGMII_PHY+$reg*$TN_RGMII_REG+$write_data)) > /dev/null
+  TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((1*$TN_RGMII_WRITE+($alaska & 0x1F)*$TN_RGMII_PHY+($reg & 0x1F)*$TN_RGMII_REG+($write_data & 0xFFFF))) > /dev/null
   # Check for completion
   let read_data=`TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_READ)) | cut -d " " -f 6`
   if [[ $read_data -eq 0xEEEEEEEE ]]; then
@@ -25,7 +25,7 @@ write_alaska()
 write_gphy()
 {
   # Execute write
-  TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((1*$TN_RGMII_WRITE+($gphy+16)*$TN_RGMII_PHY+$reg*$TN_RGMII_REG+$write_data)) > /dev/null
+  TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((1*$TN_RGMII_WRITE+(($gphy & 0x1F)+16)*$TN_RGMII_PHY+($reg & 0x1F)*$TN_RGMII_REG+($write_data & 0xFFFF))) > /dev/null
   # Check for completion
   let read_data=`TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_READ)) | cut -d " " -f 6`
   if [[ $read_data -eq 0xEEEEEEEE ]]; then
@@ -39,9 +39,9 @@ read_alaska()
   let page_reg=22
 
   # Set page
-  TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((1*$TN_RGMII_WRITE+$alaska*$TN_RGMII_PHY+$page_reg*$TN_RGMII_REG+$page)) > /dev/null
+  TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((1*$TN_RGMII_WRITE+($alaska & 0x1F)*$TN_RGMII_PHY+$page_reg*$TN_RGMII_REG+($page & 0xFFFF))) > /dev/null
   # Execute read
-  TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((0*$TN_RGMII_WRITE+$alaska*$TN_RGMII_PHY+$reg*$TN_RGMII_REG+$write_data)) > /dev/null
+  TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((0*$TN_RGMII_WRITE+($alaska & 0x1F)*$TN_RGMII_PHY+($reg & 0x1F)*$TN_RGMII_REG+($write_data & 0xFFFF))) > /dev/null
   # Check for completion
   let read_data=`TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_READ)) | cut -d " " -f 6`
   if [[ $read_data -eq 0xEEEEEEEE ]]; then
@@ -52,7 +52,7 @@ read_alaska()
 read_gphy()
 {
   # Execute read
-  TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((0*$TN_RGMII_WRITE+($gphy+16)*$TN_RGMII_PHY+$reg*$TN_RGMII_REG+$write_data)) > /dev/null
+  TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((0*$TN_RGMII_WRITE+(($gphy & 0x1F)+16)*$TN_RGMII_PHY+($reg & 0x1F)*$TN_RGMII_REG+($write_data & 0xFFFF))) > /dev/null
   # Check for completion
   let read_data=`TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_READ)) | cut -d " " -f 6`
   if [[ $read_data -eq 0xEEEEEEEE ]]; then
@@ -156,9 +156,9 @@ elif [[ $1 == 5 ]]; then
    #let write_data=0x0600 # Select Collision Frame Count
    #let write_data=0x0800 # Select Link Down Count
    #let write_data=0x0900 # Select Auto-Downspeed Count
-  TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((1*$TN_RGMII_WRITE+16*$TN_RGMII_PHY+$reg*$TN_RGMII_REG+$write_data)) > /dev/null
+  TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((1*$TN_RGMII_WRITE+16*$TN_RGMII_PHY+($reg & 0x1F)*$TN_RGMII_REG+($write_data & 0xFFFF))) > /dev/null
   sleep 1
-  TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((0*$TN_RGMII_WRITE+16*$TN_RGMII_PHY+$reg*$TN_RGMII_REG+$write_data)) > /dev/null # Execute Read
+  TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((0*$TN_RGMII_WRITE+16*$TN_RGMII_PHY+($reg & 0x1F)*$TN_RGMII_REG+($write_data & 0xFFFF))) > /dev/null # Execute Read
   # Get Read Data -> counter is the lower byte of the result
   read_mdio_result
   printf "Counter value = %d\n" $read_data
@@ -175,9 +175,9 @@ elif [[ $1 == 6 ]]; then
    #let write_data=0x0600 # Select Collision Frame Count
    #let write_data=0x0800 # Select Link Down Count
    #let write_data=0x0900 # Select Auto-Downspeed Count
-  TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((1*$TN_RGMII_WRITE+17*$TN_RGMII_PHY+$reg*$TN_RGMII_REG+$write_data)) > /dev/null
+  TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((1*$TN_RGMII_WRITE+17*$TN_RGMII_PHY+($reg & 0x1F)*$TN_RGMII_REG+($write_data & 0xFFFF))) > /dev/null
   sleep 1
-  TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((0*$TN_RGMII_WRITE+17*$TN_RGMII_PHY+$reg*$TN_RGMII_REG+$write_data)) > /dev/null # Execute Read
+  TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((0*$TN_RGMII_WRITE+17*$TN_RGMII_PHY+($reg & 0x1F)*$TN_RGMII_REG+($write_data & 0xFFFF))) > /dev/null # Execute Read
   # Get Read Data -> counter is the lower byte of the result
   read_mdio_result
   printf "Counter value = %d\n" $read_data

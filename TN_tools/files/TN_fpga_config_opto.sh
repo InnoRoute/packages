@@ -3,6 +3,8 @@
 echo "Configuring Artix, expecting none or one parameter"
 
 if [[ $# == 0 ]]; then
+  echo "ERROR: no bitstream defined"
+  exit
   # Set default bitstream name, if no parameter is given
   export bitstream=tn_atom_ctrl.bin
 else
@@ -45,20 +47,20 @@ if [[ $(( $biterr & 140 )) -eq 0 ]]; then
   echo "-> No error";
 fi
 if [[ $(( $biterr & 128 )) -eq 128 ]]; then
-  echo "-> ID warning";
+  echo "-> Pinout ID warning";
 fi
 if [[ $(( $biterr & 3 )) -eq 1 ]]; then
-  echo "-> Flash Error";
+  echo "-> Error configuring from Flash";
 fi
 if [[ $(( $biterr & 3 )) -eq 2 ]]; then
-  echo "-> LPC Error";
+  echo "-> Error configuring via LPC";
 fi
 if [[ $(( $biterr & 3 )) -eq 3 ]]; then
-  echo "-> OPTO Error";
+  echo "-> Error configuring via OPTO";
 fi
 if [[ $(( $biterr & 4 )) -gt 0 ]]; then
-  echo "-> INIT_B went low";
+  echo "-> Cause: INIT_B went low";
 fi
 if [[ $(( $biterr & 8 )) -gt 0 ]]; then
-  echo "-> DONE timeout";
+  echo "-> Cause: DONE timeout";
 fi

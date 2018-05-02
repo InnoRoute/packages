@@ -10,9 +10,9 @@ write_alaska()
   let page_reg=22
 
   # Set page
-  TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((1*$TN_RGMII_WRITE+$phy*$TN_RGMII_PHY+$page_reg*$TN_RGMII_REG+$page)) > /dev/null
+  TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((1*$TN_RGMII_WRITE+($phy & 0x1F)*$TN_RGMII_PHY+$page_reg*$TN_RGMII_REG+($page & 0xFFFF))) > /dev/null
   # Execute write
-  TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((1*$TN_RGMII_WRITE+$phy*$TN_RGMII_PHY+$reg*$TN_RGMII_REG+$write_data)) > /dev/null
+  TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((1*$TN_RGMII_WRITE+($phy & 0x1F)*$TN_RGMII_PHY+($reg & 0x1F)*$TN_RGMII_REG+($write_data & 0xFFFF))) > /dev/null
   # Check for completion
   let read_data=`TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_READ)) | cut -d " " -f 6`
   if [[ $read_data -eq 0xEEEEEEEE ]]; then
@@ -23,7 +23,7 @@ write_alaska()
 write_gphy()
 {
   # Execute write
-  TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((1*$TN_RGMII_WRITE+($phy+16)*$TN_RGMII_PHY+$reg*$TN_RGMII_REG+$write_data)) > /dev/null
+  TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((1*$TN_RGMII_WRITE+(($phy & 0x1F)+16)*$TN_RGMII_PHY+($reg & 0x1F)*$TN_RGMII_REG+($write_data & 0xFFFF))) > /dev/null
   # Check for completion
   let read_data=`TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_READ)) | cut -d " " -f 6`
   if [[ $read_data -eq 0xEEEEEEEE ]]; then
@@ -37,9 +37,9 @@ read_alaska()
   let page_reg=22
 
   # Set page
-  TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((1*$TN_RGMII_WRITE+$phy*$TN_RGMII_PHY+$page_reg*$TN_RGMII_REG+$page)) > /dev/null
+  TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((1*$TN_RGMII_WRITE+($phy & 0x1F)*$TN_RGMII_PHY+$page_reg*$TN_RGMII_REG+($page & 0xFFFF))) > /dev/null
   # Execute read
-  TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((0*$TN_RGMII_WRITE+$phy*$TN_RGMII_PHY+$reg*$TN_RGMII_REG+$write_data)) > /dev/null
+  TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((0*$TN_RGMII_WRITE+($phy & 0x1F)*$TN_RGMII_PHY+($reg & 0x1F)*$TN_RGMII_REG+($write_data & 0xFFFF))) > /dev/null
   # Check for completion
   let read_data=`TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_READ)) | cut -d " " -f 6`
   if [[ $read_data -eq 0xEEEEEEEE ]]; then
@@ -50,7 +50,7 @@ read_alaska()
 read_gphy()
 {
   # Execute read
-  TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((0*$TN_RGMII_WRITE+($phy+16)*$TN_RGMII_PHY+$reg*$TN_RGMII_REG+$write_data)) > /dev/null
+  TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((0*$TN_RGMII_WRITE+(($phy & 0x1F)+16)*$TN_RGMII_PHY+($reg & 0x1F)*$TN_RGMII_REG+($write_data & 0xFFFF))) > /dev/null
   # Check for completion
   let read_data=`TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_READ)) | cut -d " " -f 6`
   if [[ $read_data -eq 0xEEEEEEEE ]]; then
@@ -71,28 +71,31 @@ if [[ $# == 3 ]]; then
   let page=$2
   let reg=$3
   let write_data=0
-  printf "Executing Read Access to PHY %d, page %d, register %d/0x%02x\n" $phy $page $reg $reg
   if [[ $1 -lt $TN_NO_OF_GPHYS ]]; then
-    printf "Access to GPHY %d\n" $phy
+    printf "Executing Read Access to PHY %d, register %d/0x%02x\n" $(($phy & 0x1F)) $(($reg & 0x1F)) $(($reg & 0x1F))
+    printf "Access to GPHY %d\n" $(($phy & 0x1F))
     read_gphy
   else
-    printf "Access to Alaska %d\n" $(( $phy - $TN_NO_OF_GPHYS ))
+    printf "Executing Read Access to PHY %d, page %d, register %d/0x%02x\n" $(($phy & 0x1F)) $(($page & 0xFFFF)) $(($reg & 0x1F)) $(($reg & 0x1F))
+    printf "Access to Alaska %d\n" $(( ($phy & 0x1F) - $TN_NO_OF_GPHYS ))
     read_alaska
   fi
-  read_mdio_result	
-  printf "Read Data %04x\n" $read_data
+  read_mdio_result
+  printf "Read Data %04x\n" $(( $read_data & 0xFFFF ))
 elif [[ $# == 4 ]]; then
   let phy=$1
   let page=$2
   let reg=$3
   let write_data=$4
-  printf "Executing Write Access to PHY %d, page %d, register %d/0x%02x\n" $phy $page $reg $reg
-  printf "Writing 0x%04x\n" $write_data
   if [[ $1 -lt $TN_NO_OF_GPHYS ]]; then
-    printf "Access to GPHY %d\n" $phy
+    printf "Executing Write Access to PHY %d, register %d/0x%02x\n" $(($phy & 0x1F)) $(($reg & 0x1F)) $(($reg & 0x1F))
+    printf "Writing 0x%04x\n" $(($write_data & 0xFFFF))
+    printf "Access to GPHY %d\n" $(($phy & 0x1F))
     write_gphy
   else
-    printf "Access to Alaska %d\n" $(( $phy - $TN_NO_OF_GPHYS ))
+    printf "Executing Write Access to PHY %d, page %d, register %d/0x%02x\n" $(($phy & 0x1F)) $(($page & 0xFFFF)) $(($reg & 0x1F)) $(($reg & 0x1F))
+    printf "Writing 0x%04x\n" $(($write_data & 0xFFFF))
+    printf "Access to Alaska %d\n" $(( ($phy & 0x1F) - $TN_NO_OF_GPHYS ))
     write_alaska
   fi
 else

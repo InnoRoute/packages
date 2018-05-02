@@ -8,24 +8,24 @@ read_alaska()
   let page_reg=22
 
   # Set page
-  TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((1*$TN_RGMII_WRITE+$alaska*$TN_RGMII_PHY+$page_reg*$TN_RGMII_REG+$page)) > /dev/null
+  TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((1*$TN_RGMII_WRITE+($alaska & 0x1F)*$TN_RGMII_PHY+$page_reg*$TN_RGMII_REG+($page & 0xFFFF))) > /dev/null
   # Execute read
-  TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((0*$TN_RGMII_WRITE+$alaska*$TN_RGMII_PHY+$reg*$TN_RGMII_REG+$write_data)) > /dev/null
+  TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((0*$TN_RGMII_WRITE+($alaska & 0x1F)*$TN_RGMII_PHY+($reg & 0x1F)*$TN_RGMII_REG+($write_data & 0xFFFF))) > /dev/null
   # Check for completion
   let read_data=`TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_READ)) | cut -d " " -f 6`
   if [[ $read_data -eq 0xEEEEEEEE ]]; then
-    printf " ** MMI Read Timeout ** read_alaska(Alaska %d, page %d, reg %d, write data %04x)\n" $alaska $page $reg $write_data
+    printf " ** MMI Read Timeout ** read_alaska(Alaska %d, page %d, reg %d, write data %04x)\n" $(($alaska & 0x1F)) $(($page & 0xFFFF)) $(($reg & 0x1F)) $(($write_data & 0xFFFF))
   fi
 }
 
 read_gphy()
 {
   # Execute read
-  TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((0*$TN_RGMII_WRITE+($gphy+16)*$TN_RGMII_PHY+$reg*$TN_RGMII_REG+$write_data)) > /dev/null
+  TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((0*$TN_RGMII_WRITE+(($gphy & 0x1F)+16)*$TN_RGMII_PHY+($reg & 0x1F)*$TN_RGMII_REG+($write_data & 0xFFFF))) > /dev/null
   # Check for completion
   let read_data=`TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_READ)) | cut -d " " -f 6`
   if [[ $read_data -eq 0xEEEEEEEE ]]; then
-    printf " ** MMI Read Timeout ** read_gphy(GPHY %d, reg %d, write data %04x)\n" $gphy $reg $write_data
+    printf " ** MMI Read Timeout ** read_gphy(GPHY %d, reg %d, write data %04x)\n" $(($gphy & 0x1F)) $(($reg & 0x1F)) $(($write_data & 0xFFFF))
   fi
 }
 
@@ -57,8 +57,8 @@ fi
 
 # PCIe BAR1 Test
 for wr_data in 0xC0FFEE12 0x1C0FFEE2 0x12C0FFEE; do
-  TNbar1 $(($C_BASE_ADDR_TN_COMMON_L*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_COMMON_RW_TEST)) w $wr_data >> /dev/null
-  let    wr_result=`TNbar1 $(($C_BASE_ADDR_TN_COMMON_L*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_COMMON_RW_TEST)) w $wr_data | cut -d " " -f 6`
+  TNbar1 $(($C_BASE_ADDR_COMMON_LOWER*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_COMMON_RW_TEST)) w $wr_data >> /dev/null
+  let    wr_result=`TNbar1 $(($C_BASE_ADDR_COMMON_LOWER*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_COMMON_RW_TEST)) w $wr_data | cut -d " " -f 6`
   if [[ $wr_result -eq 0xEEEEEEEE ]]; then
     echo " ** MMI Write Timeout -> FPGA Bitstream Test FAILED **";
     exit;
@@ -67,8 +67,8 @@ for wr_data in 0xC0FFEE12 0x1C0FFEE2 0x12C0FFEE; do
     printf " ** Bad MMI Write Data (0x%08x isn't 0x%08x) -> FPGA Bitstream Test FAILED **\n" $wr_result $wr_data;
     exit;
   fi
-  TNbar1 $(($C_BASE_ADDR_TN_COMMON_L*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_COMMON_RW_TEST)) >> /dev/null
-  let    rd_result=`TNbar1 $(($C_BASE_ADDR_TN_COMMON_L*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_COMMON_RW_TEST)) | cut -d " " -f 6`
+  TNbar1 $(($C_BASE_ADDR_COMMON_LOWER*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_COMMON_RW_TEST)) >> /dev/null
+  let    rd_result=`TNbar1 $(($C_BASE_ADDR_COMMON_LOWER*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_COMMON_RW_TEST)) | cut -d " " -f 6`
   if [[ $rd_result -eq 0xEEEEEEEE ]]; then
     echo " ** MMI Read Timeout -> FPGA Bitstream Test FAILED **";
     exit;
@@ -116,14 +116,14 @@ for gphy   in `seq 0 9`; do
   read_gphy;
   read_mdio_result;
   if [ `printf "%04x\n" $(( $read_data & 0xFFFF ))` != "1001" ]; then
-    echo -e "MDIO FAIL - GPHY $gphy";
+    echo -e "MDIO FAIL - GPHY $(($gphy & 0x1F))";
   fi;
 done
 for alaska in `seq 0 1`; do
   read_alaska;
   read_mdio_result;
   if [ `printf "%04x\n" $(( $read_data & 0xFFFF ))` != "1001" ]; then
-    echo -e "MDIO FAIL - Alaska $alaska";
+    echo -e "MDIO FAIL - Alaska $(($alaska & 0x1F))";
   fi;
 done
 
@@ -234,7 +234,7 @@ sleep 1
 
 # Check for no detected atom module
 
-# Check for USB Overcurrents (3.0, 2.0)			  
+# Check for USB Overcurrents (3.0, 2.0)
 
 # Check for Atom WDT
 

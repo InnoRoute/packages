@@ -10,9 +10,9 @@ write_alaska()
   let page_reg=22
 
   # Set page
-  TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((1*$TN_RGMII_WRITE+$alaska*$TN_RGMII_PHY+$page_reg*$TN_RGMII_REG+$page)) > /dev/null
+  TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((1*$TN_RGMII_WRITE+($alaska & 0x1F)*$TN_RGMII_PHY+$page_reg*$TN_RGMII_REG+($page & 0xFFFF))) > /dev/null
   # Execute write
-  TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((1*$TN_RGMII_WRITE+$alaska*$TN_RGMII_PHY+$reg*$TN_RGMII_REG+$write_data)) > /dev/null
+  TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((1*$TN_RGMII_WRITE+($alaska & 0x1F)*$TN_RGMII_PHY+($reg & 0x1F)*$TN_RGMII_REG+($write_data & 0xFFFF))) > /dev/null
   # Check for completion
   let read_data=`TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_READ)) | cut -d " " -f 6`
   if [[ $read_data -eq 0xEEEEEEEE ]]; then
@@ -23,7 +23,7 @@ write_alaska()
 write_gphy()
 {
   # Execute write
-  TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((1*$TN_RGMII_WRITE+($gphy+16)*$TN_RGMII_PHY+$reg*$TN_RGMII_REG+$write_data)) > /dev/null
+  TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((1*$TN_RGMII_WRITE+(($gphy & 0x1F)+16)*$TN_RGMII_PHY+($reg & 0x1F)*$TN_RGMII_REG+($write_data & 0xFFFF))) > /dev/null
   # Check for completion
   let read_data=`TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_READ)) | cut -d " " -f 6`
   if [[ $read_data -eq 0xEEEEEEEE ]]; then
@@ -37,9 +37,9 @@ read_alaska()
   let page_reg=22
 
   # Set page
-  TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((1*$TN_RGMII_WRITE+$alaska*$TN_RGMII_PHY+$page_reg*$TN_RGMII_REG+$page)) > /dev/null
+  TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((1*$TN_RGMII_WRITE+($alaska & 0x1F)*$TN_RGMII_PHY+$page_reg*$TN_RGMII_REG+($page & 0xFFFF))) > /dev/null
   # Execute read
-  TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((0*$TN_RGMII_WRITE+$alaska*$TN_RGMII_PHY+$reg*$TN_RGMII_REG+$write_data)) > /dev/null
+  TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((0*$TN_RGMII_WRITE+($alaska & 0x1F)*$TN_RGMII_PHY+($reg & 0x1F)*$TN_RGMII_REG+($write_data & 0xFFFF))) > /dev/null
   # Check for completion
   let read_data=`TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_READ)) | cut -d " " -f 6`
   if [[ $read_data -eq 0xEEEEEEEE ]]; then
@@ -50,7 +50,7 @@ read_alaska()
 read_gphy()
 {
   # Execute read
-  TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((0*$TN_RGMII_WRITE+($gphy+16)*$TN_RGMII_PHY+$reg*$TN_RGMII_REG+$write_data)) > /dev/null
+  TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((0*$TN_RGMII_WRITE+(($gphy & 0x1F)+16)*$TN_RGMII_PHY+($reg & 0x1F)*$TN_RGMII_REG+($write_data & 0xFFFF))) > /dev/null
   # Check for completion
   let read_data=`TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_READ)) | cut -d " " -f 6`
   if [[ $read_data -eq 0xEEEEEEEE ]]; then
@@ -69,18 +69,18 @@ read_mdio_result()
 echo "Cleaning up"
 
 for gphy in `seq 0 9`; do
-  if [ -e /tmp/gphy$gphy.txt ]; then
-    rm /tmp/gphy$gphy.txt;
+  if [ -e /tmp/gphy$(($gphy & 0x1F)).txt ]; then
+    rm /tmp/gphy$(($gphy & 0x1F)).txt;
   fi;
 done
 for gphy in `seq 0 9`; do
-  if [ -e /tmp/gphy_mmd$gphy.txt ]; then
-    rm /tmp/gphy_mmd$gphy.txt;
+  if [ -e /tmp/gphy_mmd$(($gphy & 0x1F)).txt ]; then
+    rm /tmp/gphy_mmd$(($gphy & 0x1F)).txt;
   fi;
 done
 for alaska in `seq 0 1`; do
-  if [ -e /tmp/alaska$alaska.txt ]; then
-    rm /tmp/alaska$alaska.txt;
+  if [ -e /tmp/alaska$(($alaska & 0x1F)).txt ]; then
+    rm /tmp/alaska$(($alaska & 0x1F)).txt;
   fi;
 done
 
@@ -89,14 +89,14 @@ echo "Reading all standard register values from all Ethernet PHYs"
 let page=0
 let write_data=0x0000
 for reg in `seq 0 31`; do
-  for gphy   in `seq 0 9`; do read_gphy;   read_mdio_result; printf "Reg0x%02x:%08x\n" $reg $read_data | cut -c1-8,13-16 >> /tmp/gphy$gphy.txt; done
-  for alaska in `seq 0 1`; do read_alaska; read_mdio_result; printf "Reg0x%02x:%08x\n" $reg $read_data | cut -c1-8,13-16 >> /tmp/alaska$alaska.txt;done
+  for gphy   in `seq 0 9`; do read_gphy;   read_mdio_result; printf "Reg0x%02x:%08x\n" $(($reg & 0x1F)) $read_data | cut -c1-8,13-16 >> /tmp/gphy$(($gphy & 0x1F)).txt; done
+  for alaska in `seq 0 1`; do read_alaska; read_mdio_result; printf "Reg0x%02x:%08x\n" $(($reg & 0x1F)) $read_data | cut -c1-8,13-16 >> /tmp/alaska$(($alaska & 0x1F)).txt;done
 done
 
 echo "Differences between GPHYs:"
 for gphy in `seq 1 9`; do
-  echo -e "GPHY0 vs. GPHY$gphy"
-  diff -y --suppress-common-lines /tmp/gphy0.txt /tmp/gphy$gphy.txt
+  echo -e "GPHY0 vs. GPHY$(($gphy & 0x1F))"
+  diff -y --suppress-common-lines /tmp/gphy0.txt /tmp/gphy$(($gphy & 0x1F)).txt
 done
 
 echo "Differences between Alaskas:"
@@ -156,34 +156,34 @@ for phy in `seq 0 9`; do
     let devaddr=$1
     let regno=$2
 
-	#printf "PHY=%d: %02x.%04x\n" $phy $devaddr $regno
+    #printf "PHY=%d: %02x.%04x\n" $(($phy & 0x1F)) $devaddr $regno
     # Write Address Type to reg 0x0d (MMD Ctrl reg)
     let reg=0x0D
     let write_data=0x0000+$devaddr
-    TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((1*$TN_RGMII_WRITE+(16+$phy)*$TN_RGMII_PHY+$reg*$TN_RGMII_REG+$write_data)) > /dev/null;
+    TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((1*$TN_RGMII_WRITE+(16+($phy & 0x1F))*$TN_RGMII_PHY+($reg & 0x1F)*$TN_RGMII_REG+($write_data & 0xFFFF))) > /dev/null;
     # Write register number to reg 0x0e (MMD Data reg)
     let reg=0x0E
     let write_data=$regno
-    TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((1*$TN_RGMII_WRITE+(16+$phy)*$TN_RGMII_PHY+$reg*$TN_RGMII_REG+$write_data)) > /dev/null;
+    TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((1*$TN_RGMII_WRITE+(16+($phy & 0x1F))*$TN_RGMII_PHY+($reg & 0x1F)*$TN_RGMII_REG+($write_data & 0xFFFF))) > /dev/null;
     # Write Data Type to reg 0x0d (MMD Ctrl reg)
     let reg=0x0D
     let write_data=0x4000+$devaddr
-    TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((1*$TN_RGMII_WRITE+(16+$phy)*$TN_RGMII_PHY+$reg*$TN_RGMII_REG+$write_data)) > /dev/null;
+    TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((1*$TN_RGMII_WRITE+(16+($phy & 0x1F))*$TN_RGMII_PHY+($reg & 0x1F)*$TN_RGMII_REG+($write_data & 0xFFFF))) > /dev/null;
     # Read reg 0x0e (MMD Data reg)
     let reg=0x0E
-    TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((0*$TN_RGMII_WRITE+(16+$phy)*$TN_RGMII_PHY+$reg*$TN_RGMII_REG+$write_data)) > /dev/null;
+    TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((0*$TN_RGMII_WRITE+(16+($phy & 0x1F))*$TN_RGMII_PHY+($reg & 0x1F)*$TN_RGMII_REG+($write_data & 0xFFFF))) > /dev/null;
     # Get read data
     let read_data=`TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_READ)) | cut -d " " -f 6`
     if [[ $read_data -eq 0xEEEEEEEE ]]; then
       echo " ** MMI Read Timeout **"
     fi
-    printf "Reg %02X.%04XH:0x%08x\n" $devaddr $regno $read_data | cut -c1-15,20-23 >> /tmp/gphy_mmd$phy.txt
+    printf "Reg %02X.%04XH:0x%08x\n" $devaddr $regno $read_data | cut -c1-15,20-23 >> /tmp/gphy_mmd$(($phy & 0x1F)).txt
   done
 done
 
 echo "Dumping GPHY MMD register differences:"
 
 for gphy in `seq 1 9`; do
-  echo -e "GPHY0 vs. GPHY$gphy"
-  diff -y --suppress-common-lines /tmp/gphy_mmd0.txt /tmp/gphy_mmd$gphy.txt
+  echo -e "GPHY0 vs. GPHY$(($gphy & 0x1F))"
+  diff -y --suppress-common-lines /tmp/gphy_mmd0.txt /tmp/gphy_mmd$(($gphy & 0x1F)).txt
 done

@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# TODO: Make reading of time conditional
+
 echo "Please enter the current date and time in the following format:"
 echo "Year-Month-Day Hour:Minute:Second"
 echo "Example:"

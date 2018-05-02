@@ -18,11 +18,11 @@ for gphy in `seq 0 9`; do
     if [[ $duplex -eq 0xEEEEEEEE ]]; then
       echo " ** MMI Read Timeout **"
     fi
-	if [[ $duplex -eq 1 ]]; then
+    if [[ $duplex -eq 1 ]]; then
       echo -e "GPHY $gphy is up: 10^$speed Mbps, Full Duplex";
-	else
+    else
       echo -e "GPHY $gphy is up: 10^$speed Mbps, Half Duplex";
-	fi
+    fi
   fi
 done
 for alaska in `seq 10 11`; do
@@ -41,10 +41,10 @@ for alaska in `seq 10 11`; do
     if [[ $duplex -eq 0xEEEEEEEE ]]; then
       echo " ** MMI Read Timeout **"
     fi
-	if [[ $duplex -eq 1 ]]; then
+    if [[ $duplex -eq 1 ]]; then
       echo -e "Alaska $alaska is up: 10^$speed Mbps, Full Duplex";
-	else
+    else
       echo -e "Alaska $alaska is up: 10^$speed Mbps, Half Duplex";
-	fi
+    fi
   fi
 done

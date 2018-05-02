@@ -3,6 +3,8 @@
 echo "Configuring Artix, expecting none or one parameter"
 
 if [[ $# == 0 ]]; then
+  echo "ERROR: no bitstream defined"
+  exit
   # Set default bitstream name, if no parameter is given
   export bitstream=tn_atom_ctrl.bit
 else

@@ -4,6 +4,7 @@ source /usr/share/InnoRoute/tn_env.sh
 
 echo "Setting front panel display, expecting none/one or four/five or 16/17 parameters"
 echo "(last parameter of odd parameter count specifies brightness)"
+echo "Display Brightness ranges from 0 (off) to 3(max.)"
 
 # Set default brightness (max.)
 let brightness=3
@@ -22,7 +23,7 @@ case $# in
     let display2=0xFFFFFFFF
     let display3=0xFFFFFFFF
     let display4=0xFFFFFFFF
-	let brightness=${1}
+    let brightness=${1}
     ;;
   4)
     # If parameters are given, it is assumed that they are the display values
@@ -37,7 +38,7 @@ case $# in
     let display2=$2
     let display3=$3
     let display4=$4
-	let brightness=${5}
+    let brightness=${5}
     ;;
   16)
     let digit1=${1}
@@ -81,7 +82,7 @@ case $# in
     let digit14=${14}
     let digit15=${15}
     let digit16=${16}
-	let brightness=${17}
+    let brightness=${17}
 
     # If parameters are given, it is assumed that they are the display values
     # Convert to 4-parameter mode
