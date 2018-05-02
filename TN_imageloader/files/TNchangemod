@@ -11,7 +11,9 @@ if [[ $# -ne 1 ]] || [[ "$1" -ne "$1" ]] ;
 #	echo -e "\t 5:Atom-FPGA control interface "
 #	echo -e "\t 6:Flowcache "
 	echo -e "\t 7:Combined Image: Flowcache, PCI->CPU, Ethswitch, 6Tree"
-	echo -e "\t 8:Load userbitstream from first FAT32 partition: /boot/tn_user.bit"
+	echo -e "\t 8:Load userbitstream from first FAT32 partition: /boot/trustnode_top.bit"
+	echo -e "\t 9:TSN enabled bitstream"
+	echo -e "\t10: 100/10 Mbit/s enabled bitstream"
 	cat /usr/share/InnoRoute/TNmod.conf
 fi
 if [ $# -eq 1 ]; 
