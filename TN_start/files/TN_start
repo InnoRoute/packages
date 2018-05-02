@@ -6,11 +6,14 @@ START=98
 
 start() {
 echo "configuring TrustNode..."
+echo "mounting boot partiton"
+mount /dev/sda1 /boot/ 2>/dev/null
 sensors -c /usr/share/InnoRoute/INRsensor.conf -s > /usr/share/InnoRoute/TNstart.log 2>&1
 stty -F /dev/ttyS1 115200 #set FPGA terminal baudrate
 #/usr/share/InnoRoute/inr_slide.sh &,
 /usr/share/InnoRoute/TN_phy_init.sh
 /usr/share/InnoRoute/scripts/start_ovs.sh
+
 echo "done"
 }
 

@@ -19,6 +19,7 @@ define Package/TN_start/install
 	$(INSTALL_BIN) ./files/TN_start $(1)/etc/init.d/
 	$(INSTALL_DIR) $(1)/usr/share/InnoRoute
 	$(INSTALL_DIR) $(1)/usr/share/InnoRoute/scripts
+	$(INSTALL_DIR) $(1)/boot
 	$(INSTALL_BIN) ./files/start_ovs.sh $(1)/usr/share/InnoRoute/scripts/
 #	$(INSTALL_CONF) ./files/INRsensor.conf $(1)/usr/share/InnoRoute/
 endef
