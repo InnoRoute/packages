@@ -21,7 +21,7 @@ ovs-vsctl add-port TNbr TN12 -- set Interface TN12 ofport_request=13
 ovs-vsctl add-port TNbr TN13 -- set Interface TN13 ofport_request=14
 ovs-vsctl add-port TNbr TN14 -- set Interface TN14 ofport_request=15
 ovs-vsctl add-port TNbr TN15 -- set Interface TN15 ofport_request=16
-INRpllload /usr/share/InnoRoute/TN-PLL-V1.2_synce.stp E
+INRpllload /usr/share/InnoRoute/TN-PLL-V1.2_synce_7.stp E
 sensors-detect --auto
 INR_ftdi_eeprom -p 0x6010 -v 0x0403 -M
 chown -R TNuser /home/TNuser/
