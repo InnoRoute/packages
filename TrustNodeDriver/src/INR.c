@@ -4,6 +4,7 @@
 *@author M.Ulbricht 2015
 **/
 #include <linux/kernel.h>
+#include <linux/version.h>
 #include <linux/module.h>
 #include <linux/pci.h>
 #include <linux/init.h>

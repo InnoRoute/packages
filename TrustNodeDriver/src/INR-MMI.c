@@ -1,4 +1,5 @@
 #include <linux/kernel.h>
+#include <linux/version.h>
 #include <linux/module.h>
 #include "INR-MMI.h"
 #include <TN_MMI.h>

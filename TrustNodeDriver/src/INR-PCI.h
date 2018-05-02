@@ -7,11 +7,16 @@ int INR_init_drv (struct pci_dev *dev);
 void INR_UNMAP_all (struct pci_dev *dev);
 void INR_PCI_reset (void);
 void INR_remove_drv (struct pci_dev *dev);
-static irqreturn_t XPCIe_IRQHandler (int irq, void *dev_id, struct pt_regs *regs);
-int INR_TX_push (struct sk_buff *skb, uint8_t * data, uint16_t datalength, uint8_t eof, uint8_t port, uint8_t ll, uint8_t paged, uint16_t fragcount);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,4,200)
+	static irqreturn_t XPCIe_IRQHandler (int irq, void *dev_id);
+#else
+	static irqreturn_t XPCIe_IRQHandler (int irq, void *dev_id, struct pt_regs *regs);
+#endif
+
+int INR_TX_push (struct net_device *nwdev,struct sk_buff *skb, uint8_t * data, uint16_t datalength, uint8_t eof, uint8_t port, uint8_t ll, uint8_t paged, uint16_t fragcount);
 void INR_PCI_alloc_new_rx_skb (uint16_t current_descriptor, uint16_t ringindex);
 struct INR_PCI_rx_descriptor_ring_entry *INR_PCI_get_new_rx_descriptor_ring_entry (uint8_t index);
-void INR_PCI_rx_pageallocator (void *nix);
+int INR_PCI_rx_pageallocator (void *nix);
 uint16_t INR_PCI_process_rx_descriptor_ring (uint8_t index);
 uint16_t INR_PCI_pointerdistance (uint16_t tail, uint16_t head, uint16_t max);
 void INR_PCI_zerovars(void);
@@ -50,6 +55,7 @@ uint8_t get_russian(void);
 #define zerocopy_rx	1	/*<enable rx zerocopy packet handling */
 #define zerocopy_tx	1	/*<enable tx zerocopy packet handling */
 #define INR_PCI_page_prealloc_count 32	/*<prealloc pages */
+#define INR_PCI_HW_timestamp 0 /*<enable hardware timestamping */
 
 #define INR_PCI_tx_descriptor_base_address_reg 	0x6000/*<TX ring config register*/	//INR_TX_Ring_address
 #define INR_PCI_tx_descriptor_base_address_reg_h 	0x6004/*<TX ring config register high*/	//INR_TX_Ring_address
@@ -75,7 +81,8 @@ uint8_t get_russian(void);
 */
 struct INR_PCI_tx_descriptor_ring_entry
 {
-    struct sk_buf *skb; /**<store skb*/
+    struct net_device *nwdev; /**<store network device*/
+    struct sk_buff *skb; /**<store skb*/
     uint8_t eop:1;      /**<is last fragment of packet?*/
     uint8_t paged:1;    /**<is paged fragment?*/
     uint8_t *data;      /**<address of data*/

@@ -4,6 +4,7 @@
 *@author M.Ulbricht 2015
 **/
 #include <linux/kernel.h>
+#include <linux/version.h>
 #include <linux/module.h>
 #include <linux/pci.h>
 #include <linux/msi.h>
@@ -16,10 +17,12 @@
 #include <linux/kthread.h>
 #include <linux/skbuff.h>
 #include <linux/unistd.h>
+#include <linux/ptp_classify.h>
 #include "INR.h"
 #include "INR-NW.h"
 #include "INR-PCI.h"
 #include "INR-NAPI.h"
+#include "INR-TIME.h"
 #include <asm/signal.h>
 #include <linux/semaphore.h>
 #include <asm/cacheflush.h>
@@ -90,8 +93,8 @@ INR_PCI_zerovars() {
     txsemophore = 0;
     INR_PCI_tx_descriptor_current = 0;
     INR_PCI_tx_descriptor_unmap_current = 0;
-    for(j=0; j<INR_PCI_rx_descriptor_ring_count; j++)INR_PCI_rx_descriptor_base[j];
-    for(j=0; j<INR_PCI_rx_descriptor_ring_count; j++)INR_PCI_rx_descriptor_current[j];
+    for(j=0; j<INR_PCI_rx_descriptor_ring_count; j++)INR_PCI_rx_descriptor_base[j]=0;
+    for(j=0; j<INR_PCI_rx_descriptor_ring_count; j++)INR_PCI_rx_descriptor_current[j]=0;
     page_prealloc_current=0;
     for(j=0; j<INR_PCI_page_prealloc_count; j++)INR_PCI_rx_preallocated_page[j] =  NULL ;
     rx_descriptor_pool_length=0;
@@ -384,6 +387,15 @@ INR_PCI_process_rx_descriptor_ring (uint8_t index)
                         [index]->data, RX_descriptor->length);	//copy whole fragment into SKB
 
             }
+            //###########Timestamping
+            if (INR_PCI_HW_timestamp) {
+		    struct skb_shared_hwtstamps *skbtimestamp = skb_hwtstamps(rx_skb[index]);
+		    skbtimestamp->hwtstamp=ns_to_ktime(0); //0: insert timestamp here...
+            
+            }else {
+            	//skb_rx_timestamp(rx_skb[index]);
+            }
+            //########################
             rx_skb[index]->ip_summed = CHECKSUM_UNNECESSARY;	//set checksumflag in skb
             rx_skb[index]->protocol = eth_type_trans (rx_skb[index], rx_skb[index]->dev);	//set ethertype in skb
             if (RX_descriptor->length > ETH_HLEN)
@@ -391,7 +403,12 @@ INR_PCI_process_rx_descriptor_ring (uint8_t index)
                     skb_add_rx_frag (rx_skb[index], skb_shinfo (rx_skb[index])->nr_frags, data_rx[INR_PCI_rx_descriptor_current[index]]
                                      [index]->page, data_rx[INR_PCI_rx_descriptor_current[index]]
                                      [index]->offset + ETH_HLEN, RX_descriptor->length - ETH_HLEN, ALIGN (RX_descriptor->length - ETH_HLEN, L1_CACHE_BYTES));
-            atomic_inc (&data_rx[INR_PCI_rx_descriptor_current[index]][index]->page->_count);	//INCREMTN PAGECOUNT.. creazy voodoo
+        #if LINUX_VERSION_CODE >= KERNEL_VERSION(4,4,200)
+		atomic_inc (&data_rx[INR_PCI_rx_descriptor_current[index]][index]->page->_refcount);	//INCREMTN PAGECOUNT.. creazy voodoo
+	#else
+		atomic_inc (&data_rx[INR_PCI_rx_descriptor_current[index]][index]->page->_count);	//INCREMTN PAGECOUNT.. creazy voodoo
+	#endif                        
+            
         }
 //##############################OTHER FRAGMENT handling
         else {			//some other fragment of packet
@@ -413,7 +430,11 @@ INR_PCI_process_rx_descriptor_ring (uint8_t index)
                     skb_add_rx_frag (rx_skb[index], skb_shinfo (rx_skb[index])->nr_frags, data_rx[INR_PCI_rx_descriptor_current[index]][index]->page,
                                      data_rx[INR_PCI_rx_descriptor_current[index]][index]->offset, RX_descriptor->length, ALIGN (RX_descriptor->length,
                                              L1_CACHE_BYTES));
-                    atomic_inc (&data_rx[INR_PCI_rx_descriptor_current[index]][index]->page->_count);	//INCREMT PAGECOUNT.. creazy voodoo
+                    #if LINUX_VERSION_CODE >= KERNEL_VERSION(4,4,200)
+                    	atomic_inc (&data_rx[INR_PCI_rx_descriptor_current[index]][index]->page->_refcount);	//INCREMT PAGECOUNT.. creazy voodoo
+                    #else                         
+                    	atomic_inc (&data_rx[INR_PCI_rx_descriptor_current[index]][index]->page->_count);	//INCREMT PAGECOUNT.. creazy voodoo
+                    #endif
                 }
                 else {			//dont add new page, only extend last frag (pages are sorted by rx-ring )
                     skb_shinfo (rx_skb[index])->frags[skb_shinfo (rx_skb[index])->nr_frags - 1].size += RX_descriptor->length;
@@ -514,8 +535,13 @@ exit_rxloop:
 *@param dev_id PCI-device
 *@param regs flags
 */
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,4,200)
+static irqreturn_t
+XPCIe_IRQHandler (int irq, void *dev_id)
+#else
 static irqreturn_t
 XPCIe_IRQHandler (int irq, void *dev_id, struct pt_regs *regs)
+#endif
 {
     uint64_t intcause = INR_PCI_BAR0_read(INR_PCI_interrupt_cause_reg); //not implemented yet :/ -> read all rings  0xffff;//
     if (RX_DBG_mod)INR_LOG_debug(loglevel_warn"Int cause:0x%lx\n",INR_PCI_BAR0_read(INR_PCI_interrupt_cause_reg));
@@ -576,8 +602,10 @@ INR_int_enable (struct pci_dev *dev)
             return (1);
         }
     }
-    else
+    else {
         INR_LOG_debug (loglevel_err"MSI error\n");
+        return 1;
+        }
 }
 //*****************************************************************************************************************
 /**
@@ -600,7 +628,7 @@ void
 INR_RX_RING_init (struct pci_dev *dev, uint8_t index)
 {
     INR_LOG_debug (loglevel_info"Init RX-Ring %i\n", index);
-    INR_PCI_rx_descriptor_base[index] = pci_alloc_consistent (dev, INR_PCI_rx_descriptor_ring_length * INR_PCI_rx_descriptor_length, &INR_RX_Ring[index]);	//allocate TX-Ring in DMA
+    INR_PCI_rx_descriptor_base[index] = pci_alloc_consistent (dev, INR_PCI_rx_descriptor_ring_length * INR_PCI_rx_descriptor_length, (dma_addr_t)&INR_RX_Ring[index]);	//allocate TX-Ring in DMA
     INR_LOG_debug (loglevel_info"RX-Ring: cpu_adress:0x%llx  dma-adress:0x%llx\n", INR_PCI_rx_descriptor_base[index], INR_RX_Ring[index]);
     uint32_t tmpaddr_h, tmpaddr_l;
     tmpaddr_l = INR_RX_Ring[index] & 0xffffffff;
@@ -660,7 +688,7 @@ INR_PCI_ringtailtest (void *nix)
 /**
 *tread function which automatically preallocate RX-pages
 */
-void
+int
 INR_PCI_rx_pageallocator (void *nix)// contains empirical thesholds..but it works ;)
 {
     DECLARE_WAITQUEUE (wait2, current);
@@ -751,7 +779,7 @@ void
 INR_TX_RING_init (struct pci_dev *dev)
 {
     INR_LOG_debug (loglevel_info"Init TX-Ring\n");
-    INR_PCI_tx_descriptor_base = pci_alloc_consistent (dev, INR_PCI_tx_descriptor_ring_length * INR_PCI_tx_descriptor_length, &INR_TX_Ring);	//allocate TX-Ring in DMA
+    INR_PCI_tx_descriptor_base = pci_alloc_consistent (dev, INR_PCI_tx_descriptor_ring_length * INR_PCI_tx_descriptor_length, (dma_addr_t)&INR_TX_Ring);	//allocate TX-Ring in DMA
     INR_LOG_debug (loglevel_info"TX-Ring: cpu_adress:0x%llx  dma-adress:0x%llx\n", INR_PCI_tx_descriptor_base, INR_TX_Ring);
     if (!INR_PCI_tx_descriptor_base)
         INR_LOG_debug (loglevel_err"error cant alloc tx-ring\n");
@@ -811,13 +839,13 @@ INR_UNMAP_all (struct pci_dev *dev)
     uint64_t i = 0;
     INR_LOG_debug (loglevel_info"unmap all descriptors\n");
     for (i = 0; i < INR_PCI_tx_descriptor_ring_length; i++) {
-        struct INR_PCI_tx_descriptor *TX_descriptor = INR_PCI_tx_descriptor_ring[i];	//create temp. TDESC-structure
+        struct INR_PCI_tx_descriptor *TX_descriptor = (struct INR_PCI_tx_descriptor*)INR_PCI_tx_descriptor_ring[i];	//create temp. TDESC-structure
         if (TX_descriptor->buffer) {	//if there is an address stored, first unmap before override
             dma_unmap_single (&dev->dev, TX_descriptor->buffer, TX_descriptor->length, DMA_TO_DEVICE);	//unmap DMA
         }
     }
     for (i = 0; i < INR_PCI_rx_descriptor_ring_length; i++) {
-        struct INR_PCI_rx_descriptor *RX_descriptor = INR_PCI_rx_descriptor_ring[i];	//create temp. TDESC-structure
+        struct INR_PCI_rx_descriptor *RX_descriptor = (struct INR_PCI_rx_descriptor*)INR_PCI_rx_descriptor_ring[i];	//create temp. TDESC-structure
         if (RX_descriptor->buffer) {	//if there is an address stored, first unmap before override
             dma_unmap_single (&dev->dev, RX_descriptor->buffer, RX_descriptor->length, DMA_FROM_DEVICE);	//unmap DMA
         }
@@ -852,8 +880,11 @@ INR_PCI_pointerdistance (uint16_t tail, uint16_t head, uint16_t max)
 *@param ll local loop (send to cpu)
 */
 int
-INR_TX_push (struct sk_buff *skb, uint8_t * data, uint16_t datalength, uint8_t eof, uint8_t port, uint8_t ll, uint8_t paged, uint16_t fragcount)
+INR_TX_push (struct net_device *nwdev,struct sk_buff *skb, uint8_t * data, uint16_t datalength, uint8_t eof, uint8_t port, uint8_t ll, uint8_t paged, uint16_t fragcount)
 {
+    uint32_t tmp66 = tx_head_backup;
+    uint8_t error = 0;
+    uint64_t head, tail;
     if (INR_STATUS_get (INR_STATUS_DRV_INIT_done) == 0)//check if device ready after startup
         return 1;
     preempt_disable ();
@@ -863,15 +894,14 @@ INR_TX_push (struct sk_buff *skb, uint8_t * data, uint16_t datalength, uint8_t e
         return 1;
     }
     txsemophore = 1;
-    uint64_t head, tail;
+
     head = INR_PCI_BAR0_read (INR_PCI_tx_descriptor_head_reg) / INR_PCI_tx_descriptor_length;
     tail = INR_PCI_BAR0_read (INR_PCI_tx_descriptor_tail_reg) / INR_PCI_tx_descriptor_length;
     IfNotRuss if ((INR_PCI_pointerdistance (tail, head, INR_PCI_tx_descriptor_ring_length)) <= fragcount + 5) {//no free space in TX ring
         txsemophore = 0;
         return 1;
     }
-    uint32_t tmp66 = tx_head_backup;
-    uint8_t error = 0;
+
     if (TX_DBG_mod)// check if FPGA have forgotten a TX descriptor
         while (tx_head_backup != head) {
             volatile struct INR_PCI_tx_descriptor *TX_descriptor_headbackup = INR_PCI_tx_descriptor_ring[tx_head_backup];
@@ -906,7 +936,7 @@ INR_TX_push (struct sk_buff *skb, uint8_t * data, uint16_t datalength, uint8_t e
     }*/
     uint64_t dma_addr = dma_map_single (&globdev->dev, data, datalength, DMA_TO_DEVICE);	//map packet  to DMA
     if (dma_mapping_error (&globdev->dev, dma_addr)){
-        INR_LOG_debug (loglevel_err"TX dma mapping error! current:%i \n", INR_PCI_tx_descriptor_current);
+        INR_LOG_debug (loglevel_err"TX dma mapping error! current:%llu \n", INR_PCI_tx_descriptor_current);
         INR_PCI_enable_error_LED
         }
     dma_sync_single_for_device (&globdev->dev, dma_addr, datalength, DMA_TO_DEVICE);
@@ -923,10 +953,15 @@ INR_TX_push (struct sk_buff *skb, uint8_t * data, uint16_t datalength, uint8_t e
     }
     if (TX_descriptor->buffer)	//if buffer was used before
     {
+
         dma_unmap_single (&globdev->dev, TX_descriptor->buffer, TX_descriptor->length, DMA_TO_DEVICE);	//unmap DMA
         if (data_tx[INR_PCI_tx_descriptor_current].eop)
             if (data_tx[INR_PCI_tx_descriptor_current].skb)
-                kfree_skb (data_tx[INR_PCI_tx_descriptor_current].skb);	//if last fragment of skb->free skb
+            	if(INR_PCI_HW_timestamp){
+            		INR_TIME_TX_add(data_tx[INR_PCI_tx_descriptor_current].skb);//if hardware timestamp store skb for lateron timestamp adding
+            	}else{
+            		kfree_skb (data_tx[INR_PCI_tx_descriptor_current].skb);	//if last fragment of skb->free skb
+		    	}
         if (!data_tx[INR_PCI_tx_descriptor_current].paged)
             if (data_tx[INR_PCI_tx_descriptor_current].data)
                 kfree (data_tx[INR_PCI_tx_descriptor_current].data);	//if not paged free kmalloc mem
@@ -938,7 +973,8 @@ INR_TX_push (struct sk_buff *skb, uint8_t * data, uint16_t datalength, uint8_t e
     TX_descriptor->STA = 0xf & 0x0;
     TX_descriptor->Rsvd = 0xf & port;	//triger output-port
     TX_descriptor->CSS = 0xff & 0x00;
-    TX_descriptor->VLAN = 0xffff & 0;	//christians solution for giving thew port to the hardware
+    TX_descriptor->VLAN = 0xffff & 0;	
+    data_tx[INR_PCI_tx_descriptor_current].nwdev = nwdev;
     data_tx[INR_PCI_tx_descriptor_current].skb = skb;
     data_tx[INR_PCI_tx_descriptor_current].length = datalength;
     data_tx[INR_PCI_tx_descriptor_current].paged = 1 & paged;
@@ -972,12 +1008,12 @@ INR_PROBE_dma (struct pci_dev *dev)
     INR_LOG_debug (loglevel_info"probing DMA_BIT_MASK\n");
     uint64_t j = 64;
     for (j = 64; j > 0; j--) {
-        INR_LOG_debug ("%i ", j);
+        INR_LOG_debug ("%llu ", j);
         if (0 == dma_set_mask (&dev->dev, DMA_BIT_MASK (j)))
             break;
     }
     if (j)
-        INR_LOG_debug (loglevel_info"set dma-mask to %i\n", j);
+        INR_LOG_debug (loglevel_info"set dma-mask to %llu\n", j);
     else
         INR_LOG_debug (loglevel_err"fail to set DMA-Mask!\n");
 
@@ -989,7 +1025,7 @@ INR_PROBE_dma (struct pci_dev *dev)
             break;
     }
     if (j)
-        INR_LOG_debug (loglevel_info"dma_set_coherent_mask to %i\n", j);
+        INR_LOG_debug (loglevel_info"dma_set_coherent_mask to %llu\n", j);
     else
         INR_LOG_debug (loglevel_err"fail to set DMA_coherent-Mask!\n");
 
@@ -1000,7 +1036,7 @@ INR_PROBE_dma (struct pci_dev *dev)
             break;
     }
     if (j)
-        INR_LOG_debug (loglevel_info"set pci_set_dma_mask to %i\n", j);
+        INR_LOG_debug (loglevel_info"set pci_set_dma_mask to %llu\n", j);
     else
         INR_LOG_debug (loglevel_err"fail to set PCI-DMA-Mask!\n");
 }
@@ -1021,7 +1057,7 @@ INR_remove_drv (struct pci_dev *dev)
     if (INR_STATUS_get (INR_STATUS_BAR1))
         release_mem_region (gBaseHdwr1, REGISTER_SIZE);	//release bar1
     if (INR_STATUS_get (INR_STATUS_TX_RING))
-        pci_free_consistent (dev, INR_PCI_tx_descriptor_ring_length * INR_PCI_tx_descriptor_length, INR_PCI_tx_descriptor_base, INR_TX_Ring);	//release DMA-mem
+        pci_free_consistent (dev, INR_PCI_tx_descriptor_ring_length * INR_PCI_tx_descriptor_length,(void*)(uintptr_t) INR_PCI_tx_descriptor_base, INR_TX_Ring);	//release DMA-mem
     if (INR_STATUS_get (INR_STATUS_INT1))
         free_irq (gIrq, dev);	//release interrupt
     if (INR_STATUS_get (INR_STATUS_MSI))
@@ -1096,7 +1132,7 @@ INR_init_drv (struct pci_dev *dev)
         for (i = 0; i < INR_PCI_rx_descriptor_ring_count; i++)
             INR_NAPI_init (i);
     INR_LOG_debug (loglevel_info"Hardware setup done\n");
-    INR_MMI_interrupt_start(gBaseVirt1);
+    INR_MMI_interrupt_start((uint64_t)(uintptr_t)gBaseVirt1);
     INR_STATUS_set (INR_STATUS_HW_RUNNING);
     INR_PCI_disable_error_LED
 }

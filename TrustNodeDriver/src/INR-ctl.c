@@ -5,6 +5,7 @@
 **/
 #include <linux/kernel.h>
 #include <linux/export.h>
+#include <linux/version.h>
 #include <linux/module.h>
 #include <linux/pci.h>
 #include <linux/init.h>
@@ -24,7 +25,7 @@
 
 #define PROCFS_MAX_SIZE		1024
 static char procfs_buffer[PROCFS_MAX_SIZE];
-static unsigned long procfs_buffer_size = 0;
+static size_t procfs_buffer_size = 0;
 static struct proc_dir_entry *reg1, *reg2,*reg3,*reg4, *INR_proc_dir;
 
 //*****************************************************************************************************************
@@ -33,7 +34,7 @@ static struct proc_dir_entry *reg1, *reg2,*reg3,*reg4, *INR_proc_dir;
 *
 */
 int
-TNrussian_write (struct file *file, const char *buffer, unsigned long count, void *data)
+TNrussian_write (struct file *file, const char *buffer, size_t count, void *data)
 {
     procfs_buffer_size = count;
     if (procfs_buffer_size > PROCFS_MAX_SIZE) {
@@ -77,7 +78,7 @@ TNrussian_proc_open (struct inode *inode, struct file *file)
 *
 */
 int
-TNsend2cpu_write (struct file *file, const char *buffer, unsigned long count, void *data)
+TNsend2cpu_write (struct file *file, const char *buffer, size_t count, void *data)
 {
     procfs_buffer_size = count;
     if (procfs_buffer_size > PROCFS_MAX_SIZE) {
@@ -122,7 +123,7 @@ TNsend2cpu_proc_open (struct inode *inode, struct file *file)
 *
 */
 int
-TXdbg_write (struct file *file, const char *buffer, unsigned long count, void *data)
+TXdbg_write (struct file *file, const char *buffer, size_t count, void *data)
 {
     procfs_buffer_size = count;
     if (procfs_buffer_size > PROCFS_MAX_SIZE) {
@@ -166,7 +167,7 @@ TXdbg_proc_open (struct inode *inode, struct file *file)
 *
 */
 int
-RXdbg_write (struct file *file, const char *buffer, unsigned long count, void *data)
+RXdbg_write (struct file *file, const char *buffer, size_t count, void *data)
 {
     procfs_buffer_size = count;
     if (procfs_buffer_size > PROCFS_MAX_SIZE) {

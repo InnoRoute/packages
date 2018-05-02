@@ -3,7 +3,10 @@
 *@brief settings and definitions Netork communication
 *@author M.Ulbricht 2015
 **/
+#include <linux/netdev_features.h>
+#include <linux/netdevice.h>
 #define INR_NWDEV_features NETIF_F_SG | NETIF_F_FRAGLIST
+#define INR_NWDEV_features_HW NETIF_F_SG | NETIF_F_FRAGLIST
 //no, we dont support TCP-checsum.. NETIF_F_IP_CSUM
 /**
 *Network packet structure
@@ -31,13 +34,14 @@ int INR_NW_ioctl (struct net_device *nwdev, struct ifreq *rq, int cmd);
 struct net_device_stats *INR_NW_stats (struct net_device *nwdev);
 int INR_NW_change_mtu (struct net_device *nwdev, int new_mtu);
 void INR_NW_tx_timeout (struct net_device *nwdev);
-int INR_NW_init (struct net_device *nwdev);
+void INR_NW_init (struct net_device *nwdev);
 struct net_device *get_nwdev (uint8_t index);
 void set_nwdev (uint8_t index, struct net_device *dev);
 int INR_NW_set_features (struct net_device *net, netdev_features_t features);
 void set_send2cpu (uint8_t flag);
 uint8_t get_send2cpu(void);
 void INR_NW_zerovars(void);
+static int INR_NW_get_ts_info(struct net_device *dev, struct ethtool_ts_info *info);
 
 //*****************************************************************************************************************
 /**
@@ -52,6 +56,12 @@ static const struct net_device_ops INR_NW_netdev_ops = {
     .ndo_change_mtu = INR_NW_change_mtu,    /* define change_mtu callback */
     .ndo_tx_timeout = INR_NW_tx_timeout,    /* define timeout callback */
     .ndo_set_features = INR_NW_set_features,
+    .ndo_do_ioctl = INR_NW_ioctl,
+};
+
+static const struct ethtool_ops INR_NW_ethtool_ops = {
+	.get_ts_info		= INR_NW_get_ts_info,
+
 };
 
 //*****************************************************************************************************************

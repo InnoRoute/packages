@@ -12,6 +12,7 @@
 #include <linux/kernel.h>
 #include <linux/export.h>
 #include <linux/module.h>
+#include <linux/version.h>
 #include <linux/pci.h>
 #include <linux/init.h>
 #include <linux/interrupt.h>
@@ -32,6 +33,8 @@ static void remove (struct pci_dev *dev);
 static struct pci_device_id ids[] = {
     {PCI_DEVICE (0xAAAA, 0x7024),},
     {PCI_DEVICE (0x10EE, 0x0000),},
+    {PCI_DEVICE (0xAAAA, 0x7121),},
+    {PCI_DEVICE (0xAAAA, 0x7021),},
     {0,}
 };
 
