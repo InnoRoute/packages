@@ -10,7 +10,7 @@
 *init mmid address for MDIO
 *@param bar1base mmi address of bar1
 */
-void INR_MDIO_init(uint64_t bar1base) {
+void INR_MDIO_init(uint64_t *bar1base) {
     INR_MMI_PHY_hard_reset();
     INR_MMI_GPHY_soft_reset();
 

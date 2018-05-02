@@ -31,10 +31,10 @@ void INR_PCI_MMI_write(uint32_t value, uint64_t addr) {
 *init mmid address
 *
 */
-void INR_MMI_init(uint64_t bar1) {
+void INR_MMI_init(uint64_t *bar1) {
     gBaseVirt1_MMI=bar1;//get baseaddr from
     printk("INR_MMI_init base:0x%lx\n",gBaseVirt1_MMI);
-    if(gBaseVirt1_MMI)INR_MDIO_init(gBaseVirt1_MMI);//init mdio
+    //if(gBaseVirt1_MMI)INR_MDIO_init(gBaseVirt1_MMI);//init mdio
 
 }
 //*****************************************************************************************************************
@@ -47,13 +47,19 @@ void INR_MMI_interrupt_handler() {
         printk("error no connection to BAR1\n");
         return 0;//no address of bar 1, exit
     }
-    printk("MMI_interrupt handler_test\n");
-    uint32_t MDIO_int=INR_PCI_BAR1_read(INR_MDIO_interrupt);
+    INR_PCI_BAR1_write(0x0,0xc20010);
+    INR_PCI_BAR1_write(0x0,0xc20014);
+    INR_PCI_BAR1_write(0x0,0xc20018);
+    INR_PCI_BAR1_write(0x0,0xc2001c);
+    //uint32_t MDIO_int=INR_PCI_BAR1_read(INR_MDIO_interrupt);
+    //printk("MMI_interrupt handler_test: 0x%lx\n",MDIO_int);
 
-    if(MDIO_int&0xfff)INR_MMI_PHY_interrupt(MDIO_int&0xfff);
-    if(MDIO_int&(3<<16))INR_MMI_ALASKA_PHY_PTP_interrupt((MDIO_int>>16)&3);
-    if(MDIO_int&(1<<30))INR_MMI_PHY_hard_reset();
-    if(MDIO_int&(1<<31))INR_MMI_PHY_hard_reset();
+    printk("Flowcache EMA has entry 1 cleared\n");
+	
+    //if(MDIO_int&0xfff)INR_MMI_PHY_interrupt(MDIO_int&0xfff);
+    //if(MDIO_int&(3<<16))INR_MMI_ALASKA_PHY_PTP_interrupt((MDIO_int>>16)&3);
+    //if(MDIO_int&(1<<30))INR_MMI_PHY_hard_reset();
+    //if(MDIO_int&(1<<31))INR_MMI_PHY_hard_reset();
 
 }
 //*****************************************************************************************************************
