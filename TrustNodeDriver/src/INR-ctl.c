@@ -18,6 +18,7 @@
 #include <linux/kthread.h>
 #include <asm/signal.h>
 #include <linux/semaphore.h>
+
 #include "INR.h"
 #include "INR-PCI.h"
 #include "INR-NW.h"
