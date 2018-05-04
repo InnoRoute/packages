@@ -19,7 +19,7 @@ define KernelPackage/trustnode
   TITLE:=TrustNode network iterface driver
   FILES:=$(PKG_BUILD_DIR)/trustnode.ko
   AUTOLOAD:=$(call AutoLoad,50,trustnode)
-  DEPENDS:=+TN_tools +kmod-ptp
+  DEPENDS:=+TN_tools +kmod-ptp +kmod-INR_TN_MMI
 #+kmod-openvswitch
 #+openvswitch-dev +kmod-TNopenvswitch
 endef
@@ -52,4 +52,4 @@ define KernelPackage/trelay/install
 	$(INSTALL_DIR) $(1)/etc/trustnode
 endef
 
-$(eval $(call KernelPackage,trustnode,+libopenvswitch,+libsflow,+libofproto,+libovsdb,TN_tools,kmod-ptp))
+$(eval $(call KernelPackage,trustnode,+kmod-INR_TN_MMI,+libopenvswitch,+libsflow,+libofproto,+libovsdb,TN_tools,kmod-ptp))
