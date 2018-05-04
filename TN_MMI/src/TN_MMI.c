@@ -56,7 +56,7 @@ void INR_MMI_interrupt_handler() {
     //printk("MMI_interrupt handler_test: 0x%lx\n",MDIO_int);
 
     //printk("Flowcache EMA has entry 1 cleared\n");
-	
+
     //if(MDIO_int&0xfff)INR_MMI_PHY_interrupt(MDIO_int&0xfff);
     //if(MDIO_int&(3<<16))INR_MMI_ALASKA_PHY_PTP_interrupt((MDIO_int>>16)&3);
     //if(MDIO_int&(1<<30))INR_MMI_PHY_hard_reset();

@@ -11,9 +11,9 @@ void INR_MDIO_ALASKA_init(uint8_t id);
 #define INR_MDIO_read_addr ((C_SUB_ADDR_MDIO_READ<<8)|C_BASE_ADDR_MDIO)
 #define INR_MDIO_write_addr ((C_SUB_ADDR_MDIO_WRITE<<8)|C_BASE_ADDR_MDIO)
 #ifdef C_SUB_ADDR_MDIO_INTERRUPTS //backwardcompatibility
-	#define INR_MDIO_interrupt ((C_SUB_ADDR_MDIO_INTERRUPTS<<8)|C_BASE_ADDR_MDIO)
+#define INR_MDIO_interrupt ((C_SUB_ADDR_MDIO_INTERRUPTS<<8)|C_BASE_ADDR_MDIO)
 #else
-	#define INR_MDIO_interrupt ((C_SUB_ADDR_MDIO_INTERRUPT<<8)|C_BASE_ADDR_MDIO)
+#define INR_MDIO_interrupt ((C_SUB_ADDR_MDIO_INTERRUPT<<8)|C_BASE_ADDR_MDIO)
 #endif
 
 #define INR_MDIO_GPHY_REG_ISTAT 0x1A
