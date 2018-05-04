@@ -47,14 +47,15 @@ void INR_MMI_interrupt_handler() {
         printk("error no connection to BAR1\n");
         return 0;//no address of bar 1, exit
     }
-    INR_PCI_BAR1_write(0x0,0xc20010);
+    /*INR_PCI_BAR1_write(0x0,0xc20010);
     INR_PCI_BAR1_write(0x0,0xc20014);
     INR_PCI_BAR1_write(0x0,0xc20018);
     INR_PCI_BAR1_write(0x0,0xc2001c);
+    */
     //uint32_t MDIO_int=INR_PCI_BAR1_read(INR_MDIO_interrupt);
     //printk("MMI_interrupt handler_test: 0x%lx\n",MDIO_int);
 
-    printk("Flowcache EMA has entry 1 cleared\n");
+    //printk("Flowcache EMA has entry 1 cleared\n");
 	
     //if(MDIO_int&0xfff)INR_MMI_PHY_interrupt(MDIO_int&0xfff);
     //if(MDIO_int&(3<<16))INR_MMI_ALASKA_PHY_PTP_interrupt((MDIO_int>>16)&3);
