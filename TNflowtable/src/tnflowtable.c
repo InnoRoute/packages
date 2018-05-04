@@ -44,6 +44,7 @@ static struct argp_option options[] = {//user interface
   {"ID", 'i', "", 0, "ID of entry"},
   {"COUNT", 'c', "", 0, "number of entrys to do something"},
   {"PQUEUE", 'q', "", 0, "select a processor queue"},
+  {"memdump", 'm', 0, 0, "select a processor queue"},
   {0, 0, 0, 0, "Rule options:", 1},
   {"AUTOHASH", 'a', 0, 0, "automatic generate and write hash to hashtable"},
   {"AUTOACT", 'z', 0, 0, "automatic write action to Actiontable"},
@@ -99,6 +100,9 @@ parse_opt (int key, char *arg, struct argp_state *state)
     break;
   case 'z':
     arguments->autoaction = 1;
+    break;
+  case 'm':
+    memdump_en();
     break;
   case 'n':
     arguments->numberout = 1;
@@ -328,7 +332,7 @@ main (int argc, char **argv)
   FCinit_EMH (map_base, map_base_shadow);
   FCinit_MasterTable (map_base_master);//pass the memorypointer to the flowcache libs
   INR_ACCDP_init(map_base, map_base_shadow);
-
+  if(INR_FC_check){
   switch (arguments.args[0][0]) {//parse commandline arguments
   case 'A':
     switch (arguments.args[0][5]) { //actiontable
@@ -350,7 +354,7 @@ main (int argc, char **argv)
     }
     break;
   case 'H':
-    if (arguments.args[0][8] == 'H')
+    if (arguments.args[0][8] == 'H')if(INR_EMH_check()){
       switch (arguments.args[0][10]) { //hashtable
       case 'a':
         HT_EMH_add (&arguments);
@@ -367,8 +371,8 @@ main (int argc, char **argv)
       default:
         printf ("unknown subaction\n");
         break;
-      }
-    else
+      }}else {printf("EMH table is not available in this bitstream!\n");}
+    else if(INR_EMA_check()){
       switch (arguments.args[0][10]) {  //hashtable
       case 'a':
         HT_EMA_add (&arguments);
@@ -385,10 +389,10 @@ main (int argc, char **argv)
       default:
         printf ("unknown subaction\n");
         break;
-      }
+      }}else printf("EMA table is not available in this bitstream\n");
     break;
   case 'C':
-    if (arguments.args[0][8] == 'H')
+    if (arguments.args[0][8] == 'H')if(INR_collT_check()){
       switch (arguments.args[0][10]) {  //ruletable
       case 'a':
         CT_EMH_add (&arguments);
@@ -408,7 +412,7 @@ main (int argc, char **argv)
       default:
         printf ("unknown subaction\n");
         break;
-      }
+      }}else printf("Collision table not available in this bitstream!\n");
     break;
   case 'D':
       if(INR_accdp_check()){
@@ -504,7 +508,7 @@ main (int argc, char **argv)
       break;
     }
     break;
-  }
+  }}else printf("Flow cache not available in this bitstream!\n");
   munmap(map_base, MAP_SIZE);//unmap files and mmi from memory
   munmap(map_base_shadow, MAP_SIZE);
   munmap(map_base_master, MASTERTABLE_length * sizeof (struct arguments));

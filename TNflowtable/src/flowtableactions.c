@@ -384,7 +384,7 @@ RT_EMH_add (struct arguments *arguments)
 			entry_shadow->VALID_BIT = 1;
 			entry_shadow->TYPE_ID = 0x3f & arguments->TYPE_ID;	//& (1<<(arguments->TYPE_ID-1));
 			entry_shadow->PRIORITY = 0xff & arguments->PRIORITY;
-			entry_shadow->ACTION_ID = 0xffff & arguments->ACTION_ID;
+			entry_shadow->ACTION_ID = 0xffffff & arguments->ACTION_ID;
 			uint8_t j = 0;
 			switch (arguments->TYPE_ID) {
 			case 1:
@@ -444,7 +444,7 @@ RT_EMH_update (struct arguments arguments)
 		entry_shadow->VALID_BIT = 1;
 		entry_shadow->TYPE_ID = 0x3f & arguments.TYPE_ID;
 		entry_shadow->PRIORITY = 0xff & arguments.PRIORITY;
-		entry_shadow->ACTION_ID = 0xffff & arguments.ACTION_ID;
+		entry_shadow->ACTION_ID = 0xffffff & arguments.ACTION_ID;
 		//entry->NEXT_BIT = 0x1 & arguments.NEXT_BIT;
 		switch (arguments.TYPE_ID) {
 		case 1:
@@ -584,7 +584,7 @@ CT_EMH_add (struct arguments *arguments)
 			entry_shadow->VALID_BIT = 1;
 			entry_shadow->TYPE_ID = 0x3f & arguments->TYPE_ID;
 			entry_shadow->PRIORITY = 0xff & arguments->PRIORITY;
-			entry_shadow->ACTION_ID = 0xffff & arguments->ACTION_ID;
+			entry_shadow->ACTION_ID = 0xffffff & arguments->ACTION_ID;
 			//entry->NEXT_BIT = 0x1 & arguments.NEXT_BIT;
 			uint8_t j = 0;
 			switch (arguments->TYPE_ID) {
@@ -637,7 +637,7 @@ CT_EMH_update (struct arguments arguments)
 		entry_shadow->VALID_BIT = 1;
 		entry_shadow->TYPE_ID = 0x3f & arguments.TYPE_ID;
 		entry_shadow->PRIORITY = 0xff & arguments.PRIORITY;
-		entry_shadow->ACTION_ID = 0xffff & arguments.ACTION_ID;
+		entry_shadow->ACTION_ID = 0xffffff & arguments.ACTION_ID;
 		//entry->NEXT_BIT = 0x1 & arguments.NEXT_BIT;
 		uint8_t j = 0;
 		switch (arguments.TYPE_ID) {
@@ -853,7 +853,7 @@ RT_EMA_add (struct arguments *arguments)
 			entry_shadow->reserved = 0;
 			entry_shadow->TYPE_ID = 0xfff & arguments->TYPE_ID;	  //type of rule
 			entry_shadow->PRIORITY = 0xff & arguments->PRIORITY;
-			entry_shadow->ACTION_ID = 0xffff & arguments->ACTION_ID;	   //pointer to action table
+			entry_shadow->ACTION_ID = 0xffffff & arguments->ACTION_ID;	   //pointer to action table
 			entry_shadow->INGRESS_PORT = 0x1f & arguments->INPORT;
 			entry_shadow->MAC_SRC = arguments->MAC_SRC;		    //source MAC
 			entry_shadow->MAC_DST = arguments->MAC_DST;		   //destination MAC
@@ -948,7 +948,7 @@ RT_EMA_update (struct arguments arguments)
 		entry_shadow->reserved = 0;
 		entry_shadow->TYPE_ID = 0xfff & arguments.TYPE_ID;	 //type of rule
 		entry_shadow->PRIORITY = 0xff & arguments.PRIORITY;
-		entry_shadow->ACTION_ID = 0xffff & arguments.ACTION_ID;	   //pointer to action table
+		entry_shadow->ACTION_ID = 0xffffff & arguments.ACTION_ID;	   //pointer to action table
 		entry_shadow->INGRESS_PORT = 0x1f & arguments.INPORT;
 		entry_shadow->MAC_SRC = arguments.MAC_SRC;	   //source MAC
 		entry_shadow->MAC_DST = arguments.MAC_DST;	   //destination MAC

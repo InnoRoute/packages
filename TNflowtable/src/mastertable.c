@@ -226,12 +226,14 @@ FC_MT_FIND_entry (struct arguments *arguments)
 uint8_t
 FC_MT_autotable (struct arguments * arguments)
 {
+uint8_t at_added=0;
   verblog printf ("__FUNCTION__ = %s\n", __FUNCTION__);
   arguments->ID = 1;  //override automatic switches
   arguments->autoaction = 0;
   //arguments->ACTION_ID = 0; removed to pass actionselection to mastertable
   arguments->HASH.gauto = 0;
   arguments->TYPE_ID = 0; //reset type for self finding
+  if(INR_EMH_check){
   if (entry_is_EMH1 (arguments)) {
     arguments->TYPE_ID = 1; //set type
   }
@@ -244,6 +246,7 @@ FC_MT_autotable (struct arguments * arguments)
    if (entry_is_EMH4 (arguments)) {
     arguments->TYPE_ID = 4; //set type
   }
+  }
   if (arguments->dohave_INPORT){
     arguments->TYPE_ID = 0; //if inport is present it is EMA
   }
@@ -253,6 +256,7 @@ FC_MT_autotable (struct arguments * arguments)
 	  arguments->TableID.ActT = arguments->ACTION_ID;
 	  if (arguments->ACTION_ID == 0) {
 	    AT_add (arguments); //add new action if not found
+	    at_added=1;
 	  }}else{
 	  	arguments->ID=arguments->PQUEUE;
 	  	arguments->ACTION_ID=arguments->PQUEUE;
@@ -263,16 +267,18 @@ FC_MT_autotable (struct arguments * arguments)
   get_HASH (arguments); //calculate hashes
   if (arguments->TYPE_ID) { //EMH
     if (FC_MT_have_EMH_hash (arguments->HASH.EMH)) {
-      CT_EMH_add (arguments);
+     if(INR_collT_check) CT_EMH_add (arguments); else printf("hash collision, this cule cant be apllied, because the collisiontable is not available in this bitstream\n");
     } else {
       RT_EMH_add (arguments); //add to table
       HT_EMH_add (arguments); //add to hashtable
     }
     return 0;
   } else {      //EMA
+    if(INR_EMA_check()){
+    printf("möp\n");
     RT_EMA_add (arguments); //add to table
     HT_EMA_add (arguments); //add to hashtable
-
+	}else {printf("Rule can't be applied the loaded bitstream doesn't provide a ruleset which can used for this rule.\n");if(at_added)AT_del (*arguments);}
   }
 }
 

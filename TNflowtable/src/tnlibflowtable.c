@@ -8,6 +8,8 @@
   #include <stddef.h>
   #include <stdio.h>
   #include <endian.h>
+  #include <sys/time.h>
+  #include <time.h>
 #else
   #include <linux/kernel.h>
   #include <linux/export.h>
@@ -28,6 +30,7 @@ uint64_t FCbase_EMH_shadow = 0;
 uint64_t FCbase_EMA = 0;
 uint64_t FCbase_EMA_shadow = 0;
 uint8_t verbose = 0;
+uint8_t MEMDUMP=0;
 uint8_t touch_HW=1;//this switch allows to disable hardware writng.
 
 
@@ -75,6 +78,13 @@ FCmemcpy(void *dst, const void *src, size_t len)
   uint32_t *s = src;
   THW {for (i = 0; i < len / sizeof(uint32_t); i++) {
     d[i] = s[i];
+    #ifndef __KERNEL__
+      if(MEMDUMP){
+      struct timeval tv;
+	  gettimeofday(&tv, NULL);
+      printf("TNbar1 0x%llx w 0x%llx\n",dst-FCbase_EMA+i*sizeof(uint32_t),s[i]);
+    }
+    #endif
   }}
   return dst;
 }
@@ -860,4 +870,45 @@ printf("RuleTable_EMH, used:%i total:%i\n",INR_RuleTable_EMH_get_used(),INR_FC_E
 printf("HashTable_EMH, used:%lli total:%lli\n",INR_RuleTable_EMH_get_used()-INR_CTable_EMH_get_used(),INR_FC_EMH_HashTable_length);
 printf("Mastertable, used:%lli total:%lli\n",INR_MasterT_get_used(),MASTERTABLE_length);
 
+}
+void memdump_en(){
+MEMDUMP=1;
+
+}
+
+//************************************************************************************************************************************
+/**
+*check if EMH table is available in current bitstream
+*/
+uint8_t INR_EMH_check(){
+uint32_t *available=(uint32_t*)((C_BASE_ADDR_COMMON_LOWER<<8)|C_SUB_ADDR_COMMON_FEATURES_FLOWCACHE+FCbase_EMA);
+verblog printf("EMH flowtable available:0x%lx\n",*available&2);
+return *available&2;
+}
+//************************************************************************************************************************************
+/**
+*check if EMA table is available in current bitstream
+*/
+uint8_t INR_EMA_check(){
+uint32_t *available=(uint32_t*)((C_BASE_ADDR_COMMON_LOWER<<8)|C_SUB_ADDR_COMMON_FEATURES_FLOWCACHE+FCbase_EMA);
+verblog printf("EMA flowtable available:0x%lx\n",*available&8);
+return *available&8;
+}
+//************************************************************************************************************************************
+/**
+*check if EMA table is available in current bitstream
+*/
+uint8_t INR_collT_check(){
+uint32_t *available=(uint32_t*)((C_BASE_ADDR_COMMON_LOWER<<8)|C_SUB_ADDR_COMMON_FEATURES_FLOWCACHE+FCbase_EMA);
+verblog printf("Collision flowtable available:0x%lx\n",*available&4);
+return *available&4;
+}
+//************************************************************************************************************************************
+/**
+*check if EMA table is available in current bitstream
+*/
+uint8_t INR_FC_check(){
+uint32_t *available=(uint32_t*)((C_BASE_ADDR_COMMON_LOWER<<8)|C_SUB_ADDR_COMMON_FEATURES_FLOWCACHE+FCbase_EMA);
+verblog printf("Collision flowtable available:0x%lx\n",*available&1);
+return *available&1;
 }

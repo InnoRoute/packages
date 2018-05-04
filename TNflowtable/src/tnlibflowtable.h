@@ -34,6 +34,11 @@ uint16_t INR_HashTable_EMA_get_used (void);
 uint16_t INR_RuleTable_EMA_get_used (void);
 uint16_t INR_CTable_EMH_get_used (void);
 uint32_t INR_RuleTable_EMH_get_used (void);
+void memdump_en(void);
+uint8_t INR_EMH_check(void);
+uint8_t INR_EMA_check(void);
+uint8_t INR_collT_check(void);
+uint8_t INR_FC_check(void);
 
 uint8_t get_verbose(void);
 void set_verbose(uint8_t i);
@@ -42,6 +47,11 @@ int hwaddr_aton2(const char *txt, uint8_t *addr);
 static int hex2num(char c);
 uint32_t parseIPV4string(char* ipAddress) ;
 #define verblog if(get_verbose()) //macro for checking verbose bit
+#ifndef C_BASE_ADDR_COMMON_LOWER
+#ifdef C_BASE_ADDR_TN_COMMON_L
+#define C_BASE_ADDR_COMMON_LOWER C_BASE_ADDR_TN_COMMON_L
+#endif
+#endif
 //base addresses:
 //hashtable with hardcoded fields
 #define  INR_FC_ActT_entry_length 4 //length of entry in byte
@@ -128,7 +138,7 @@ union INR_FC_EMH_RULE_TYPES //put all types in same meory
 };
 
 
-
+#if C_MMI_ADDR_MAP_REVISION<5
 struct INR_FC_EMH_RULE
 {
   uint8_t VALID_BIT: 1;     /**<use this rule or not*/
@@ -159,6 +169,39 @@ struct INR_FC_EMA_RULE
   uint16_t PORT_SRC: 16;  /**<TCP/UDP source port*/
   uint16_t PORT_DST: 16;  /**<TCP/UDP destination port*/
 } __attribute__ ((__packed__));
+#endif
+#if C_MMI_ADDR_MAP_REVISION>4
+struct INR_FC_EMH_RULE
+{
+  uint8_t VALID_BIT: 1;     /**<use this rule or not*/
+  uint8_t TYPE_ID: 5;   /**<type of rule*/
+  uint8_t dc1: 2;        /**<dont care bit 1*/
+  uint8_t PRIORITY: 8;
+  uint32_t ACTION_ID: 24;    /**<pointer to action table*/
+  union INR_FC_EMH_RULE_TYPES COMP_FIELDS;      /**<fields used for comparison, depends on ruletype*/
+} __attribute__ ((__packed__));
+
+struct INR_FC_EMA_RULE
+{
+  uint8_t VALID_BIT: 1;     /**<use this rule or not*/
+  uint16_t TYPE_ID: 12;   /**<type of rule*/
+  uint8_t PRIORITY: 8;
+  uint32_t ACTION_ID: 24;    /**<pointer to action table*/
+  uint8_t INGRESS_PORT: 5;
+  uint64_t MAC_SRC: 48;     /**<source MAC*/
+  uint64_t MAC_DST: 48;     /**<destination MAC*/
+  uint16_t ETHERTYPE: 16;     /**<ETHERTYPE*/
+  uint16_t VLAN_ID: 12;     /**<VLAN_ID*/
+  uint8_t VLAN_PRIO: 3;     /**<VLAN_Priority*/
+  uint32_t IPv4_SRC: 32;  /**<IPv4 source address*/
+  uint32_t IPv4_DST: 32;  /**<IPv4 destination address*/
+  uint8_t PROTOCOL: 8;  /**<layer 3 protocol*/
+  uint8_t TOS: 6;   /**<ToS field*/
+  uint16_t PORT_SRC: 16;  /**<TCP/UDP source port*/
+  uint16_t PORT_DST: 16;  /**<TCP/UDP destination port*/
+  uint8_t reserved:1;
+} __attribute__ ((__packed__));
+#endif
 
 struct INR_FC_EMH_HashTable_entry
 {
