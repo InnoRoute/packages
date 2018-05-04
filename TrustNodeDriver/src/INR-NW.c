@@ -172,26 +172,26 @@ INR_NW_tx (struct sk_buff *skb, struct net_device *nwdev)
         const u8 *data;
         unsigned int len;
         unsigned int consumed = 0;
-       // if(zerocopy_tx)skb_shinfo(skb)->tx_flags |= SKBTX_DEV_ZEROCOPY; //maybe this fix the memory drain
-	//######Timestamping
-	if (skb_shinfo(skb)->tx_flags & SKBTX_HW_TSTAMP){//check if timestamp is requested
-	if(INR_PCI_HW_timestamp){//hw timestamping
-		skb_shinfo(skb)->tx_flags |= SKBTX_IN_PROGRESS; //announce HW will do timestamping
-	}else{//no hw timestamping
-	skb_tx_timestamp(skb);
-	}
-	}
-	if (skb_shinfo(skb)->tx_flags & SKBTX_SW_TSTAMP)skb_tx_timestamp(skb); 
-	
-	
-	
-	//#################
+        // if(zerocopy_tx)skb_shinfo(skb)->tx_flags |= SKBTX_DEV_ZEROCOPY; //maybe this fix the memory drain
+        //######Timestamping
+        if (skb_shinfo(skb)->tx_flags & SKBTX_HW_TSTAMP) { //check if timestamp is requested
+            if(INR_PCI_HW_timestamp) { //hw timestamping
+                skb_shinfo(skb)->tx_flags |= SKBTX_IN_PROGRESS; //announce HW will do timestamping
+            } else { //no hw timestamping
+                skb_tx_timestamp(skb);
+            }
+        }
+        if (skb_shinfo(skb)->tx_flags & SKBTX_SW_TSTAMP)skb_tx_timestamp(skb);
+
+
+
+        //#################
         from = 0;
         if (skb_shinfo (skb)->nr_frags) {
             if (zerocopy_tx) {
                 int i = 0;
                 error = INR_TX_push (nwdev,skb, skb->data, skb_headlen (skb), 0, toport, get_send2cpu(), 1, skb_shinfo (skb)->nr_frags);
-                if (error){
+                if (error) {
                     goto errorhandling;
                 }
                 for (i = 0; i < skb_shinfo (skb)->nr_frags - 1; i++) {
@@ -238,7 +238,7 @@ INR_NW_tx (struct sk_buff *skb, struct net_device *nwdev)
                         last = 1;
                     }
                     uint8_t *skb_data = kmalloc (nextfrag, GFP_DMA | GFP_ATOMIC);
-                    if (!skb_data){
+                    if (!skb_data) {
                         INR_LOG_debug (loglevel_err"Cant alloc tx data\n");
                     } else {
                         memcpy (skb_data, skb->data + offset, nextfrag);
@@ -246,14 +246,14 @@ INR_NW_tx (struct sk_buff *skb, struct net_device *nwdev)
                         countfrag++;
                         if (error) {
                             goto errorhandling;
-                            }
+                        }
                     }
                     offset += nextfrag;
                     rest -= nextfrag;
                 }
 
             } else {//
-                uint8_t *skb_data;  
+                uint8_t *skb_data;
                 if (0) {
                     INR_LOG_debug (loglevel_err"Cant alloc tx data\n");
                 } else {
@@ -301,50 +301,60 @@ errorhandling:
 int
 INR_NW_ioctl (struct net_device *nwdev, struct ifreq *rq, int cmd)
 {
-	INR_LOG_debug (loglevel_info"INR_NW_ioctl called\n");
-	struct INR_NW_priv *priv = netdev_priv(nwdev);
-	struct hwtstamp_config config;
-	if (copy_from_user(&config, rq->ifr_data, sizeof(config)))
-		return -EFAULT;
-	if (config.flags)
-		return -EINVAL;
-		
-	switch (cmd) {
-	case SOF_TIMESTAMPING_TX_SOFTWARE:
-			break;
-	case SIOCGHWTSTAMP:
-			copy_to_user(rq->ifr_data, &INR_tstamp_config,sizeof(INR_tstamp_config));
-			break;
-	case SIOCSHWTSTAMP:
-		switch (config.tx_type) {
-			case HWTSTAMP_TX_OFF:
-				INR_tstamp_config.tx_type=config.tx_type;
-				break;
+    INR_LOG_debug (loglevel_info"INR_NW_ioctl called\n");
+    struct INR_NW_priv *priv = netdev_priv(nwdev);
+    struct hwtstamp_config config;
+    if (copy_from_user(&config, rq->ifr_data, sizeof(config)))
+        return -EFAULT;
+    if (config.flags)
+        return -EINVAL;
 
-			case HWTSTAMP_TX_ON:
-				if(INR_PCI_HW_timestamp==0){return -EOPNOTSUPP;}else{INR_tstamp_config.tx_type=config.tx_type;}
-				break;
+    switch (cmd) {
+    case SOF_TIMESTAMPING_TX_SOFTWARE:
+        break;
+    case SIOCGHWTSTAMP:
+        copy_to_user(rq->ifr_data, &INR_tstamp_config,sizeof(INR_tstamp_config));
+        break;
+    case SIOCSHWTSTAMP:
+        switch (config.tx_type) {
+        case HWTSTAMP_TX_OFF:
+            INR_tstamp_config.tx_type=config.tx_type;
+            break;
 
-			default:
-				return -ERANGE;
-		}
-		switch (config.rx_filter) {
-			case HWTSTAMP_FILTER_NONE:
-				INR_tstamp_config.rx_filter=config.rx_filter;
-				break;
+        case HWTSTAMP_TX_ON:
+            if(INR_PCI_HW_timestamp==0) {
+                return -EOPNOTSUPP;
+            }
+            else {
+                INR_tstamp_config.tx_type=config.tx_type;
+            }
+            break;
 
-			case HWTSTAMP_FILTER_ALL:
-				if(INR_PCI_HW_timestamp==0){return -EOPNOTSUPP;}else{INR_tstamp_config.rx_filter=config.rx_filter;}
-				break;
-			default:
-				return -ERANGE;
-			}
+        default:
+            return -ERANGE;
+        }
+        switch (config.rx_filter) {
+        case HWTSTAMP_FILTER_NONE:
+            INR_tstamp_config.rx_filter=config.rx_filter;
+            break;
 
-		memcpy(&INR_tstamp_config, &config, sizeof(config));
-		break;
-	default:
-		return -EOPNOTSUPP;
-	}
+        case HWTSTAMP_FILTER_ALL:
+            if(INR_PCI_HW_timestamp==0) {
+                return -EOPNOTSUPP;
+            }
+            else {
+                INR_tstamp_config.rx_filter=config.rx_filter;
+            }
+            break;
+        default:
+            return -ERANGE;
+        }
+
+        memcpy(&INR_tstamp_config, &config, sizeof(config));
+        break;
+    default:
+        return -EOPNOTSUPP;
+    }
     return 0;
 }
 
@@ -417,32 +427,33 @@ INR_NW_init (struct net_device *nwdev)
 */
 //*****************************************************************************************************************
 static int INR_NW_get_ts_info(struct net_device *nwdev, struct ethtool_ts_info *info)
-{ INR_LOG_debug (loglevel_info"INR_NW_get_ts_info called\n");
-	struct INR_NW_priv *priv = netdev_priv(nwdev);
+{   INR_LOG_debug (loglevel_info"INR_NW_get_ts_info called\n");
+    struct INR_NW_priv *priv = netdev_priv(nwdev);
 
-	info->so_timestamping =
-			SOF_TIMESTAMPING_TX_SOFTWARE |
-			SOF_TIMESTAMPING_RX_SOFTWARE |
-			SOF_TIMESTAMPING_SOFTWARE;// |
-	if(INR_PCI_HW_timestamp){
-	info->so_timestamping|=		
-			SOF_TIMESTAMPING_TX_HARDWARE |
-			SOF_TIMESTAMPING_RX_HARDWARE |
-			SOF_TIMESTAMPING_RAW_HARDWARE;}
+    info->so_timestamping =
+        SOF_TIMESTAMPING_TX_SOFTWARE |
+        SOF_TIMESTAMPING_RX_SOFTWARE |
+        SOF_TIMESTAMPING_SOFTWARE;// |
+    if(INR_PCI_HW_timestamp) {
+        info->so_timestamping|=
+            SOF_TIMESTAMPING_TX_HARDWARE |
+            SOF_TIMESTAMPING_RX_HARDWARE |
+            SOF_TIMESTAMPING_RAW_HARDWARE;
+    }
 
-		if(INR_PCI_HW_timestamp){
-			info->phc_index = ptp_clock_index(INR_TIME_get_ptp_clock());
-		}else{
-			info->phc_index = -1;
-			}
+    if(INR_PCI_HW_timestamp) {
+        info->phc_index = ptp_clock_index(INR_TIME_get_ptp_clock());
+    } else {
+        info->phc_index = -1;
+    }
 
-	info->tx_types = (1 << HWTSTAMP_TX_OFF);
-	if(INR_PCI_HW_timestamp)info->tx_types |=(1 << HWTSTAMP_TX_ON);
+    info->tx_types = (1 << HWTSTAMP_TX_OFF);
+    if(INR_PCI_HW_timestamp)info->tx_types |=(1 << HWTSTAMP_TX_ON);
 
-	info->rx_filters =(1 << HWTSTAMP_FILTER_NONE);
-	if(INR_PCI_HW_timestamp)info->rx_filters |=(1 << HWTSTAMP_FILTER_ALL);
-		
-	return 0;
+    info->rx_filters =(1 << HWTSTAMP_FILTER_NONE);
+    if(INR_PCI_HW_timestamp)info->rx_filters |=(1 << HWTSTAMP_FILTER_ALL);
+
+    return 0;
 }
 
 int
@@ -452,7 +463,7 @@ INR_NW_set_features (struct net_device *net, netdev_features_t features)
     struct usbnet *dev = netdev_priv (net);
     netdev_features_t changed = net->features ^ features;
 
-    if (changed & NETIF_F_TSO){
+    if (changed & NETIF_F_TSO) {
         net->features ^= NETIF_F_TSO;
     }
     if (changed & NETIF_F_SG) {

@@ -8,9 +8,9 @@ void INR_UNMAP_all (struct pci_dev *dev);
 void INR_PCI_reset (void);
 void INR_remove_drv (struct pci_dev *dev);
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4,4,200)
-	static irqreturn_t XPCIe_IRQHandler (int irq, void *dev_id);
+static irqreturn_t XPCIe_IRQHandler (int irq, void *dev_id);
 #else
-	static irqreturn_t XPCIe_IRQHandler (int irq, void *dev_id, struct pt_regs *regs);
+static irqreturn_t XPCIe_IRQHandler (int irq, void *dev_id, struct pt_regs *regs);
 #endif
 
 int INR_TX_push (struct net_device *nwdev,struct sk_buff *skb, uint8_t * data, uint16_t datalength, uint8_t eof, uint8_t port, uint8_t ll, uint8_t paged, uint16_t fragcount);
@@ -27,7 +27,7 @@ uint8_t get_tx_dbg(void);
 void set_russian(uint8_t mode);
 uint8_t get_russian(void);
 
-#define IfNotRuss if(TNrussian==0)  
+#define IfNotRuss if(TNrussian==0)
 
 #define INR_PCI_TX_maxfragments 16  /*<maximum number of segments the hardware supports */
 #define INR_PCI_FPGA_max_tx_length  1600	/*<number of bytes the FPGA accept in one TX packet */

@@ -250,9 +250,9 @@ INR_CTL_init_proc (struct pci_dev *dev)
     };
     INR_proc_dir = proc_mkdir("TrustNode",NULL);
     if(!INR_proc_dir)
-      {
-    printk(KERN_ALERT "Error creating proc entry");
-    return -ENOMEM;
+    {
+        printk(KERN_ALERT "Error creating proc entry");
+        return -ENOMEM;
     }
     reg1 = proc_create ("TN_send2cpu", 0644, INR_proc_dir, &TNsend2cpu);
     if (reg1 == NULL) {
@@ -276,7 +276,7 @@ INR_CTL_init_proc (struct pci_dev *dev)
         printk (KERN_ALERT "Error: Could not initialize /proc/%s\n", "TN_TXdbg");
         return -ENOMEM;
     }
-        reg4 = proc_create ("TN_russian", 0644, INR_proc_dir, &TNrussian);
+    reg4 = proc_create ("TN_russian", 0644, INR_proc_dir, &TNrussian);
     if (reg4 == NULL) {
         remove_proc_entry ("TN_russian", INR_proc_dir);
         printk (KERN_ALERT "Error: Could not initialize /proc/%s\n", "TN_russian");
@@ -305,5 +305,5 @@ INR_CTL_remove_proc (struct pci_dev *dev)
     printk (KERN_INFO "/proc/TrustNode/%s removed\n", "TN_russian");
     remove_proc_entry ("TrustNode", NULL);
     printk (KERN_INFO "/proc/%s removed\n", "TrustNode");
-    
+
 }
