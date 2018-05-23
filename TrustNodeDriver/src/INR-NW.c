@@ -19,6 +19,7 @@
 #include <linux/net_tstamp.h>
 #include <linux/ethtool.h>
 #include <linux/ptp_clock_kernel.h>
+#include <linux/time.h>
 #include "INR-NW.h"
 #include "INR.h"
 #include "INR-PCI.h"
@@ -175,7 +176,7 @@ INR_NW_tx (struct sk_buff *skb, struct net_device *nwdev)
         // if(zerocopy_tx)skb_shinfo(skb)->tx_flags |= SKBTX_DEV_ZEROCOPY; //maybe this fix the memory drain
         //######Timestamping
         if (skb_shinfo(skb)->tx_flags & SKBTX_HW_TSTAMP) { //check if timestamp is requested
-            if(INR_PCI_HW_timestamp) { //hw timestamping
+            if(get_INR_PCI_HW_timestamp()) { //hw timestamping
                 skb_shinfo(skb)->tx_flags |= SKBTX_IN_PROGRESS; //announce HW will do timestamping
             } else { //no hw timestamping
                 skb_tx_timestamp(skb);
@@ -190,6 +191,15 @@ INR_NW_tx (struct sk_buff *skb, struct net_device *nwdev)
         if (skb_shinfo (skb)->nr_frags) {
             if (zerocopy_tx) {
                 int i = 0;
+                if(get_INR_PCI_HW_timestamp()){
+                	uint64_t *timestamp = kmalloc (8, GFP_DMA | GFP_ATOMIC);
+                	ktime_t time=ktime_get();
+                	*timestamp=ktime_to_ns(time);
+                	error = INR_TX_push (nwdev,skb, timestamp, 8, 0, toport, get_send2cpu(), 1, skb_shinfo (skb)->nr_frags);
+                	if (error) {
+                   	 goto errorhandling;
+                	}
+                }
                 error = INR_TX_push (nwdev,skb, skb->data, skb_headlen (skb), 0, toport, get_send2cpu(), 1, skb_shinfo (skb)->nr_frags);
                 if (error) {
                     goto errorhandling;
@@ -207,6 +217,15 @@ INR_NW_tx (struct sk_buff *skb, struct net_device *nwdev)
                 }
             } else {
                 skb_prepare_seq_read (skb, from, to, &st);
+                if(get_INR_PCI_HW_timestamp()){
+                	uint64_t *timestamp = kmalloc (8, GFP_DMA | GFP_ATOMIC);
+                	ktime_t time=ktime_get();
+                	*timestamp=ktime_to_ns(time);
+                	error = INR_TX_push (nwdev,skb, timestamp, 8, 0, toport, get_send2cpu(), 1, skb_shinfo (skb)->nr_frags);
+                	if (error) {
+                   	 goto errorhandling;
+                	}
+                }
                 while ((len = skb_seq_read (consumed, &data, &st)) != 0) {
                     if (consumed + len == to) {
                         error = INR_TX_push (nwdev,skb, data, len, 1, toport, get_send2cpu(), 0, 1);
@@ -228,7 +247,15 @@ INR_NW_tx (struct sk_buff *skb, struct net_device *nwdev)
                 uint16_t offset = 0, nextfrag = 0;
                 uint8_t last = 0;
                 uint64_t countfrag = 0;
-
+		if(get_INR_PCI_HW_timestamp()){
+                	uint64_t *timestamp = kmalloc (8, GFP_DMA | GFP_ATOMIC);
+                	ktime_t time=ktime_get();
+                	*timestamp=ktime_to_ns(time);
+                	error = INR_TX_push (nwdev,skb, timestamp, 8, 0, toport, get_send2cpu(), 0, skb_shinfo (skb)->nr_frags);
+                	if (error) {
+                   	 goto errorhandling;
+                	}
+                }
                 while (rest) {
                     if (rest > INR_PCI_FPGA_max_tx_length) {
                         nextfrag = INR_PCI_FPGA_max_tx_length;
@@ -322,7 +349,7 @@ INR_NW_ioctl (struct net_device *nwdev, struct ifreq *rq, int cmd)
             break;
 
         case HWTSTAMP_TX_ON:
-            if(INR_PCI_HW_timestamp==0) {
+            if(get_INR_PCI_HW_timestamp()==0) {
                 return -EOPNOTSUPP;
             }
             else {
@@ -339,7 +366,7 @@ INR_NW_ioctl (struct net_device *nwdev, struct ifreq *rq, int cmd)
             break;
 
         case HWTSTAMP_FILTER_ALL:
-            if(INR_PCI_HW_timestamp==0) {
+            if(get_INR_PCI_HW_timestamp()==0) {
                 return -EOPNOTSUPP;
             }
             else {
@@ -434,24 +461,24 @@ static int INR_NW_get_ts_info(struct net_device *nwdev, struct ethtool_ts_info *
         SOF_TIMESTAMPING_TX_SOFTWARE |
         SOF_TIMESTAMPING_RX_SOFTWARE |
         SOF_TIMESTAMPING_SOFTWARE;// |
-    if(INR_PCI_HW_timestamp) {
+    if(get_INR_PCI_HW_timestamp()) {
         info->so_timestamping|=
             SOF_TIMESTAMPING_TX_HARDWARE |
             SOF_TIMESTAMPING_RX_HARDWARE |
             SOF_TIMESTAMPING_RAW_HARDWARE;
     }
 
-    if(INR_PCI_HW_timestamp) {
-        info->phc_index = ptp_clock_index(INR_TIME_get_ptp_clock());
+    if(get_INR_PCI_HW_timestamp()) {
+        //info->phc_index = ptp_clock_index(INR_TIME_get_ptp_clock());
     } else {
         info->phc_index = -1;
     }
 
     info->tx_types = (1 << HWTSTAMP_TX_OFF);
-    if(INR_PCI_HW_timestamp)info->tx_types |=(1 << HWTSTAMP_TX_ON);
+    if(get_INR_PCI_HW_timestamp())info->tx_types |=(1 << HWTSTAMP_TX_ON);
 
     info->rx_filters =(1 << HWTSTAMP_FILTER_NONE);
-    if(INR_PCI_HW_timestamp)info->rx_filters |=(1 << HWTSTAMP_FILTER_ALL);
+    if(get_INR_PCI_HW_timestamp())info->rx_filters |=(1 << HWTSTAMP_FILTER_ALL);
 
     return 0;
 }

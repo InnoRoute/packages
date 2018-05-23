@@ -28,6 +28,7 @@
 #include <asm/cacheflush.h>
 #include "INR-MMI.h"
 
+uint8_t INR_PCI_HW_timestamp=0;
 volatile uint32_t tx_head_backup = 0;	/**< Storage for tx_headpointer, to spot cluttering of the FPGA*/
 volatile uint8_t TX_DBG_mod=0;		/**< verbose TX messages*/
 volatile uint8_t RX_DBG_mod=0;		/**< verbose RX messages*/
@@ -155,6 +156,16 @@ get_pci_version (void)
 {
 
     return INR_PCI_BAR0_read (INR_PCI_version);
+}
+//*****************************************************************************************************************
+/**
+*read version form hardware
+*/
+uint8_t
+get_INR_PCI_HW_timestamp (void)
+{
+
+    return INR_PCI_HW_timestamp;
 }
 //*****************************************************************************************************************
 /**
@@ -327,6 +338,7 @@ uint16_t
 INR_PCI_process_rx_descriptor_ring (uint8_t index)
 {
     uint16_t count = 0; /**<count number of packets received to report to NAPI*/
+    uint64_t hw_timestamp;
     uint32_t ringhead = INR_PCI_BAR0_read (INR_PCI_rx_descriptor_head_reg + (64 * index));
     INR_CHECK_fpga_read_val (ringhead, "process_rx_ring:INR_PCI_rx_descriptor_head_reg", 0); //print error message if readed values is 0xffffffff and PCIe interface out of sync
     uint16_t loopcount = 0; /**<count number of fragments received stop endless loop if FPGA reports wrong HEAD/TAIL pointer*/
@@ -369,8 +381,14 @@ INR_PCI_process_rx_descriptor_ring (uint8_t index)
                 rx_skb[index]->dev = get_nwdev (index);
                 skb_reserve (rx_skb[index], 2);
                 skb_put (rx_skb[index], ETH_HLEN);
-                memcpy (rx_skb[index]->data, data_rx[INR_PCI_rx_descriptor_current[index]]
+                if(INR_PCI_HW_timestamp){
+                	memcpy (rx_skb[index]->data, &hw_timestamp, 8);// copy hardware timestamp
+                	memcpy (rx_skb[index]->data+8, data_rx[INR_PCI_rx_descriptor_current[index]]
                         [index]->data, ETH_HLEN);
+                        
+                       }else{
+                	memcpy (rx_skb[index]->data, data_rx[INR_PCI_rx_descriptor_current[index]]
+                        [index]->data, ETH_HLEN);}
             }
             else {			//if no zerocopy alloc big skb and coppy whole fragment into
                 rx_skb[index] = netdev_alloc_skb (get_nwdev (index), 1800 + 2);
@@ -390,7 +408,7 @@ INR_PCI_process_rx_descriptor_ring (uint8_t index)
             //###########Timestamping
             if (INR_PCI_HW_timestamp) {
                 struct skb_shared_hwtstamps *skbtimestamp = skb_hwtstamps(rx_skb[index]);
-                skbtimestamp->hwtstamp=ns_to_ktime(0); //0: insert timestamp here...
+                skbtimestamp->hwtstamp=ns_to_ktime(hw_timestamp); //0: insert timestamp here...
 
             } else {
                 //skb_rx_timestamp(rx_skb[index]);
@@ -1121,6 +1139,8 @@ INR_init_drv (struct pci_dev *dev)
         return 1;
     else
         INR_STATUS_set (INR_STATUS_INT1);
+    if(C_SUB_ADDR_COMMON_ADDR_MAP_REV)INR_PCI_HW_timestamp=(INR_PCI_BAR1_read((C_BASE_ADDR_COMMON_LOWER<<8)+C_SUB_ADDR_COMMON_ADDR_MAP_REV)>>31)&1;
+    INR_LOG_debug (loglevel_info"Hardware timestamping:%i.\n",INR_PCI_HW_timestamp);
     kthread_run (&INR_PCI_rx_pageallocator, NULL, "INR_rx_pageallocator");
     wake_up_interruptible (&INR_PCI_rx_pageallocator_waittingqueu);	//wakeop preallocator
     INR_LOG_debug (loglevel_info"Page preallocator is running.\n");

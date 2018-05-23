@@ -3,6 +3,7 @@
 *@brief settings and definitions PCI communication
 *@author M.Ulbricht 2015
 **/
+#include<tn_env.h>
 int INR_init_drv (struct pci_dev *dev);
 void INR_UNMAP_all (struct pci_dev *dev);
 void INR_PCI_reset (void);
@@ -26,6 +27,7 @@ uint8_t get_rx_dbg(void);
 uint8_t get_tx_dbg(void);
 void set_russian(uint8_t mode);
 uint8_t get_russian(void);
+uint8_t get_INR_PCI_HW_timestamp (void);
 
 #define IfNotRuss if(TNrussian==0)
 
@@ -55,7 +57,7 @@ uint8_t get_russian(void);
 #define zerocopy_rx	1	/*<enable rx zerocopy packet handling */
 #define zerocopy_tx	1	/*<enable tx zerocopy packet handling */
 #define INR_PCI_page_prealloc_count 32	/*<prealloc pages */
-#define INR_PCI_HW_timestamp 0 /*<enable hardware timestamping */
+
 
 #define INR_PCI_tx_descriptor_base_address_reg 	0x6000/*<TX ring config register*/	//INR_TX_Ring_address
 #define INR_PCI_tx_descriptor_base_address_reg_h 	0x6004/*<TX ring config register high*/	//INR_TX_Ring_address
@@ -74,6 +76,16 @@ uint8_t get_russian(void);
 
 #define INR_PCI_enable_error_LED INR_PCI_BAR1_write(((INR_PCI_BAR1_read(INR_PCI_error_LED_addr))|(1<<10)),INR_PCI_error_LED_addr);
 #define INR_PCI_disable_error_LED INR_PCI_BAR1_write(((INR_PCI_BAR1_read(INR_PCI_error_LED_addr))&(~(1<<10))),INR_PCI_error_LED_addr);
+
+#ifndef C_SUB_ADDR_COMMON_ADDR_MAP_REV
+	#define C_SUB_ADDR_COMMON_ADDR_MAP_REV 0
+#endif
+#ifndef C_BASE_ADDR_COMMON_L
+	#define C_BASE_ADDR_COMMON_L C_BASE_ADDR_COMMON
+#endif
+#ifndef C_BASE_ADDR_COMMON_LOWER
+	#define C_BASE_ADDR_COMMON_LOWER C_BASE_ADDR_COMMON_L
+#endif
 
 //****************************************************************************************************************
 /**
