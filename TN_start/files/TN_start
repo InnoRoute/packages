@@ -12,6 +12,7 @@ sensors -c /usr/share/InnoRoute/INRsensor.conf -s > /usr/share/InnoRoute/TNstart
 stty -F /dev/ttyS1 115200 #set FPGA terminal baudrate
 #/usr/share/InnoRoute/inr_slide.sh &,
 /usr/share/InnoRoute/TN_phy_init.sh
+/usr/share/InnoRoute/TN_phy_force_linkspeed.sh 1
 /usr/share/InnoRoute/scripts/start_ovs.sh
 
 echo "done"
