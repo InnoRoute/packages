@@ -20,4 +20,6 @@ i2cset -y 0 4 2 2
 i2cget -y 0 4 2
 
 i2cset -y 0 4 2 0
+sleep 1
+TN_force_default_CPU.sh
 fi
