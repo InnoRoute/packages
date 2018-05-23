@@ -628,8 +628,9 @@ TSN_apply (struct arguments *arguments)
     TSN_set_config (C_TM_SCHED_TAS_CYCLE_START_TIME, port, ns2ticks (cycle_start_time));
     TSN_set_config (C_TM_SCHED_TAS_CONFIG_CHANGE_TIME, port, ns2ticks (config_change_time));
     TSN_set_config (C_TM_SCHED_TAS_CONFIG_CHANGE, port, 1);	//trigger config change
-    while ((TSN_get_config (C_TM_SCHED_TAS_CONFIG_CHANGE_ACK, port, 0) & 1) == 0) {
-    POLLSLEEP}
+    TSN_set_config (C_TM_SCHED_TAS_CONFIG_CHANGE, port, 0);
+    /*while ((TSN_get_config (C_TM_SCHED_TAS_CONFIG_CHANGE_ACK, port, 0) & 1) == 0) {
+    POLLSLEEP}*/
     verblog printf ("port config done\n");
 
     if (arguments->dohave_PORT)

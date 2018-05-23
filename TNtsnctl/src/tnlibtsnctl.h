@@ -80,7 +80,7 @@ void printallconst (void);
 #define MACHINEREADABLE if(arguments->machinereadable)
 #define not_MACHINEREADABLE if(arguments->machinereadable==0)
 
-#define HW_TIMEBASE 5		// one HW tick are X nanoseconds
+#define HW_TIMEBASE 1		// one HW tick are X nanoseconds
 
 struct arguments
 {
