@@ -6,7 +6,7 @@ source /usr/share/InnoRoute/tn_env.sh
 
 echo "################################"
 case $1 in
-	0) let phy_prt=`TNbar1 $(($C_BASE_ADDR_HC_0*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_HC_CNT_BAD_FRAMES)) | cut -d " " -f 6`
+	0) let phy_prt=`TNbar1 $(($C_BASE_ADDR_HC_0*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_HC_CNT_BAD_FRAMES)) | cut -d " " -f 6` ;;
 	1) let phy_prt=`TNbar1 $(($C_BASE_ADDR_HC_1*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_HC_CNT_BAD_FRAMES)) | cut -d " " -f 6` ;;
 	2) let phy_prt=`TNbar1 $(($C_BASE_ADDR_HC_2*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_HC_CNT_BAD_FRAMES)) | cut -d " " -f 6` ;;
 	3) let phy_prt=`TNbar1 $(($C_BASE_ADDR_HC_3*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_HC_CNT_BAD_FRAMES)) | cut -d " " -f 6` ;;

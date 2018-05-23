@@ -57,7 +57,7 @@ reg=26 #int register
 for gphy   in `seq 0 9`; do
   read_gphy;
   read_mdio_result;
-  printf "|0x%s|"  $(echo "$(printf "%04x  " $read_data)" |cut -c4-8);
+  printf "|0x%s|"  $(echo "$(printf "%04x  " $read_data)");
 done
 
 reg=19
