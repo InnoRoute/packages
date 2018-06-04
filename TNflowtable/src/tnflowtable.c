@@ -37,7 +37,7 @@ struct flock lock;
    OPTIONS.  Field 1 in ARGP.
    Order of fields: {NAME, KEY, ARG, FLAGS, DOC}.
 */
-static struct argp_option options[] = {//user interface
+static struct argp_option options[] = {	//user interface
   {0, 0, 0, 0, "General options:", 0},
   {"verbose", 'v', 0, 0, "Produce verbose output"},
   {"numberout", 'n', 0, 0, "Output number of tableentry"},
@@ -92,8 +92,8 @@ parse_opt (int key, char *arg, struct argp_state *state)
   switch (key) {
   case 'v':
     arguments->verbose = 1;
-    set_verbose(1);
-    printallconst();
+    set_verbose (1);
+    printallconst ();
     break;
   case 'a':
     arguments->HASH.gauto = 1;
@@ -102,7 +102,7 @@ parse_opt (int key, char *arg, struct argp_state *state)
     arguments->autoaction = 1;
     break;
   case 'm':
-    memdump_en();
+    memdump_en ();
     break;
   case 'n':
     arguments->numberout = 1;
@@ -151,24 +151,24 @@ parse_opt (int key, char *arg, struct argp_state *state)
   case 'Y':
     arguments->ACTION_ID = strtoul (arg, 0, 0);
     break;
-  /*case 'n':
-    arguments->NEXT_BIT = strtoul (arg, 0, 0);
-    break; */
+    /*case 'n':
+       arguments->NEXT_BIT = strtoul (arg, 0, 0);
+       break; */
   case 'c':
     arguments->COUNT = strtoull (arg, 0, 0);
     break;
   case 'S':
     arguments->MAC_SRC = strtoull (arg, 0, 0);
-    hwaddr_aton2(arg, &arguments->MAC_SRC);
-    arguments->MAC_SRC = htobe64(arguments->MAC_SRC) >> 16;
+    hwaddr_aton2 (arg, &arguments->MAC_SRC);
+    arguments->MAC_SRC = htobe64 (arguments->MAC_SRC) >> 16;
     arguments->MASK_MAC_SRC = 0;
     arguments->dohave_MAC_SRC = 1;
     arguments->dohave_MASK_MAC_SRC = 1;
     break;
   case 'D':
     arguments->MAC_DST = strtoull (arg, 0, 0);
-    hwaddr_aton2(arg, &arguments->MAC_DST);
-    arguments->MAC_DST = htobe64(arguments->MAC_DST) >> 16;
+    hwaddr_aton2 (arg, &arguments->MAC_DST);
+    arguments->MAC_DST = htobe64 (arguments->MAC_DST) >> 16;
     arguments->MASK_MAC_DST = 0;
     arguments->dohave_MAC_DST = 1;
     arguments->dohave_MASK_MAC_DST = 1;
@@ -211,13 +211,13 @@ parse_opt (int key, char *arg, struct argp_state *state)
     arguments->dohave_MASK_INPORT = 1;
     break;
   case 'C':
-    arguments->IPv4_SRC = htobe32(inet_addr(arg));
+    arguments->IPv4_SRC = htobe32 (inet_addr (arg));
     arguments->MASK_IPv4_SRC = 0;
     arguments->dohave_IPv4_SRC = 1;
     arguments->dohave_MASK_IPv4_SRC = 1;
     break;
   case 'T':
-    arguments->IPv4_DST = htobe32(inet_addr(arg));
+    arguments->IPv4_DST = htobe32 (inet_addr (arg));
     arguments->MASK_IPv4_DST = 0;
     arguments->dohave_IPv4_DST = 1;
     arguments->dohave_MASK_IPv4_DST = 1;
@@ -263,7 +263,8 @@ parse_opt (int key, char *arg, struct argp_state *state)
    A description of the non-option command-line arguments
      that we accept.
 */
-static char args_doc[] = "action[[[HashT_[EMH|EMA]_|DP_|ActT_|RuleT_[EMH|EMA]_|CollT_EMH_][add|del|clearall|print|stat]]|[[RuleT_[EMH|EMA]|CollT_EMH]_update]";
+static char args_doc[] =
+  "action[[[HashT_[EMH|EMA]_|DP_|ActT_|RuleT_[EMH|EMA]_|CollT_EMH_][add|del|clearall|print|stat]]|[[RuleT_[EMH|EMA]|CollT_EMH]_update]";
 
 /*
   DOC.  Field 4 in ARGP.
@@ -292,7 +293,7 @@ main (int argc, char **argv)
   int fd, fd_shadow, fd_master;
   uint64_t *map_base, *map_base_shadow, *map_base_master;
   off_t target;
-  struct arguments arguments;//create structure for passing comandlinearguments and settings
+  struct arguments arguments;	//create structure for passing comandlinearguments and settings
   clear_arguments (&arguments);
   argp_parse (&argp, argc, argv, 0, 0, &arguments);
 
@@ -300,23 +301,23 @@ main (int argc, char **argv)
     printf ("error opening file\n");
   }
 
-  lock.l_start = 0;//lock semaphor to prevent shadowfile acces of other instances
+  lock.l_start = 0;		//lock semaphor to prevent shadowfile acces of other instances
   lock.l_whence = SEEK_SET;
   lock.l_len = 0;
   lock.l_type = F_RDLCK;
-  fcntl(fd, F_SETLKW, &lock); //block until file is free
+  fcntl (fd, F_SETLKW, &lock);	//block until file is free
 
-  if ((fd_shadow = open ("/tmp/INR_FC_shadow.mem", O_CREAT | O_RDWR | O_SYNC, 0600)) == -1) {//shadowmemory, because FPGA-mmi is write only
+  if ((fd_shadow = open ("/tmp/INR_FC_shadow.mem", O_CREAT | O_RDWR | O_SYNC, 0600)) == -1) {	//shadowmemory, because FPGA-mmi is write only
     printf ("error opening shadowmem file\n");
   }
-  if ((fd_master = open ("/tmp/INR_FC_masterTable.mem", O_CREAT | O_RDWR | O_SYNC, 0600)) == -1) { //memory to store mastertable
+  if ((fd_master = open ("/tmp/INR_FC_masterTable.mem", O_CREAT | O_RDWR | O_SYNC, 0600)) == -1) {	//memory to store mastertable
     printf ("error opening msterTable file\n");
   }
 
-  ftruncate (fd_shadow, MAP_SIZE);//if new files created, expand them
+  ftruncate (fd_shadow, MAP_SIZE);	//if new files created, expand them
   ftruncate (fd_master, MASTERTABLE_length * sizeof (struct arguments));
 
-  map_base = mmap (0, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);//map files and mmi to memory
+  map_base = mmap (0, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);	//map files and mmi to memory
   map_base_shadow = mmap (0, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd_shadow, 0);
   map_base_master = mmap (0, MASTERTABLE_length * sizeof (struct arguments), PROT_READ | PROT_WRITE, MAP_SHARED, fd_master, 0);
 
@@ -330,192 +331,209 @@ main (int argc, char **argv)
     printf ("error mapping memory\n");
   }
   FCinit_EMH (map_base, map_base_shadow);
-  FCinit_MasterTable (map_base_master);//pass the memorypointer to the flowcache libs
-  INR_ACCDP_init(map_base, map_base_shadow);
-  if(INR_FC_check){
-  switch (arguments.args[0][0]) {//parse commandline arguments
-  case 'A':
-    switch (arguments.args[0][5]) { //actiontable
-    case 'a':
-      AT_add (&arguments);
-      break;
-    case 'd':
-      AT_del (arguments);
-      break;
-    case 'c':
-      AT_clear (arguments);
-      break;
-    case 'p':
-      AT_print (arguments);
-      break;
-    default:
-      printf ("unknown subaction\n");
-      break;
-    }
-    break;
-  case 'H':
-    if (arguments.args[0][8] == 'H')if(INR_EMH_check()){
-      switch (arguments.args[0][10]) { //hashtable
+  FCinit_MasterTable (map_base_master);	//pass the memorypointer to the flowcache libs
+  INR_ACCDP_init (map_base, map_base_shadow);
+  if (INR_FC_check) {
+    switch (arguments.args[0][0]) {	//parse commandline arguments
+    case 'A':
+      switch (arguments.args[0][5]) {	//actiontable
       case 'a':
-        HT_EMH_add (&arguments);
-        break;
+	AT_add (&arguments);
+	break;
       case 'd':
-        HT_EMH_del (arguments);
-        break;
+	AT_del (arguments);
+	break;
       case 'c':
-        HT_EMH_clear (arguments);
-        break;
+	AT_clear (arguments);
+	break;
       case 'p':
-        HT_EMH_print (arguments);
-        break;
+	AT_print (arguments);
+	break;
       default:
-        printf ("unknown subaction\n");
-        break;
-      }}else {printf("EMH table is not available in this bitstream!\n");}
-    else if(INR_EMA_check()){
-      switch (arguments.args[0][10]) {  //hashtable
-      case 'a':
-        HT_EMA_add (&arguments);
-        break;
-      case 'd':
-        HT_EMA_del (arguments);
-        break;
-      case 'c':
-        HT_EMA_clear ();
-        break;
-      case 'p':
-        HT_EMA_print (arguments);
-        break;
-      default:
-        printf ("unknown subaction\n");
-        break;
-      }}else printf("EMA table is not available in this bitstream\n");
-    break;
-  case 'C':
-    if (arguments.args[0][8] == 'H')if(INR_collT_check()){
-      switch (arguments.args[0][10]) {  //ruletable
-      case 'a':
-        CT_EMH_add (&arguments);
-        break;
-      case 'd':
-        CT_EMH_del (arguments);
-        break;
-      case 'u':
-        CT_EMH_update (arguments);
-        break;
-      case 'c':
-        CT_EMH_clear (arguments);
-        break;
-      case 'p':
-        CT_EMH_print (arguments);
-        break;
-      default:
-        printf ("unknown subaction\n");
-        break;
-      }}else printf("Collision table not available in this bitstream!\n");
-    break;
-  case 'D':
-      if(INR_accdp_check()){
-      switch (arguments.args[0][3]) {  //AccDP
-      case 'a':
-        ACCDP_add (&arguments);
-        break;
-      case 'd':
-        ACCDP_del (arguments);
-        break;
+	printf ("unknown subaction\n");
+	break;
+      }
+      break;
+    case 'H':
+      if (arguments.args[0][8] == 'H')
+	if (INR_EMH_check ()) {
+	  switch (arguments.args[0][10]) {	//hashtable
+	  case 'a':
+	    HT_EMH_add (&arguments);
+	    break;
+	  case 'd':
+	    HT_EMH_del (arguments);
+	    break;
+	  case 'c':
+	    HT_EMH_clear (arguments);
+	    break;
+	  case 'p':
+	    HT_EMH_print (arguments);
+	    break;
+	  default:
+	    printf ("unknown subaction\n");
+	    break;
+	  }
+	}
+	else {
+	  printf ("EMH table is not available in this bitstream!\n");
+	}
+      else if (INR_EMA_check ()) {
+	switch (arguments.args[0][10]) {	//hashtable
+	case 'a':
+	  HT_EMA_add (&arguments);
+	  break;
+	case 'd':
+	  HT_EMA_del (arguments);
+	  break;
+	case 'c':
+	  HT_EMA_clear ();
+	  break;
+	case 'p':
+	  HT_EMA_print (arguments);
+	  break;
+	default:
+	  printf ("unknown subaction\n");
+	  break;
+	}
+      }
+      else
+	printf ("EMA table is not available in this bitstream\n");
+      break;
+    case 'C':
+      if (arguments.args[0][8] == 'H')
+	if (INR_collT_check ()) {
+	  switch (arguments.args[0][10]) {	//ruletable
+	  case 'a':
+	    CT_EMH_add (&arguments);
+	    break;
+	  case 'd':
+	    CT_EMH_del (arguments);
+	    break;
+	  case 'u':
+	    CT_EMH_update (arguments);
+	    break;
+	  case 'c':
+	    CT_EMH_clear (arguments);
+	    break;
+	  case 'p':
+	    CT_EMH_print (arguments);
+	    break;
+	  default:
+	    printf ("unknown subaction\n");
+	    break;
+	  }
+	}
+	else
+	  printf ("Collision table not available in this bitstream!\n");
+      break;
+    case 'D':
+      if (INR_accdp_check ()) {
+	switch (arguments.args[0][3]) {	//AccDP
+	case 'a':
+	  ACCDP_add (&arguments);
+	  break;
+	case 'd':
+	  ACCDP_del (arguments);
+	  break;
 //      case 'u':
 //        ACCDP_update (arguments);
 //        break;
-      case 'c':
-        ACCDP_clear ();
-        break;
-      case 'p':
-        ACCDP_print (arguments);
-        break;
-      default:
-        printf ("unknown subaction\n");
-        break;
-      }}else{
-      printf ("Acceleration Datapath not available for loaded bitstream\n");
+	case 'c':
+	  ACCDP_clear ();
+	  break;
+	case 'p':
+	  ACCDP_print (arguments);
+	  break;
+	default:
+	  printf ("unknown subaction\n");
+	  break;
+	}
       }
-    break;
-  case 'R':
-    if (arguments.args[0][8] == 'H')
-      switch (arguments.args[0][10]) { //ruletable
+      else {
+	printf ("Acceleration Datapath not available for loaded bitstream\n");
+      }
+      break;
+    case 'R':
+      if (arguments.args[0][8] == 'H')
+	switch (arguments.args[0][10]) {	//ruletable
+	case 'a':
+	  RT_EMH_add (&arguments);
+	  break;
+	case 'd':
+	  RT_EMH_del (arguments);
+	  break;
+	case 'u':
+	  RT_EMH_update (arguments);
+	  break;
+	case 'c':
+	  RT_EMH_clear (arguments);
+	  break;
+	case 'p':
+	  RT_EMH_print (arguments);
+	  break;
+	default:
+	  printf ("unknown subaction\n");
+	  break;
+	}
+      else
+	switch (arguments.args[0][10]) {	//ruletable
+	case 'a':
+	  RT_EMA_add (&arguments);
+	  break;
+	case 'd':
+	  RT_EMA_del (arguments);
+	  break;
+	case 'u':
+	  RT_EMA_update (arguments);
+	  break;
+	case 'c':
+	  RT_EMA_clear ();
+	  break;
+	case 'p':
+	  RT_EMA_print (arguments);
+	  break;
+	default:
+	  printf ("unknown subaction\n");
+	  break;
+	}
+      break;
+    default:			//mastertable
+      switch (arguments.args[0][0]) {
       case 'a':
-        RT_EMH_add (&arguments);
-        break;
+	FC_MasterT_add (&arguments);
+	break;
       case 'd':
-        RT_EMH_del (arguments);
-        break;
+	FC_MasterT_del_entry (&arguments);
+	break;
       case 'u':
-        RT_EMH_update (arguments);
-        break;
+	FC_MasterT_update (arguments.ID);
+	break;
       case 'c':
-        RT_EMH_clear (arguments);
-        break;
+	FC_MasterT_clear ();
+	break;
       case 'p':
-        RT_EMH_print (arguments);
-        break;
+	FC_MasterT_print (&arguments);
+	break;
+      case 's':
+	FC_statistics_print ();
+	break;
       default:
-        printf ("unknown subaction\n");
-        break;
+	printf ("unknown subaction\n");
+	break;
       }
-    else
-      switch (arguments.args[0][10]) {  //ruletable
-      case 'a':
-        RT_EMA_add (&arguments);
-        break;
-      case 'd':
-        RT_EMA_del (arguments);
-        break;
-      case 'u':
-        RT_EMA_update (arguments);
-        break;
-      case 'c':
-        RT_EMA_clear ();
-        break;
-      case 'p':
-        RT_EMA_print (arguments);
-        break;
-      default:
-        printf ("unknown subaction\n");
-        break;
-      }
-    break;
-  default: //mastertable
-    switch (arguments.args[0][0]) { 
-    case 'a':
-      FC_MasterT_add (&arguments);
-      break;
-    case 'd':
-      FC_MasterT_del_entry (&arguments);
-      break;
-    case 'u':
-      FC_MasterT_update (arguments.ID);
-      break;
-    case 'c':
-      FC_MasterT_clear ();
-      break;
-    case 'p':
-      FC_MasterT_print (&arguments);
-      break;
-    case 's':
-      FC_statistics_print ();
-      break;
-    default:
-      printf ("unknown subaction\n");
       break;
     }
-    break;
-  }}else printf("Flow cache not available in this bitstream!\n");
-  munmap(map_base, MAP_SIZE);//unmap files and mmi from memory
-  munmap(map_base_shadow, MAP_SIZE);
-  munmap(map_base_master, MASTERTABLE_length * sizeof (struct arguments));
-  close(fd_shadow);//close shadow files
-  close(fd_master);
-  lock.l_type = F_UNLCK;//free semaphor
-  fcntl(fd, F_SETLK, &lock);//release filelock
-  close(fd);
+  }
+  else
+    printf ("Flow cache not available in this bitstream!\n");
+  munmap (map_base, MAP_SIZE);	//unmap files and mmi from memory
+  munmap (map_base_shadow, MAP_SIZE);
+  munmap (map_base_master, MASTERTABLE_length * sizeof (struct arguments));
+  close (fd_shadow);		//close shadow files
+  close (fd_master);
+  lock.l_type = F_UNLCK;	//free semaphor
+  fcntl (fd, F_SETLK, &lock);	//release filelock
+  close (fd);
   return 0;
 }

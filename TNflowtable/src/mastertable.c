@@ -3,25 +3,25 @@
 *@brief functions to handle flowtable mastertable
 *M.Ulbricht 2015
 **/
-#ifndef __KERNEL__ //find out, if we build a kernel module or not
-  #include <inttypes.h>
-  #include <stddef.h>
-  #include <stdio.h>
-  #include <string.h>
+#ifndef __KERNEL__		//find out, if we build a kernel module or not
+#include <inttypes.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <string.h>
 #else
-  #include <linux/kernel.h>
-  #include <linux/export.h>
-  #include <linux/module.h>
-  #include <linux/printk.h>
-  #define printf printk
+#include <linux/kernel.h>
+#include <linux/export.h>
+#include <linux/module.h>
+#include <linux/printk.h>
+#define printf printk
 #endif
 
 #include "tnlibflowtable.h"
 #include "flowtableactions.h"
 #include "mastertable.h"
 
-uint64_t MAbase = 0;//base addres of master table
-const uint64_t MASTERTABLE_ENTRY_length = sizeof(struct arguments);
+uint64_t MAbase = 0;		//base addres of master table
+const uint64_t MASTERTABLE_ENTRY_length = sizeof (struct arguments);
 
 //************************************************************************************************************************************
 /**
@@ -47,10 +47,13 @@ FC_MT_have_action (struct arguments *arguments)
   uint64_t i = 0;
   uint8_t match = 0;
   struct arguments *entry = NULL;
-  switch(arguments->ACTION_ID){//hande id exeptions
-  	case 0x155	:return 0x155; break;//pass to cpu
-    	default		:break;
-  	}
+  switch (arguments->ACTION_ID) {	//hande id exeptions
+  case 0x155:
+    return 0x155;
+    break;			//pass to cpu
+  default:
+    break;
+  }
   do {
     match = 1;
     entry = (struct arguments *) INR_MasterT_get_addr (i++);
@@ -79,7 +82,7 @@ FC_MT_have_action (struct arguments *arguments)
       match = 0;
     }
     if (match) {
-      return entry->TableID.ActT; //match found, return entry in action table
+      return entry->TableID.ActT;	//match found, return entry in action table
     }
   } while ((i < MASTERTABLE_length));
   return 0;
@@ -115,6 +118,7 @@ uint8_t
 FC_MT_have_EMH_hash (uint16_t hash)
 {
   verblog printf ("__FUNCTION__ = %s\n", __FUNCTION__);
+  //return 1; // hotfix until problem with EMH_ruletable is solved
   uint64_t i = 0;
   struct arguments *entry = NULL;
   do {
@@ -132,11 +136,11 @@ FC_MT_have_EMH_hash (uint16_t hash)
 *@param arguments struct with request
 */
 uint64_t
-FC_MT_FIND_entry (struct arguments *arguments)
+FC_MT_FIND_entry (struct arguments * arguments)
 {
   verblog printf ("__FUNCTION__ = %s\n", __FUNCTION__);
   if (arguments->ID) {
-    return arguments->ID; //if provided, don't search
+    return arguments->ID;	//if provided, don't search
   }
   uint64_t i = 0;
   uint8_t match = 1;
@@ -144,72 +148,73 @@ FC_MT_FIND_entry (struct arguments *arguments)
   do {
     entry = (struct arguments *) INR_MasterT_get_addr (i++);
     match = entry->used;
-    MT_matchfiled(entry, arguments, match, MAC_SRC);
-    MT_matchfiled(entry, arguments, match, dohave_MAC_SRC);
-    MT_matchfiled(entry, arguments, match, MAC_DST);
-    MT_matchfiled(entry, arguments, match, dohave_MAC_DST);
-    MT_matchfiled(entry, arguments, match, VLAN_ID);
-    MT_matchfiled(entry, arguments, match, dohave_VLAN_ID);
-    MT_matchfiled(entry, arguments, match, VLAN_PRIO);
-    MT_matchfiled(entry, arguments, match, dohave_VLAN_PRIO);
-    MT_matchfiled(entry, arguments, match, IPv4_SRC);
-    MT_matchfiled(entry, arguments, match, dohave_IPv4_SRC);
-    MT_matchfiled(entry, arguments, match, IPv4_DST);
-    MT_matchfiled(entry, arguments, match, dohave_IPv4_DST);
-    MT_matchfiled(entry, arguments, match, PROTOCOL);
-    MT_matchfiled(entry, arguments, match, dohave_PROTOCOL);
-    MT_matchfiled(entry, arguments, match, PORT_SRC);
-    MT_matchfiled(entry, arguments, match, dohave_PORT_SRC);
-    MT_matchfiled(entry, arguments, match, PORT_DST);
-    MT_matchfiled(entry, arguments, match, dohave_PORT_DST);
-    MT_matchfiled(entry, arguments, match, ETHERTYPE);
-    MT_matchfiled(entry, arguments, match, dohave_ETHERTYPE);
-    MT_matchfiled(entry, arguments, match, TOS);
-    MT_matchfiled(entry, arguments, match, dohave_TOS);
-    MT_matchfiled(entry, arguments, match, INPORT);
-    MT_matchfiled(entry, arguments, match, dohave_INPORT);
-    MT_matchfiled(entry, arguments, match, MASK_MAC_SRC);
-    MT_matchfiled(entry, arguments, match, dohave_MASK_MAC_SRC);
-    MT_matchfiled(entry, arguments, match, MASK_MAC_DST);
-    MT_matchfiled(entry, arguments, match, dohave_MASK_MAC_DST);
-    MT_matchfiled(entry, arguments, match, MASK_VLAN_ID);
-    MT_matchfiled(entry, arguments, match, dohave_MASK_VLAN_ID);
-    MT_matchfiled(entry, arguments, match, MASK_VLAN_PRIO);
-    MT_matchfiled(entry, arguments, match, dohave_MASK_VLAN_PRIO);
-    MT_matchfiled(entry, arguments, match, MASK_IPv4_SRC);
-    MT_matchfiled(entry, arguments, match, dohave_MASK_IPv4_SRC);
-    MT_matchfiled(entry, arguments, match, MASK_IPv4_DST);
-    MT_matchfiled(entry, arguments, match, dohave_MASK_IPv4_DST);
-    MT_matchfiled(entry, arguments, match, MASK_PROTOCOL);
-    MT_matchfiled(entry, arguments, match, dohave_MASK_PROTOCOL);
-    MT_matchfiled(entry, arguments, match, MASK_PORT_SRC);
-    MT_matchfiled(entry, arguments, match, dohave_MASK_PORT_SRC);
-    MT_matchfiled(entry, arguments, match, MASK_PORT_DST);
-    MT_matchfiled(entry, arguments, match, dohave_MASK_PORT_DST);
-    MT_matchfiled(entry, arguments, match, MASK_ETHERTYPE);
-    MT_matchfiled(entry, arguments, match, dohave_MASK_ETHERTYPE);
-    MT_matchfiled(entry, arguments, match, MASK_TOS);
-    MT_matchfiled(entry, arguments, match, dohave_MASK_TOS);
-    MT_matchfiled(entry, arguments, match, MASK_INPORT);
-    MT_matchfiled(entry, arguments, match, dohave_MASK_INPORT);
-    MT_matchfiled(entry, arguments, match, PRIORITY);
-    MT_matchfiled(entry, arguments, match, OutPort_enable);
-    MT_matchfiled(entry, arguments, match, dohave_OutPort_enable);
-    MT_matchfiled(entry, arguments, match, OutPort);
-    MT_matchfiled(entry, arguments, match, dohave_OutPort);
-    MT_matchfiled(entry, arguments, match, Bad_enable);
-    MT_matchfiled(entry, arguments, match, dohave_Bad_enable);
-    MT_matchfiled(entry, arguments, match, BadValue);
-    MT_matchfiled(entry, arguments, match, dohave_BadValue);
-    MT_matchfiled(entry, arguments, match, BadReason);
-    MT_matchfiled(entry, arguments, match, dohave_BadReason);
-    MT_matchfiled(entry, arguments, match, Cut_enable);
-    MT_matchfiled(entry, arguments, match, dohave_Cut_enable);
-    MT_matchfiled(entry, arguments, match, CutValue);
-    MT_matchfiled(entry, arguments, match, dohave_CutValue);
+    MT_matchfiled (entry, arguments, match, MAC_SRC);
+    MT_matchfiled (entry, arguments, match, dohave_MAC_SRC);
+    MT_matchfiled (entry, arguments, match, MAC_DST);
+    MT_matchfiled (entry, arguments, match, dohave_MAC_DST);
+    MT_matchfiled (entry, arguments, match, VLAN_ID);
+    MT_matchfiled (entry, arguments, match, dohave_VLAN_ID);
+    MT_matchfiled (entry, arguments, match, VLAN_PRIO);
+    MT_matchfiled (entry, arguments, match, dohave_VLAN_PRIO);
+    MT_matchfiled (entry, arguments, match, IPv4_SRC);
+    MT_matchfiled (entry, arguments, match, dohave_IPv4_SRC);
+    MT_matchfiled (entry, arguments, match, IPv4_DST);
+    MT_matchfiled (entry, arguments, match, dohave_IPv4_DST);
+    MT_matchfiled (entry, arguments, match, PROTOCOL);
+    MT_matchfiled (entry, arguments, match, dohave_PROTOCOL);
+    MT_matchfiled (entry, arguments, match, PORT_SRC);
+    MT_matchfiled (entry, arguments, match, dohave_PORT_SRC);
+    MT_matchfiled (entry, arguments, match, PORT_DST);
+    MT_matchfiled (entry, arguments, match, dohave_PORT_DST);
+    MT_matchfiled (entry, arguments, match, ETHERTYPE);
+    MT_matchfiled (entry, arguments, match, dohave_ETHERTYPE);
+    MT_matchfiled (entry, arguments, match, TOS);
+    MT_matchfiled (entry, arguments, match, dohave_TOS);
+    MT_matchfiled (entry, arguments, match, INPORT);
+    MT_matchfiled (entry, arguments, match, dohave_INPORT);
+    MT_matchfiled (entry, arguments, match, MASK_MAC_SRC);
+    MT_matchfiled (entry, arguments, match, dohave_MASK_MAC_SRC);
+    MT_matchfiled (entry, arguments, match, MASK_MAC_DST);
+    MT_matchfiled (entry, arguments, match, dohave_MASK_MAC_DST);
+    MT_matchfiled (entry, arguments, match, MASK_VLAN_ID);
+    MT_matchfiled (entry, arguments, match, dohave_MASK_VLAN_ID);
+    MT_matchfiled (entry, arguments, match, MASK_VLAN_PRIO);
+    MT_matchfiled (entry, arguments, match, dohave_MASK_VLAN_PRIO);
+    MT_matchfiled (entry, arguments, match, MASK_IPv4_SRC);
+    MT_matchfiled (entry, arguments, match, dohave_MASK_IPv4_SRC);
+    MT_matchfiled (entry, arguments, match, MASK_IPv4_DST);
+    MT_matchfiled (entry, arguments, match, dohave_MASK_IPv4_DST);
+    MT_matchfiled (entry, arguments, match, MASK_PROTOCOL);
+    MT_matchfiled (entry, arguments, match, dohave_MASK_PROTOCOL);
+    MT_matchfiled (entry, arguments, match, MASK_PORT_SRC);
+    MT_matchfiled (entry, arguments, match, dohave_MASK_PORT_SRC);
+    MT_matchfiled (entry, arguments, match, MASK_PORT_DST);
+    MT_matchfiled (entry, arguments, match, dohave_MASK_PORT_DST);
+    MT_matchfiled (entry, arguments, match, MASK_ETHERTYPE);
+    MT_matchfiled (entry, arguments, match, dohave_MASK_ETHERTYPE);
+    MT_matchfiled (entry, arguments, match, MASK_TOS);
+    MT_matchfiled (entry, arguments, match, dohave_MASK_TOS);
+    MT_matchfiled (entry, arguments, match, MASK_INPORT);
+    MT_matchfiled (entry, arguments, match, dohave_MASK_INPORT);
+    MT_matchfiled (entry, arguments, match, PRIORITY);
+    MT_matchfiled (entry, arguments, match, OutPort_enable);
+    MT_matchfiled (entry, arguments, match, dohave_OutPort_enable);
+    MT_matchfiled (entry, arguments, match, OutPort);
+    MT_matchfiled (entry, arguments, match, dohave_OutPort);
+    MT_matchfiled (entry, arguments, match, Bad_enable);
+    MT_matchfiled (entry, arguments, match, dohave_Bad_enable);
+    MT_matchfiled (entry, arguments, match, BadValue);
+    MT_matchfiled (entry, arguments, match, dohave_BadValue);
+    MT_matchfiled (entry, arguments, match, BadReason);
+    MT_matchfiled (entry, arguments, match, dohave_BadReason);
+    MT_matchfiled (entry, arguments, match, Cut_enable);
+    MT_matchfiled (entry, arguments, match, dohave_Cut_enable);
+    MT_matchfiled (entry, arguments, match, CutValue);
+    MT_matchfiled (entry, arguments, match, dohave_CutValue);
 
-    verblog if (match) {
-      printf("Entry found, ID:%li\n");
+    verblog if (match)
+    {
+      printf ("Entry found, ID:%li\n");
     }
     if (match) {
       return i - 1;
@@ -226,59 +231,68 @@ FC_MT_FIND_entry (struct arguments *arguments)
 uint8_t
 FC_MT_autotable (struct arguments * arguments)
 {
-uint8_t at_added=0;
+  uint8_t at_added = 0;
   verblog printf ("__FUNCTION__ = %s\n", __FUNCTION__);
-  arguments->ID = 1;  //override automatic switches
+  arguments->ID = 1;		//override automatic switches
   arguments->autoaction = 0;
   //arguments->ACTION_ID = 0; removed to pass actionselection to mastertable
   arguments->HASH.gauto = 0;
-  arguments->TYPE_ID = 0; //reset type for self finding
-  if(INR_EMH_check){
-  if (entry_is_EMH1 (arguments)) {
-    arguments->TYPE_ID = 1; //set type
+  arguments->TYPE_ID = 0;	//reset type for self finding
+  if (INR_EMH_check) {
+    if (entry_is_EMH1 (arguments)) {
+      arguments->TYPE_ID = 1;	//set type
+    }
+    if (entry_is_EMH2 (arguments)) {
+      arguments->TYPE_ID = 2;	// set type //type2 actually deactivated  
+    }
+    if (entry_is_EMH3 (arguments)) {
+      arguments->TYPE_ID = 3;	//set type
+    }
+    if (entry_is_EMH4 (arguments)) {
+      arguments->TYPE_ID = 4;	//set type
+    }
   }
-  if (entry_is_EMH2 (arguments)) {
-    arguments->TYPE_ID = 2; // set type //type2 actually deactivated  
-  }
-   if (entry_is_EMH3 (arguments)) {
-    arguments->TYPE_ID = 3; //set type
-  }
-   if (entry_is_EMH4 (arguments)) {
-    arguments->TYPE_ID = 4; //set type
-  }
-  }
-  if (arguments->dohave_INPORT){
-    arguments->TYPE_ID = 0; //if inport is present it is EMA
-  }
-  if(arguments->dohave_PQUEUE==0){
-			
-	  arguments->ACTION_ID = FC_MT_have_action (arguments); //try to find fitting action
-	  arguments->TableID.ActT = arguments->ACTION_ID;
-	  if (arguments->ACTION_ID == 0) {
-	    AT_add (arguments); //add new action if not found
-	    at_added=1;
-	  }}else{
-	  	arguments->ID=arguments->PQUEUE;
-	  	arguments->ACTION_ID=arguments->PQUEUE;
-	  	arguments->TableID.ActT = arguments->ACTION_ID;
-	  	AT_update(*arguments);
-	  
-	  }
-  get_HASH (arguments); //calculate hashes
-  if (arguments->TYPE_ID) { //EMH
+  
+  //if (arguments->dohave_PQUEUE == 0) {
+
+    arguments->ACTION_ID = FC_MT_have_action (arguments);	//try to find fitting action
+    arguments->TableID.ActT = arguments->ACTION_ID;
+    if (arguments->ACTION_ID == 0) {
+      AT_add (arguments);	//add new action if not found
+      at_added = 1;
+    }
+  /*} else {
+    arguments->ID = arguments->PQUEUE;
+    arguments->ACTION_ID = arguments->PQUEUE;
+    arguments->TableID.ActT = arguments->ACTION_ID;
+    AT_update (*arguments);
+
+  }*/
+  get_HASH (arguments);		//calculate hashes
+  if (arguments->TYPE_ID) {	//EMH
     if (FC_MT_have_EMH_hash (arguments->HASH.EMH)) {
-     if(INR_collT_check) CT_EMH_add (arguments); else printf("hash collision, this cule cant be apllied, because the collisiontable is not available in this bitstream\n");
-    } else {
-      RT_EMH_add (arguments); //add to table
-      HT_EMH_add (arguments); //add to hashtable
+      if (INR_collT_check)
+	CT_EMH_add (arguments);
+      else
+	printf ("hash collision, this cule cant be apllied, because the collisiontable is not available in this bitstream\n");
+    }
+    else {
+      RT_EMH_add (arguments);	//add to table
+      HT_EMH_add (arguments);	//add to hashtable
     }
     return 0;
-  } else {      //EMA
-    if(INR_EMA_check()){
-    printf("möp\n");
-    RT_EMA_add (arguments); //add to table
-    HT_EMA_add (arguments); //add to hashtable
-	}else {printf("Rule can't be applied the loaded bitstream doesn't provide a ruleset which can used for this rule.\n");if(at_added)AT_del (*arguments);}
+  }
+  else {			//EMA
+    if (INR_EMA_check ()) {
+      printf ("möp\n");
+      RT_EMA_add (arguments);	//add to table
+      HT_EMA_add (arguments);	//add to hashtable
+    }
+    else {
+      printf ("Rule can't be applied the loaded bitstream doesn't provide a ruleset which can used for this rule.\n");
+      if (at_added)
+	AT_del (*arguments);
+    }
   }
 }
 
@@ -286,34 +300,38 @@ uint8_t at_added=0;
 /**
 *sort RT/HT_EMA by priority
 */
-void FC_MT_apply_priority(){
-verblog printf ("__FUNCTION__ = %s\n", __FUNCTION__);
-	INR_FC_set_HW_write(0);//don't touch hardware
-	HT_EMA_clear();
-	RT_EMA_clear();//clear all, and rearange from MT information
-	INR_FC_set_HW_write(1);//dont touch hardware
+void
+FC_MT_apply_priority ()
+{
+  verblog printf ("__FUNCTION__ = %s\n", __FUNCTION__);
+  INR_FC_set_HW_write (0);	//don't touch hardware
+  HT_EMA_clear ();
+  RT_EMA_clear ();		//clear all, and rearange from MT information
+  INR_FC_set_HW_write (1);	//dont touch hardware
   uint32_t i = 0;
-  uint16_t priority=MAXprio;
-  uint8_t match=0;
-  uint32_t lastmatch=0;
-  while(priority){//do for all priorities
-  	lastmatch=0;
- // 	do{	
-  		match=0;
-      		for (i = lastmatch; i < MASTERTABLE_length; i++) {
-    			struct arguments *entry = (struct arguments *) INR_MasterT_get_addr (0xffff & i);
-    			if (entry != NULL)if (entry->used&&entry->TableID.EMA_RT)if(entry->PRIORITY==priority){
-    				verblog printf ("sorting match %i\n",i);
-//    				match=1;
-//    				lastmatch=i+1;//nextrun start on next entry
-    				entry->ID=1;//search next free space from start of table
-    				RT_EMA_add (entry); //add to table
-   				HT_EMA_add (entry); //add to hashtable
-    			}    		
-    		}   	
-      	
-//      	}while(match);//do until no matching entry found  
-     priority--;
+  uint16_t priority = MAXprio;
+  uint8_t match = 0;
+  uint32_t lastmatch = 0;
+  while (priority) {		//do for all priorities
+    lastmatch = 0;
+    //     do{     
+    match = 0;
+    for (i = lastmatch; i < MASTERTABLE_length; i++) {
+      struct arguments *entry = (struct arguments *) INR_MasterT_get_addr (0xffff & i);
+      if (entry != NULL)
+	if (entry->used && entry->TableID.EMA_RT)
+	  if (entry->PRIORITY == priority) {
+	    verblog printf ("sorting match %i\n", i);
+//                              match=1;
+//                              lastmatch=i+1;//nextrun start on next entry
+	    entry->ID = 1;	//search next free space from start of table
+	    RT_EMA_add (entry);	//add to table
+	    HT_EMA_add (entry);	//add to hashtable
+	  }
+    }
+
+//              }while(match);//do until no matching entry found  
+    priority--;
   }
 }
 
@@ -332,9 +350,11 @@ FC_MasterT_add (struct arguments *arguments)
     arguments->used = 1;
     FC_MT_autotable (arguments);
     memcpy (entry, arguments, sizeof (struct arguments));
-    if(arguments->TableID.EMA_RT)FC_MT_apply_priority();
-  } else {
-    printf("error: MasterTabele full");
+    if (arguments->TableID.EMA_RT)
+      FC_MT_apply_priority ();
+  }
+  else {
+    printf ("error: MasterTabele full");
   }
   return 0;
 }
@@ -346,40 +366,40 @@ FC_MasterT_add (struct arguments *arguments)
 */
 uint8_t
 FC_MasterT_del (uint64_t ID)
-{ 
+{
   verblog printf ("__FUNCTION__ = %s\n", __FUNCTION__);
-  verblog printf("going to del entry %li\n", ID);
+  verblog printf ("going to del entry %li\n", ID);
   if (ID > 0 && ID < MASTERTABLE_length) {
     struct arguments *entry = (struct arguments *) INR_MasterT_get_addr (ID);
-    verblog printf("Entry stored in ");
-    verblog printf("EMH_RT:%li ", entry->TableID.EMH_RT);
-    verblog printf("EMH_HT:%li ", entry->TableID.EMH_HT);
-    verblog printf("EMH_CT:%li ", entry->TableID.EMH_CT);
-    verblog printf("EMA_RT:%li ", entry->TableID.EMA_RT);
-    verblog printf("EMA_HT:%li ", entry->TableID.EMA_HT);
-    verblog printf("ActT:%li\n ", entry->TableID.ActT);
+    verblog printf ("Entry stored in ");
+    verblog printf ("EMH_RT:%li ", entry->TableID.EMH_RT);
+    verblog printf ("EMH_HT:%li ", entry->TableID.EMH_HT);
+    verblog printf ("EMH_CT:%li ", entry->TableID.EMH_CT);
+    verblog printf ("EMA_RT:%li ", entry->TableID.EMA_RT);
+    verblog printf ("EMA_HT:%li ", entry->TableID.EMA_HT);
+    verblog printf ("ActT:%li\n ", entry->TableID.ActT);
     //remove entry from tables where stored
     if (entry->TableID.EMH_RT) {
-      INR_RuleTable_EMH_clear_entry(entry->TableID.EMH_RT);
+      INR_RuleTable_EMH_clear_entry (entry->TableID.EMH_RT);
     }
     if (entry->TableID.EMH_HT) {
-      INR_HashTable_EMH_clear_entry(entry->TableID.EMH_HT);
+      INR_HashTable_EMH_clear_entry (entry->TableID.EMH_HT);
     }
     if (entry->TableID.EMH_CT) {
-      INR_CTable_EMH_clear_entry(entry->TableID.EMH_CT);
+      INR_CTable_EMH_clear_entry (entry->TableID.EMH_CT);
     }
     if (entry->TableID.EMA_RT) {
-      INR_RuleTable_EMA_clear_entry(entry->TableID.EMA_RT);
+      INR_RuleTable_EMA_clear_entry (entry->TableID.EMA_RT);
     }
     if (entry->TableID.EMA_HT) {
-      INR_HashTable_EMA_clear_entry(entry->TableID.EMA_HT);
+      INR_HashTable_EMA_clear_entry (entry->TableID.EMA_HT);
     }
-    if ((entry->TableID.ActT) && (FC_MT_count_action(entry->TableID.ActT) == 1)) {
-      INR_ActT_clear_entry(entry->TableID.ActT); //can't remove because multible entrys could have the same action, first check
+    if ((entry->TableID.ActT) && (FC_MT_count_action (entry->TableID.ActT) == 1)) {
+      INR_ActT_clear_entry (entry->TableID.ActT);	//can't remove because multible entrys could have the same action, first check
     }
     entry->used = 0;
   }
-  FC_MT_apply_priority();
+  FC_MT_apply_priority ();
   return ID;
 }
 
@@ -388,11 +408,11 @@ FC_MasterT_del (uint64_t ID)
 *clear entry in mastetable by arguments
 *@param arguments struct with request
 */
-uint8_t 
-FC_MasterT_del_entry(struct arguments *arguments)
+uint8_t
+FC_MasterT_del_entry (struct arguments * arguments)
 {
   verblog printf ("__FUNCTION__ = %s\n", __FUNCTION__);
-  return FC_MasterT_del(FC_MT_FIND_entry(arguments));
+  return FC_MasterT_del (FC_MT_FIND_entry (arguments));
 }
 
 //************************************************************************************************************************************
@@ -424,7 +444,7 @@ INR_MasterT_get_addr (uint64_t id)
     return NULL;
   }
   if (!MAbase) {
-    return NULL;  //not initalized
+    return NULL;		//not initalized
   }
   uint64_t addr = (id * sizeof (struct arguments));
   return MAbase + (addr);
@@ -445,7 +465,7 @@ INR_MasterT_get_next_free_entry (uint64_t id)
   }
   struct arguments *entry = NULL;
   if (id >= MASTERTABLE_length) {
-    return NULL;    //error, id not valid
+    return NULL;		//error, id not valid
   }
   do {
     entry = (struct arguments *) INR_MasterT_get_addr (i);
@@ -465,16 +485,17 @@ INR_MasterT_get_next_free_entry (uint64_t id)
 uint32_t
 INR_MasterT_get_used ()
 {
-  uint32_t i =0; 
-  uint32_t c=0;
+  uint32_t i = 0;
+  uint32_t c = 0;
   if (i == 0) {
     i++;
   }
   struct arguments *entry = NULL;
-  for(i=0;i<MASTERTABLE_length;i++){
+  for (i = 0; i < MASTERTABLE_length; i++) {
     entry = (struct arguments *) INR_MasterT_get_addr (i);
-    if((entry->used))c++;
-  } 
+    if ((entry->used))
+      c++;
+  }
   //printf("mtcount:%lli\n",c);
   return c;
 }
@@ -499,50 +520,56 @@ FC_MasterT_print (struct arguments *arguments)
       printf ("ID:%li  ", i);
       printf ("VALID_BIT:0x%x  ", entry->used);
       if (entry->used) {
-        MT_dohaveprint(entry, MAC_SRC);//print if filed is available
-        MT_dohaveprint(entry, MAC_DST);
-        MT_dohaveprint(entry, VLAN_ID);
-        MT_dohaveprint(entry, VLAN_PRIO);
-        MT_dohaveprint(entry, IPv4_SRC);
-        MT_dohaveprint(entry, IPv4_DST);
-        MT_dohaveprint(entry, PROTOCOL);
-        MT_dohaveprint(entry, PORT_SRC);
-        MT_dohaveprint(entry, PORT_DST);
-        MT_dohaveprint(entry, ETHERTYPE);
-        MT_dohaveprint(entry, TOS);
-        MT_dohaveprint(entry, INPORT);
-        MT_dohaveprint(entry, MASK_MAC_SRC);
-        MT_dohaveprint(entry, MASK_MAC_DST);
-        MT_dohaveprint(entry, MASK_VLAN_ID);
-        MT_dohaveprint(entry, MASK_VLAN_PRIO);
-        MT_dohaveprint(entry, MASK_IPv4_SRC);
-        MT_dohaveprint(entry, MASK_IPv4_DST);
-        MT_dohaveprint(entry, MASK_PROTOCOL);
-        MT_dohaveprint(entry, MASK_PORT_SRC);
-        MT_dohaveprint(entry, MASK_PORT_DST);
-        MT_dohaveprint(entry, MASK_ETHERTYPE);
-        MT_dohaveprint(entry, MASK_TOS);
-        MT_dohaveprint(entry, MASK_INPORT);
-        MT_dohaveprint(entry, OutPort_enable);
-        MT_dohaveprint(entry, OutPort);
-        MT_dohaveprint(entry, Bad_enable);
-        MT_dohaveprint(entry, BadValue);
-        MT_dohaveprint(entry, BadReason);
-        MT_dohaveprint(entry, Cut_enable);
-        MT_dohaveprint(entry, CutValue);
-        printf ("\n");
-        printf("prio:%li ", entry->PRIORITY);
-        if (entry->TableID.EMH_RT)printf("EMH_RT:%li ", entry->TableID.EMH_RT);     
-        if (entry->TableID.EMH_HT)printf("EMH_HT:%li ", entry->TableID.EMH_HT);
-        if (entry->TableID.EMH_CT)printf("EMH_CT:%li ", entry->TableID.EMH_CT);
-        if (entry->TableID.EMA_RT)printf("EMA_RT:%li ", entry->TableID.EMA_RT);
-        if (entry->TableID.EMA_HT)printf("EMA_HT:%li ", entry->TableID.EMA_HT);
-        if (entry->TableID.ActT) {
-          printf("ActT:%li ", entry->TableID.ActT);
-        }
+	MT_dohaveprint (entry, MAC_SRC);	//print if filed is available
+	MT_dohaveprint (entry, MAC_DST);
+	MT_dohaveprint (entry, VLAN_ID);
+	MT_dohaveprint (entry, VLAN_PRIO);
+	MT_dohaveprint (entry, IPv4_SRC);
+	MT_dohaveprint (entry, IPv4_DST);
+	MT_dohaveprint (entry, PROTOCOL);
+	MT_dohaveprint (entry, PORT_SRC);
+	MT_dohaveprint (entry, PORT_DST);
+	MT_dohaveprint (entry, ETHERTYPE);
+	MT_dohaveprint (entry, TOS);
+	MT_dohaveprint (entry, INPORT);
+	MT_dohaveprint (entry, MASK_MAC_SRC);
+	MT_dohaveprint (entry, MASK_MAC_DST);
+	MT_dohaveprint (entry, MASK_VLAN_ID);
+	MT_dohaveprint (entry, MASK_VLAN_PRIO);
+	MT_dohaveprint (entry, MASK_IPv4_SRC);
+	MT_dohaveprint (entry, MASK_IPv4_DST);
+	MT_dohaveprint (entry, MASK_PROTOCOL);
+	MT_dohaveprint (entry, MASK_PORT_SRC);
+	MT_dohaveprint (entry, MASK_PORT_DST);
+	MT_dohaveprint (entry, MASK_ETHERTYPE);
+	MT_dohaveprint (entry, MASK_TOS);
+	MT_dohaveprint (entry, MASK_INPORT);
+	MT_dohaveprint (entry, OutPort_enable);
+	MT_dohaveprint (entry, OutPort);
+	MT_dohaveprint (entry, Bad_enable);
+	MT_dohaveprint (entry, BadValue);
+	MT_dohaveprint (entry, BadReason);
+	MT_dohaveprint (entry, Cut_enable);
+	MT_dohaveprint (entry, CutValue);
+	printf ("\n");
+	printf ("prio:%li ", entry->PRIORITY);
+	if (entry->TableID.EMH_RT)
+	  printf ("EMH_RT:%li ", entry->TableID.EMH_RT);
+	if (entry->TableID.EMH_HT)
+	  printf ("EMH_HT:%li ", entry->TableID.EMH_HT);
+	if (entry->TableID.EMH_CT)
+	  printf ("EMH_CT:%li ", entry->TableID.EMH_CT);
+	if (entry->TableID.EMA_RT)
+	  printf ("EMA_RT:%li ", entry->TableID.EMA_RT);
+	if (entry->TableID.EMA_HT)
+	  printf ("EMA_HT:%li ", entry->TableID.EMA_HT);
+	if (entry->TableID.ActT) {
+	  printf ("ActT:%li ", entry->TableID.ActT);
+	}
       }
       printf ("\n");
-    } else {
+    }
+    else {
       printf ("ID not valid\n");
     }
   }

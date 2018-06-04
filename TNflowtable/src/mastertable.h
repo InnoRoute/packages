@@ -12,6 +12,12 @@
 	#define entry_is_EMH3(arg) ((arg)->dohave_IPv4_DST&&(arg)->dohave_IPv4_SRC&&(arg)->dohave_MAC_DST)
 	#define entry_is_EMH4(arg) ((arg)->dohave_MAC_DST)
 #endif
+#if EMH_hash_revision == 3
+	#define entry_is_EMH1(arg) ((arg)->dohave_INPORT)
+	#define entry_is_EMH2(arg) ((arg)->dohave_VLAN_PRIO)
+	#define entry_is_EMH3(arg) ((arg)->dohave_VLAN_ID&&(arg)->dohave_MAC_DST)
+	#define entry_is_EMH4(arg) ((arg)->dohave_VLAN_ID&&(arg)->dohave_MAC_DST&&(arg)->dohave_VLAN_PRIO)
+#endif
 #define MT_matchfiled(entry, arguments, match, type) {if( (entry)-> type != (arguments)->type ) (match) =0;}
 #define MT_dohaveprint(entry, type) {if( entry ->dohave_ ## type )printf(#type":0x%lx ", entry -> type);}
 #define MAXprio 255
@@ -27,7 +33,7 @@ uint64_t FC_MT_have_action (struct arguments *arguments);
 void FC_MasterT_print (struct arguments *arguments);
 void FC_MasterT_update (struct arguments *arguments);
 uint64_t FC_MT_FIND_entry (struct arguments *arguments);
-uint8_t FC_MasterT_del_entry(struct arguments *arguments);
+uint8_t FC_MasterT_del_entry (struct arguments *arguments);
 uint64_t FC_MT_count_action (uint64_t actid);
-void FC_MT_apply_priority(void);
-uint32_t INR_MasterT_get_used(void);
+void FC_MT_apply_priority (void);
+uint32_t INR_MasterT_get_used (void);
