@@ -10,8 +10,8 @@ if [[ $# == 1 ]]; then
   python ./vhdl2env.py $1 >> ./tn_env.sh
 
   hg commit -m "tn_env.sh gen from vhdl"
-else 
+else
   echo "provide vhdl-mmi input file!"
 fi
- 
+
 

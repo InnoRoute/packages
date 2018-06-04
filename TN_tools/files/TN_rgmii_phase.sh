@@ -1,49 +1,21 @@
 #!/bin/bash
 
 source /usr/share/InnoRoute/tn_env.sh
+source /usr/share/InnoRoute/tn_func_ll.sh
 
-echo "Setting board-specific RGMII input delays, expecting none or 12 parameters"
-
-if [[ $# < 12 ]]; then
-  let idelay1=11
-  let idelay2=11
-  let idelay3=11
-  let idelay4=11
-  let idelay5=11
-  let idelay6=11
-  let idelay7=11
-  let idelay8=11
-  let idelay9=11
-  let idelay10=11
-  let idelay11=11
-  let idelay12=11
-  echo "None or not enough parameters given: setting all IDELAY values to 11"
+if [[ $# == 0 ]]; then
+  echo "$0 <phase0> .. <phase11> is used to set the RGMII data-clock phase shift"
+  echo "Parameter <phase*> each can be between 0 and 31"
+  echo "The default values are defined in the bitstream constraints"
+  echo "In total 12 parameters are expected"
+elif [[ $# == 12 ]]; then
+  # write data range: 0-31
+  for i in `seq 1 12`; do
+    let write_data=(((${$i} & 0x1F) << 16) | (1 << ($i-1)))
+    echo "Writing $write_data to TAP address: ${$i} to port $i"
+    tn_ll_mmi_write $C_BASE_ADDR_NET_LOWER $C_SUB_ADDR_NET_TAP $write_data
+  done
+  echo "Done"
 else
-  let idelay1=${1}
-  let idelay2=${2}
-  let idelay3=${3}
-  let idelay4=${4}
-  let idelay5=${5}
-  let idelay6=${6}
-  let idelay7=${7}
-  let idelay8=${8}
-  let idelay9=${9}
-  let idelay10=${10}
-  let idelay11=${11}
-  let idelay12=${12}
-  printf "Setting the following IDELAYs: Port0=%d, Port1=%d, Port2=%d, Port3=%d, Port4=%d, Port5=%d, Port6=%d, Port7=%d, Port8=%d, Port9=%d, Port10=%d, Port11=%d\n" $idelay1 $idelay2 $idelay3 $idelay4 $idelay5 $idelay6 $idelay7 $idelay8 $idelay9 $idelay10 $idelay11 $idelay12
+  echo "$0: wrong number of parameters ($#)"
 fi
-
-# write data range: 0-31
-TNbar1 $((($C_BASE_ADDR_RGMII+ 0)*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_RGMII_TAP)) w $idelay1 > /dev/null
-TNbar1 $((($C_BASE_ADDR_RGMII+ 1)*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_RGMII_TAP)) w $idelay2 > /dev/null
-TNbar1 $((($C_BASE_ADDR_RGMII+ 2)*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_RGMII_TAP)) w $idelay3 > /dev/null
-TNbar1 $((($C_BASE_ADDR_RGMII+ 3)*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_RGMII_TAP)) w $idelay4 > /dev/null
-TNbar1 $((($C_BASE_ADDR_RGMII+ 4)*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_RGMII_TAP)) w $idelay5 > /dev/null
-TNbar1 $((($C_BASE_ADDR_RGMII+ 5)*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_RGMII_TAP)) w $idelay6 > /dev/null
-TNbar1 $((($C_BASE_ADDR_RGMII+ 6)*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_RGMII_TAP)) w $idelay7 > /dev/null
-TNbar1 $((($C_BASE_ADDR_RGMII+ 7)*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_RGMII_TAP)) w $idelay8 > /dev/null
-TNbar1 $((($C_BASE_ADDR_RGMII+ 8)*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_RGMII_TAP)) w $idelay9 > /dev/null
-TNbar1 $((($C_BASE_ADDR_RGMII+ 9)*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_RGMII_TAP)) w $idelay10 > /dev/null
-TNbar1 $((($C_BASE_ADDR_RGMII+10)*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_RGMII_TAP)) w $idelay11 > /dev/null
-TNbar1 $((($C_BASE_ADDR_RGMII+11)*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_RGMII_TAP)) w $idelay12 > /dev/null

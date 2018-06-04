@@ -1,127 +1,50 @@
 #!/bin/bash
-#todo: add alaska operation
+
 source /usr/share/InnoRoute/tn_env.sh
-write_alaska()
-{
-  # constant
-  let page_reg=22
+source /usr/share/InnoRoute/tn_func_ll.sh
 
-  # Set page
-  TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((1*$TN_RGMII_WRITE+($phy & 0x1F)*$TN_RGMII_PHY+$page_reg*$TN_RGMII_REG+($page & 0xFFFF))) > /dev/null
-  # Execute write
-  TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((1*$TN_RGMII_WRITE+($phy & 0x1F)*$TN_RGMII_PHY+($reg & 0x1F)*$TN_RGMII_REG+($write_data & 0xFFFF))) > /dev/null
-  # Check for completion
-  let read_data=`TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_READ)) | cut -d " " -f 6`
-  if [[ $read_data -eq 0xEEEEEEEE ]]; then
-    echo " ** MMI Read Timeout **"
-  fi
-}
-
-write_gphy()
-{
-  # Execute write
-  TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((1*$TN_RGMII_WRITE+(($phy & 0x1F)+16)*$TN_RGMII_PHY+($reg & 0x1F)*$TN_RGMII_REG+($write_data & 0xFFFF))) > /dev/null
-  # Check for completion
-  let read_data=`TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_READ)) | cut -d " " -f 6`
-  if [[ $read_data -eq 0xEEEEEEEE ]]; then
-    echo " ** MMI Read Timeout **"
-  fi
-}
-
-read_alaska()
-{
-  # constant
-  let page_reg=22
-
-  # Set page
-  TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((1*$TN_RGMII_WRITE+($phy & 0x1F)*$TN_RGMII_PHY+$page_reg*$TN_RGMII_REG+($page & 0xFFFF))) > /dev/null
-  # Execute read
-  TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((0*$TN_RGMII_WRITE+($phy & 0x1F)*$TN_RGMII_PHY+($reg & 0x1F)*$TN_RGMII_REG+($write_data & 0xFFFF))) > /dev/null
-  # Check for completion
-  let read_data=`TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_READ)) | cut -d " " -f 6`
-  if [[ $read_data -eq 0xEEEEEEEE ]]; then
-    echo " ** MMI Read Timeout **"
-  fi
-}
-
-read_gphy()
-{
-  # Execute read
-  TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_WRITE)) w $((0*$TN_RGMII_WRITE+(($phy & 0x1F)+16)*$TN_RGMII_PHY+($reg & 0x1F)*$TN_RGMII_REG+($write_data & 0xFFFF))) > /dev/null
-  # Check for completion
-  let read_data=`TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_READ)) | cut -d " " -f 6`
-  if [[ $read_data -eq 0xEEEEEEEE ]]; then
-    echo " ** MMI Read Timeout **"
-  fi
-}
-
-read_mdio_result()
-{
-  let read_data=`TNbar1 $(($C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_READ)) | cut -d " " -f 6`
-  if [[ $read_data -eq 0xEEEEEEEE ]]; then
-    echo " ** MMI Read Timeout **"
-  fi
-}
-
-echo -e "set FPGA linkspeed, parameter:linkspeed [0,1,2]\n\t0=10Mbit/s\n\t1=100MBit/s\n\t2=1000Mbit/s"
-if [ -z "${C_SUB_ADDR_MAC_SPEED+xxx}" ]; then 
-	echo "Setting linkspeed is not supported with this tn_env-setting." 
-	exit 0
-fi
-if [[ $# != 1 ]]; then
-  echo ""
-  
+if [[ $# -ne 1 ]]; then
+  echo "$0 <speed> is used to set a specific link speed in the PHYs and MACs."
+  echo "The parameter <speed> can be 0 (10 Mbps), 1 (100 Mbps), or 2 (1000 Mbps)"
+  echo "The setting applies to all ports"
 else
- if [ "$1" -eq "0" ]; then #10Mbit/s
-  let page=0x0
-  let reg=0x4
-  let write_data=0x841
-  for phy   in `seq 0 9`; do 
-  	write_gphy
+
+  echo "Disabling RX MACs ..."
+  /usr/share/InnoRoute/TN_mac.sh all 0
+  
+  case $1 in
+    0) echo "Setting 10 Mbps"
+       # 10 FD only
+       let write_data_4=0x0C41
+       # not 1000
+       let write_data_9=0x0000
+      ;;
+    1) echo "Setting 100 Mbps"
+       # 100 FD only
+       let write_data_4=0x0D01
+       # not 1000
+       let write_data_9=0x0000
+      ;;
+    2) echo "Setting 1000 Mbps"
+       # not 100, not 10
+       let write_data_4=0x0C01
+       # 1000 FD only
+       let write_data_9=0x0200
+      ;;
+    *) echo "$0: Parameter error"
+       exit
+      ;;
+  esac
+  
+  echo "Writing to PHYs and restarting AN ..."
+  for phy in `seq 0 11`; do 
+    tn_ll_write_phy $phy 0 4 $write_data_4
+    tn_ll_write_phy $phy 0 9 $write_data_9
+    tn_ll_write_phy $phy 0 0 0x1200
   done
-  let page=0x0
-  let reg=0x9
-  let write_data=0x0
-  for phy   in `seq 0 9`; do 
-  	write_gphy
-  done
- fi
- if [ "$1" -eq "1" ]; then #100Mbit/s
-  let page=0x0
-  let reg=0x4
-  let write_data=0x901
-  for phy   in `seq 0 9`; do 
-  	write_gphy
-  done
-  let page=0x0
-  let reg=0x9
-  let write_data=0x0
-  for phy   in `seq 0 9`; do 
-  	write_gphy
-  done
- fi
- if [ "$1" -eq "2" ]; then #1000Mbit/s
-  let page=0x0
-  let reg=0x4
-  let write_data=0x801
-  for phy   in `seq 0 9`; do 
-  	write_gphy
-  done
-  let page=0x0
-  let reg=0x9
-  let write_data=0x200
-  for phy   in `seq 0 9`; do 
-  	write_gphy
-  done
- fi
- let page=0x0
- let reg=0x0
- let write_data=0x1200
-  for phy   in `seq 0 9`; do 
-  	write_gphy
-  done
- TN_linkspeed.sh $1
+
+  echo "Changing MAC settings ..."
+  /usr/share/InnoRoute/TN_mac.sh all 1 $1
+  
+  echo "Done"
 fi
-
-
-

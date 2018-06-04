@@ -1,1026 +1,1001 @@
 #!/bin/sh
 
 source /usr/share/InnoRoute/tn_env.sh
+source /usr/share/InnoRoute/tn_func_ll.sh
 
 # derived from tn_lib/sim/mmi_stim.txt
 
+# Addresses should be converted to base and sub addresses
+
 echo "C_SUB_ADDR_BM_MMI_STATUS"
-TNbar1 0x000000
+tn_ll_mmi_read 0x000000
 echo "C_SUB_ADDR_BM_MMI_INTERRUPT"
-TNbar1 0x000004
+tn_ll_mmi_read 0x000004
 
 echo "C_SUB_ADDR_MDIO_WRITE"
-TNbar1 0x000100
+tn_ll_mmi_read 0x000100
 echo "C_SUB_ADDR_MDIO_READ"
-TNbar1 0x000104
+tn_ll_mmi_read 0x000104
 echo "C_SUB_ADDR_MDIO_INTERRUPT"
-TNbar1 0x000108
+tn_ll_mmi_read 0x000108
 echo "C_SUB_ADDR_MDIO_INTERRUPT_EN"
-TNbar1 0x00010C
+tn_ll_mmi_read 0x00010C
 
 echo "C_SUB_ADDR_PERIPH_BUTTONS"
-TNbar1 0x000200
+tn_ll_mmi_read 0x000200
 echo "C_SUB_ADDR_PERIPH_LEDS"
-TNbar1 0x000204
+tn_ll_mmi_read 0x000204
 echo "C_SUB_ADDR_PERIPH_GPIOS"
-TNbar1 0x000208
+tn_ll_mmi_read 0x000208
 echo "C_SUB_ADDR_PERIPH_DISPLAY0"
-TNbar1 0x00020C
+tn_ll_mmi_read 0x00020C
 echo "C_SUB_ADDR_PERIPH_DISPLAY1"
-TNbar1 0x000210
+tn_ll_mmi_read 0x000210
 echo "C_SUB_ADDR_PERIPH_DISPLAY2"
-TNbar1 0x000214
+tn_ll_mmi_read 0x000214
 echo "C_SUB_ADDR_PERIPH_DISPLAY3"
-TNbar1 0x000218
+tn_ll_mmi_read 0x000218
 echo "C_SUB_ADDR_PERIPH_BEEP"
-TNbar1 0x00021C
+tn_ll_mmi_read 0x00021C
 echo "C_SUB_ADDR_PERIPH_BRIGHTNESS"
-TNbar1 0x000220
+tn_ll_mmi_read 0x000220
 
 echo "C_SUB_ADDR_COMMON_TN_MAJOR_REV"
-TNbar1 0x000400
+tn_ll_mmi_read 0x000400
 echo "C_SUB_ADDR_COMMON_TN_MINOR_REV"
-TNbar1 0x000404
+tn_ll_mmi_read 0x000404
 echo "C_SUB_ADDR_COMMON_USER_REV"
-TNbar1 0x000408
+tn_ll_mmi_read 0x000408
 echo "C_SUB_ADDR_COMMON_ADDR_MAP_REV"
-TNbar1 0x00040C
+tn_ll_mmi_read 0x00040C
 echo "C_SUB_ADDR_COMMON_FPGA_ID0"
-TNbar1 0x000410
+tn_ll_mmi_read 0x000410
 echo "C_SUB_ADDR_COMMON_FPGA_ID1"
-TNbar1 0x000414
+tn_ll_mmi_read 0x000414
 echo "C_SUB_ADDR_COMMON_EFUSE"
-TNbar1 0x000418
+tn_ll_mmi_read 0x000418
 echo "C_SUB_ADDR_COMMON_BITGEN_TIME"
-TNbar1 0x00041C
+tn_ll_mmi_read 0x00041C
 echo "C_SUB_ADDR_COMMON_RW_TEST"
-TNbar1 0x000420
+tn_ll_mmi_read 0x000420
 echo "C_SUB_ADDR_COMMON_FEATURES_6TREE"
-TNbar1 0x000500
+tn_ll_mmi_read 0x000500
 echo "C_SUB_ADDR_COMMON_FEATURES_ETH_SW"
-TNbar1 0x000504
+tn_ll_mmi_read 0x000504
 echo "C_SUB_ADDR_COMMON_FEATURES_FLOWCACHE"
-TNbar1 0x000508
+tn_ll_mmi_read 0x000508
 echo "C_SUB_ADDR_COMMON_FEATURES_ACC_DP"
-TNbar1 0x00050C
+tn_ll_mmi_read 0x00050C
 echo "C_SUB_ADDR_COMMON_FEATURES_TX_ROUTER"
-TNbar1 0x000510
+tn_ll_mmi_read 0x000510
 echo "C_SUB_ADDR_COMMON_FEATURES_SFP"
-TNbar1 0x000514
+tn_ll_mmi_read 0x000514
 echo "C_SUB_ADDR_COMMON_FEATURES_SODIMM"
-TNbar1 0x000518
+tn_ll_mmi_read 0x000518
+echo "C_SUB_ADDR_COMMON_FEATURES_USER"
+tn_ll_mmi_read 0x00051C
 echo "C_SUB_ADDR_COMMON_PARAM_PRT_CNT"
-TNbar1 0x000520
+tn_ll_mmi_read 0x000520
 echo "C_SUB_ADDR_COMMON_PARAM_DP_CNT"
-TNbar1 0x000524
+tn_ll_mmi_read 0x000524
 echo "C_SUB_ADDR_COMMON_PARAM_BUF_CNT"
-TNbar1 0x000528
+tn_ll_mmi_read 0x000528
 echo "C_SUB_ADDR_COMMON_PARAM_RX_MIN"
-TNbar1 0x000530
+tn_ll_mmi_read 0x000530
 echo "C_SUB_ADDR_COMMON_PARAM_RX_MAX"
-TNbar1 0x000534
+tn_ll_mmi_read 0x000534
 echo "C_SUB_ADDR_COMMON_PARAM_TX_PRE"
-TNbar1 0x000538
+tn_ll_mmi_read 0x000538
 echo "C_SUB_ADDR_COMMON_PARAM_TX_IFG"
-TNbar1 0x00053C
+tn_ll_mmi_read 0x00053C
 echo "C_SUB_ADDR_COMMON_PARAM_DISPLAY"
-TNbar1 0x000540
+tn_ll_mmi_read 0x000540
 echo "C_SUB_ADDR_COMMON_PARAM_LED_SYNCE"
-TNbar1 0x000544
+tn_ll_mmi_read 0x000544
 echo "C_SUB_ADDR_COMMON_PARAM_LED_INTERNAL"
-TNbar1 0x000548
+tn_ll_mmi_read 0x000548
 echo "C_SUB_ADDR_COMMON_PARAM_BEEP"
-TNbar1 0x00054C
+tn_ll_mmi_read 0x00054C
 echo "C_SUB_ADDR_COMMON_PARAM_PHY_RESET"
-TNbar1 0x000550
+tn_ll_mmi_read 0x000550
 echo "C_SUB_ADDR_COMMON_PARAM_PINHEADER"
-TNbar1 0x000554
+tn_ll_mmi_read 0x000554
 echo "C_SUB_ADDR_COMMON_PARAM_PMOD"
-TNbar1 0x000558
+tn_ll_mmi_read 0x000558
 echo "C_SUB_ADDR_COMMON_PARAM_EXT_BYPASS"
-TNbar1 0x00055C
+tn_ll_mmi_read 0x00055C
 echo "C_SUB_ADDR_COMMON_WIDTH_HC_BAD"
-TNbar1 0x000560
+tn_ll_mmi_read 0x000560
 echo "C_SUB_ADDR_COMMON_WIDTH_ETH_SW"
-TNbar1 0x000564
+tn_ll_mmi_read 0x000564
 echo "C_SUB_ADDR_COMMON_WIDTH_RX_STAT_BAD"
-TNbar1 0x000568
+tn_ll_mmi_read 0x000568
 echo "C_SUB_ADDR_COMMON_FPGA_TEMP"
-TNbar1 0x000600
+tn_ll_mmi_read 0x000600
 echo "C_SUB_ADDR_COMMON_FPGA_ALARM"
-TNbar1 0x000604
+tn_ll_mmi_read 0x000604
 echo "C_SUB_ADDR_COMMON_CONFIG_CHECK"
-TNbar1 0x000608
+tn_ll_mmi_read 0x000608
 echo "C_SUB_ADDR_COMMON_FIFO_OVERFLOW0"
-TNbar1 0x000610
+tn_ll_mmi_read 0x000610
 echo "C_SUB_ADDR_COMMON_FIFO_OVERFLOW1"
-TNbar1 0x000614
+tn_ll_mmi_read 0x000614
 echo "C_SUB_ADDR_COMMON_FIFO_OVERFLOW2"
-TNbar1 0x000618
+tn_ll_mmi_read 0x000618
 echo "C_SUB_ADDR_COMMON_FIFO_OVERFLOW3"
-TNbar1 0x00061C
+tn_ll_mmi_read 0x00061C
 echo "C_SUB_ADDR_COMMON_FIFO_UNDERRUN0"
-TNbar1 0x000620
+tn_ll_mmi_read 0x000620
 echo "C_SUB_ADDR_COMMON_FIFO_UNDERRUN1"
-TNbar1 0x000624
+tn_ll_mmi_read 0x000624
 echo "C_SUB_ADDR_COMMON_FIFO_UNDERRUN2"
-TNbar1 0x000628
+tn_ll_mmi_read 0x000628
 echo "C_SUB_ADDR_COMMON_FIFO_UNDERRUN3"
-TNbar1 0x00062C
+tn_ll_mmi_read 0x00062C
 echo "C_SUB_ADDR_COMMON_PCIE_ERROR0"
-TNbar1 0x000630
+tn_ll_mmi_read 0x000630
 echo "C_SUB_ADDR_COMMON_PCIE_ERROR1"
-TNbar1 0x000634
+tn_ll_mmi_read 0x000634
 echo "C_SUB_ADDR_COMMON_PCIE_TIMEOUT_CNT"
-TNbar1 0x000638
+tn_ll_mmi_read 0x000638
 echo "C_SUB_ADDR_COMMON_BUFFER_FULL"
-TNbar1 0x000640
+tn_ll_mmi_read 0x000640
 echo "C_SUB_ADDR_COMMON_TXF_FULL"
-TNbar1 0x000644
+tn_ll_mmi_read 0x000644
 echo "C_SUB_ADDR_COMMON_CLK_MON_0"
-TNbar1 0x000650
+tn_ll_mmi_read 0x000650
 echo "C_SUB_ADDR_COMMON_CLK_MON_1"
-TNbar1 0x000654
+tn_ll_mmi_read 0x000654
 echo "C_SUB_ADDR_COMMON_CLK_MON_2"
-TNbar1 0x000658
+tn_ll_mmi_read 0x000658
 echo "C_SUB_ADDR_COMMON_CLK_MON_3"
-TNbar1 0x00065C
+tn_ll_mmi_read 0x00065C
 echo "C_SUB_ADDR_COMMON_CLK_MON_4"
-TNbar1 0x000660
+tn_ll_mmi_read 0x000660
 echo "C_SUB_ADDR_COMMON_CLK_MON_5"
-TNbar1 0x000664
+tn_ll_mmi_read 0x000664
 echo "C_SUB_ADDR_COMMON_CLK_MON_6"
-TNbar1 0x000668
+tn_ll_mmi_read 0x000668
 echo "C_SUB_ADDR_COMMON_CLK_MON_7"
-TNbar1 0x00066C
+tn_ll_mmi_read 0x00066C
 echo "C_SUB_ADDR_COMMON_CLK_MON_8"
-TNbar1 0x000670
+tn_ll_mmi_read 0x000670
 echo "C_SUB_ADDR_COMMON_CLK_MON_9"
-TNbar1 0x000674
+tn_ll_mmi_read 0x000674
 echo "C_SUB_ADDR_COMMON_CLK_MON_10"
-TNbar1 0x000678
+tn_ll_mmi_read 0x000678
 echo "C_SUB_ADDR_COMMON_CLK_MON_11"
-TNbar1 0x00067C
+tn_ll_mmi_read 0x00067C
 echo "C_SUB_ADDR_COMMON_CLK_MON_12"
-TNbar1 0x000680
+tn_ll_mmi_read 0x000680
 echo "C_SUB_ADDR_COMMON_CLK_MON_13"
-TNbar1 0x000684
+tn_ll_mmi_read 0x000684
 echo "C_SUB_ADDR_COMMON_CLK_MON_14"
-TNbar1 0x000688
+tn_ll_mmi_read 0x000688
 echo "C_SUB_ADDR_COMMON_CLK_MON_15"
-TNbar1 0x00068C
+tn_ll_mmi_read 0x00068C
 echo "C_SUB_ADDR_COMMON_CLK_MON_16"
-TNbar1 0x000690
+tn_ll_mmi_read 0x000690
 echo "C_SUB_ADDR_COMMON_CLK_MON_17"
-TNbar1 0x000694
+tn_ll_mmi_read 0x000694
 echo "C_SUB_ADDR_COMMON_CLK_MON_18"
-TNbar1 0x000698
+tn_ll_mmi_read 0x000698
 echo "C_SUB_ADDR_COMMON_CLK_MON_19"
-TNbar1 0x00069C
+tn_ll_mmi_read 0x00069C
 echo "C_SUB_ADDR_COMMON_CLK_MON_20"
-TNbar1 0x0006A0
+tn_ll_mmi_read 0x0006A0
 echo "C_SUB_ADDR_COMMON_CLK_MON_21"
-TNbar1 0x0006A4
+tn_ll_mmi_read 0x0006A4
 echo "C_SUB_ADDR_COMMON_CLK_MON_22"
-TNbar1 0x0006A8
+tn_ll_mmi_read 0x0006A8
 echo "C_SUB_ADDR_COMMON_CLK_MON_23"
-TNbar1 0x0006AC
+tn_ll_mmi_read 0x0006AC
 echo "C_SUB_ADDR_COMMON_CLK_MON_24"
-TNbar1 0x0006B0
+tn_ll_mmi_read 0x0006B0
 echo "C_SUB_ADDR_COMMON_CLK_MON_25"
-TNbar1 0x0006B4
+tn_ll_mmi_read 0x0006B4
 echo "C_SUB_ADDR_COMMON_CLK_MON_26"
-TNbar1 0x0006B8
+tn_ll_mmi_read 0x0006B8
 echo "C_SUB_ADDR_COMMON_CLK_MON_27"
-TNbar1 0x0006BC
+tn_ll_mmi_read 0x0006BC
 
 echo "C_BASE_ADDR_ACC0 Word0"
-TNbar1 0x100000
+tn_ll_mmi_read 0x100000
 echo "C_BASE_ADDR_ACC0 Word1"
-TNbar1 0x100004
+tn_ll_mmi_read 0x100004
 echo "C_BASE_ADDR_ACC0 Word2"
-TNbar1 0x100008
+tn_ll_mmi_read 0x100008
 echo "C_BASE_ADDR_ACC0 Word3"
-TNbar1 0x10000C
+tn_ll_mmi_read 0x10000C
 echo "C_BASE_ADDR_ACC1 Word0"
-TNbar1 0x280000
+tn_ll_mmi_read 0x280000
 echo "C_BASE_ADDR_ACC1 Word1"
-TNbar1 0x280004
+tn_ll_mmi_read 0x280004
 echo "C_BASE_ADDR_ACC1 Word2"
-TNbar1 0x280008
+tn_ll_mmi_read 0x280008
 echo "C_BASE_ADDR_ACC1 Word3"
-TNbar1 0x28000C
+tn_ll_mmi_read 0x28000C
 
-echo "C_SUB_ADDR_RGMII_TAP Port0"
-TNbar1 0x400000
-echo "C_SUB_ADDR_RGMII_LINK_STAT Port0"
-TNbar1 0x400004
-echo "C_SUB_ADDR_RGMII_CLK_SPEED Port0"
-TNbar1 0x400008
-echo "C_SUB_ADDR_RGMII_DPX_STAT Port0"
-TNbar1 0x40000C
-echo "C_SUB_ADDR_RGMII_TAP Port1"
-TNbar1 0x440000
-echo "C_SUB_ADDR_RGMII_LINK_STAT Port1"
-TNbar1 0x440004
-echo "C_SUB_ADDR_RGMII_CLK_SPEED Port1"
-TNbar1 0x440008
-echo "C_SUB_ADDR_RGMII_DPX_STAT Port1"
-TNbar1 0x44000C
-echo "C_SUB_ADDR_RGMII_TAP Port2"
-TNbar1 0x480000
-echo "C_SUB_ADDR_RGMII_LINK_STAT Port2"
-TNbar1 0x480004
-echo "C_SUB_ADDR_RGMII_CLK_SPEED Port2"
-TNbar1 0x480008
-echo "C_SUB_ADDR_RGMII_DPX_STAT Port2"
-TNbar1 0x48000C
-echo "C_SUB_ADDR_RGMII_TAP Port3"
-TNbar1 0x4C0000
-echo "C_SUB_ADDR_RGMII_LINK_STAT Port3"
-TNbar1 0x4C0004
-echo "C_SUB_ADDR_RGMII_CLK_SPEED Port3"
-TNbar1 0x4C0008
-echo "C_SUB_ADDR_RGMII_DPX_STAT Port3"
-TNbar1 0x4C000C
-echo "C_SUB_ADDR_RGMII_TAP Port4"
-TNbar1 0x500000
-echo "C_SUB_ADDR_RGMII_LINK_STAT Port4"
-TNbar1 0x500004
-echo "C_SUB_ADDR_RGMII_CLK_SPEED Port4"
-TNbar1 0x500008
-echo "C_SUB_ADDR_RGMII_DPX_STAT Port4"
-TNbar1 0x50000C
-echo "C_SUB_ADDR_RGMII_TAP Port5"
-TNbar1 0x540000
-echo "C_SUB_ADDR_RGMII_LINK_STAT Port5"
-TNbar1 0x540004
-echo "C_SUB_ADDR_RGMII_CLK_SPEED Port5"
-TNbar1 0x540008
-echo "C_SUB_ADDR_RGMII_DPX_STAT Port5"
-TNbar1 0x54000C
-echo "C_SUB_ADDR_RGMII_TAP Port6"
-TNbar1 0x580000
-echo "C_SUB_ADDR_RGMII_LINK_STAT Port6"
-TNbar1 0x580004
-echo "C_SUB_ADDR_RGMII_CLK_SPEED Port6"
-TNbar1 0x580008
-echo "C_SUB_ADDR_RGMII_DPX_STAT Port6"
-TNbar1 0x58000C
-echo "C_SUB_ADDR_RGMII_TAP Port7"
-TNbar1 0x5C0000
-echo "C_SUB_ADDR_RGMII_LINK_STAT Port7"
-TNbar1 0x5C0004
-echo "C_SUB_ADDR_RGMII_CLK_SPEED Port7"
-TNbar1 0x5C0008
-echo "C_SUB_ADDR_RGMII_DPX_STAT Port7"
-TNbar1 0x5C000C
-echo "C_SUB_ADDR_RGMII_TAP Port8"
-TNbar1 0x600000
-echo "C_SUB_ADDR_RGMII_LINK_STAT Port8"
-TNbar1 0x600004
-echo "C_SUB_ADDR_RGMII_CLK_SPEED Port8"
-TNbar1 0x600008
-echo "C_SUB_ADDR_RGMII_DPX_STAT Port8"
-TNbar1 0x60000C
-echo "C_SUB_ADDR_RGMII_TAP Port9"
-TNbar1 0x640000
-echo "C_SUB_ADDR_RGMII_LINK_STAT Port9"
-TNbar1 0x640004
-echo "C_SUB_ADDR_RGMII_CLK_SPEED Port9"
-TNbar1 0x640008
-echo "C_SUB_ADDR_RGMII_DPX_STAT Port9"
-TNbar1 0x64000C
-echo "C_SUB_ADDR_RGMII_TAP Port10"
-TNbar1 0x680000
-echo "C_SUB_ADDR_RGMII_LINK_STAT Port10"
-TNbar1 0x680004
-echo "C_SUB_ADDR_RGMII_CLK_SPEED Port10"
-TNbar1 0x680008
-echo "C_SUB_ADDR_RGMII_DPX_STAT Port10"
-TNbar1 0x68000C
-echo "C_SUB_ADDR_RGMII_TAP Port11"
-TNbar1 0x6C0000
-echo "C_SUB_ADDR_RGMII_LINK_STAT Port11"
-TNbar1 0x6C0004
-echo "C_SUB_ADDR_RGMII_CLK_SPEED Port11"
-TNbar1 0x6C0008
-echo "C_SUB_ADDR_RGMII_DPX_STAT Port11"
-TNbar1 0x6C000C
-echo "C_SUB_ADDR_RGMII_TAP Port12 (SFP)"
-TNbar1 0x700000
-echo "C_SUB_ADDR_RGMII_LINK_STAT Port12 (SFP)"
-TNbar1 0x700004
-echo "C_SUB_ADDR_RGMII_CLK_SPEED Port12 (SFP)"
-TNbar1 0x700008
-echo "C_SUB_ADDR_RGMII_DPX_STAT Port12 (SFP)"
-TNbar1 0x70000C
-echo "C_SUB_ADDR_RGMII_TAP Port13 (SFP)"
-TNbar1 0x740000
-echo "C_SUB_ADDR_RGMII_LINK_STAT Port13 (SFP)"
-TNbar1 0x740004
-echo "C_SUB_ADDR_RGMII_CLK_SPEED Port13 (SFP)"
-TNbar1 0x740008
-echo "C_SUB_ADDR_RGMII_DPX_STAT Port13 (SFP)"
-TNbar1 0x74000C
+echo "C_SUB_ADDR_NET_TAP (write 11 to all Ports)"
+tn_ll_mmi_read 0x400000
+tn_ll_mmi_write 0x400000 0x000BFFFF
 
-echo "C_SUB_ADDR_MAC_OWN_MAC_ADDR_L Port0"
-TNbar1 0x400100
-echo "C_SUB_ADDR_MAC_OWN_MAC_ADDR_H Port0"
-TNbar1 0x400104
-echo "C_SUB_ADDR_MAC_6T_ADDR_L Port0"
-TNbar1 0x400110
-echo "C_SUB_ADDR_MAC_6T_ADDR_H Port0"
-TNbar1 0x400114
-echo "C_SUB_ADDR_MAC_6T_SRC_PTR Port0"
-TNbar1 0x400118
-echo "C_SUB_ADDR_MAC_6T_DST_PTR Port0"
-TNbar1 0x40011C
-echo "C_SUB_ADDR_MAC_SPEED Port0"
-TNbar1 0x400120
-echo "C_SUB_ADDR_MAC_DUPLEX Port0"
-TNbar1 0x400124
-echo "C_SUB_ADDR_MAC_OWN_MAC_ADDR_L Port1"
-TNbar1 0x440100
-echo "C_SUB_ADDR_MAC_OWN_MAC_ADDR_H Port1"
-TNbar1 0x440104
-echo "C_SUB_ADDR_MAC_6T_ADDR_L Port1"
-TNbar1 0x440110
-echo "C_SUB_ADDR_MAC_6T_ADDR_H Port1"
-TNbar1 0x440114
-echo "C_SUB_ADDR_MAC_6T_SRC_PTR Port1"
-TNbar1 0x440118
-echo "C_SUB_ADDR_MAC_6T_DST_PTR Port1"
-TNbar1 0x44011C
-echo "C_SUB_ADDR_MAC_SPEED Port1"
-TNbar1 0x440120
-echo "C_SUB_ADDR_MAC_DUPLEX Port1"
-TNbar1 0x440124
-echo "C_SUB_ADDR_MAC_OWN_MAC_ADDR_L Port2"
-TNbar1 0x480100
-echo "C_SUB_ADDR_MAC_OWN_MAC_ADDR_H Port2"
-TNbar1 0x480104
-echo "C_SUB_ADDR_MAC_6T_ADDR_L Port2"
-TNbar1 0x480110
-echo "C_SUB_ADDR_MAC_6T_ADDR_H Port2"
-TNbar1 0x480114
-echo "C_SUB_ADDR_MAC_6T_SRC_PTR Port2"
-TNbar1 0x480118
-echo "C_SUB_ADDR_MAC_6T_DST_PTR Port2"
-TNbar1 0x48011C
-echo "C_SUB_ADDR_MAC_SPEED Port2"
-TNbar1 0x480120
-echo "C_SUB_ADDR_MAC_DUPLEX Port2"
-TNbar1 0x480124
-echo "C_SUB_ADDR_MAC_OWN_MAC_ADDR_L Port3"
-TNbar1 0x4C0100
-echo "C_SUB_ADDR_MAC_OWN_MAC_ADDR_H Port3"
-TNbar1 0x4C0104
-echo "C_SUB_ADDR_MAC_6T_ADDR_L Port3"
-TNbar1 0x4C0110
-echo "C_SUB_ADDR_MAC_6T_ADDR_H Port3"
-TNbar1 0x4C0114
-echo "C_SUB_ADDR_MAC_6T_SRC_PTR Port3"
-TNbar1 0x4C0118
-echo "C_SUB_ADDR_MAC_6T_DST_PTR Port3"
-TNbar1 0x4C011C
-echo "C_SUB_ADDR_MAC_SPEED Port3"
-TNbar1 0x4C0120
-echo "C_SUB_ADDR_MAC_DUPLEX Port3"
-TNbar1 0x4C0124
-echo "C_SUB_ADDR_MAC_OWN_MAC_ADDR_L Port4"
-TNbar1 0x500100
-echo "C_SUB_ADDR_MAC_OWN_MAC_ADDR_H Port4"
-TNbar1 0x500104
-echo "C_SUB_ADDR_MAC_6T_ADDR_L Port4"
-TNbar1 0x500110
-echo "C_SUB_ADDR_MAC_6T_ADDR_H Port4"
-TNbar1 0x500114
-echo "C_SUB_ADDR_MAC_6T_SRC_PTR Port4"
-TNbar1 0x500118
-echo "C_SUB_ADDR_MAC_6T_DST_PTR Port4"
-TNbar1 0x50011C
-echo "C_SUB_ADDR_MAC_SPEED Port4"
-TNbar1 0x500120
-echo "C_SUB_ADDR_MAC_DUPLEX Port4"
-TNbar1 0x500124
-echo "C_SUB_ADDR_MAC_OWN_MAC_ADDR_L Port5"
-TNbar1 0x540100
-echo "C_SUB_ADDR_MAC_OWN_MAC_ADDR_H Port5"
-TNbar1 0x540104
-echo "C_SUB_ADDR_MAC_6T_ADDR_L Port5"
-TNbar1 0x540110
-echo "C_SUB_ADDR_MAC_6T_ADDR_H Port5"
-TNbar1 0x540114
-echo "C_SUB_ADDR_MAC_6T_SRC_PTR Port5"
-TNbar1 0x540118
-echo "C_SUB_ADDR_MAC_6T_DST_PTR Port5"
-TNbar1 0x54011C
-echo "C_SUB_ADDR_MAC_SPEED Port5"
-TNbar1 0x540120
-echo "C_SUB_ADDR_MAC_DUPLEX Port5"
-TNbar1 0x540124
-echo "C_SUB_ADDR_MAC_OWN_MAC_ADDR_L Port6"
-TNbar1 0x580100
-echo "C_SUB_ADDR_MAC_OWN_MAC_ADDR_H Port6"
-TNbar1 0x580104
-echo "C_SUB_ADDR_MAC_6T_ADDR_L Port6"
-TNbar1 0x580110
-echo "C_SUB_ADDR_MAC_6T_ADDR_H Port6"
-TNbar1 0x580114
-echo "C_SUB_ADDR_MAC_6T_SRC_PTR Port6"
-TNbar1 0x580118
-echo "C_SUB_ADDR_MAC_6T_DST_PTR Port6"
-TNbar1 0x58011C
-echo "C_SUB_ADDR_MAC_SPEED Port6"
-TNbar1 0x580120
-echo "C_SUB_ADDR_MAC_DUPLEX Port6"
-TNbar1 0x580124
-echo "C_SUB_ADDR_MAC_OWN_MAC_ADDR_L Port7"
-TNbar1 0x5C0100
-echo "C_SUB_ADDR_MAC_OWN_MAC_ADDR_H Port7"
-TNbar1 0x5C0104
-echo "C_SUB_ADDR_MAC_6T_ADDR_L Port7"
-TNbar1 0x5C0110
-echo "C_SUB_ADDR_MAC_6T_ADDR_H Port7"
-TNbar1 0x5C0114
-echo "C_SUB_ADDR_MAC_6T_SRC_PTR Port7"
-TNbar1 0x5C0118
-echo "C_SUB_ADDR_MAC_6T_DST_PTR Port7"
-TNbar1 0x5C011C
-echo "C_SUB_ADDR_MAC_SPEED Port7"
-TNbar1 0x5C0120
-echo "C_SUB_ADDR_MAC_DUPLEX Port7"
-TNbar1 0x5C0124
-echo "C_SUB_ADDR_MAC_OWN_MAC_ADDR_L Port8"
-TNbar1 0x600100
-echo "C_SUB_ADDR_MAC_OWN_MAC_ADDR_H Port8"
-TNbar1 0x600104
-echo "C_SUB_ADDR_MAC_6T_ADDR_L Port8"
-TNbar1 0x600110
-echo "C_SUB_ADDR_MAC_6T_ADDR_H Port8"
-TNbar1 0x600114
-echo "C_SUB_ADDR_MAC_6T_SRC_PTR Port8"
-TNbar1 0x600118
-echo "C_SUB_ADDR_MAC_6T_DST_PTR Port8"
-TNbar1 0x60011C
-echo "C_SUB_ADDR_MAC_SPEED Port8"
-TNbar1 0x600120
-echo "C_SUB_ADDR_MAC_DUPLEX Port8"
-TNbar1 0x600124
-echo "C_SUB_ADDR_MAC_OWN_MAC_ADDR_L Port9"
-TNbar1 0x640100
-echo "C_SUB_ADDR_MAC_OWN_MAC_ADDR_H Port9"
-TNbar1 0x640104
-echo "C_SUB_ADDR_MAC_6T_ADDR_L Port9"
-TNbar1 0x640110
-echo "C_SUB_ADDR_MAC_6T_ADDR_H Port9"
-TNbar1 0x640114
-echo "C_SUB_ADDR_MAC_6T_SRC_PTR Port9"
-TNbar1 0x640118
-echo "C_SUB_ADDR_MAC_6T_DST_PTR Port9"
-TNbar1 0x64011C
-echo "C_SUB_ADDR_MAC_SPEED Port9"
-TNbar1 0x640120
-echo "C_SUB_ADDR_MAC_DUPLEX Port9"
-TNbar1 0x640124
-echo "C_SUB_ADDR_MAC_OWN_MAC_ADDR_L Port10"
-TNbar1 0x680100
-echo "C_SUB_ADDR_MAC_OWN_MAC_ADDR_H Port10"
-TNbar1 0x680104
-echo "C_SUB_ADDR_MAC_6T_ADDR_L Port10"
-TNbar1 0x680110
-echo "C_SUB_ADDR_MAC_6T_ADDR_H Port10"
-TNbar1 0x680114
-echo "C_SUB_ADDR_MAC_6T_SRC_PTR Port10"
-TNbar1 0x680118
-echo "C_SUB_ADDR_MAC_6T_DST_PTR Port10"
-TNbar1 0x68011C
-echo "C_SUB_ADDR_MAC_SPEED Port10"
-TNbar1 0x680120
-echo "C_SUB_ADDR_MAC_DUPLEX Port10"
-TNbar1 0x680124
-echo "C_SUB_ADDR_MAC_OWN_MAC_ADDR_L Port11"
-TNbar1 0x6C0100
-echo "C_SUB_ADDR_MAC_OWN_MAC_ADDR_H Port11"
-TNbar1 0x6C0104
-echo "C_SUB_ADDR_MAC_6T_ADDR_L Port11"
-TNbar1 0x6C0110
-echo "C_SUB_ADDR_MAC_6T_ADDR_H Port11"
-TNbar1 0x6C0114
-echo "C_SUB_ADDR_MAC_6T_SRC_PTR Port11"
-TNbar1 0x6C0118
-echo "C_SUB_ADDR_MAC_6T_DST_PTR Port11"
-TNbar1 0x6C011C
-echo "C_SUB_ADDR_MAC_SPEED Port11"
-TNbar1 0x6C0120
-echo "C_SUB_ADDR_MAC_DUPLEX Port11"
-TNbar1 0x6C0124
-echo "C_SUB_ADDR_MAC_OWN_MAC_ADDR_L Port12 (SFP)"
-TNbar1 0x700100
-echo "C_SUB_ADDR_MAC_OWN_MAC_ADDR_H Port12 (SFP)"
-TNbar1 0x700104
-echo "C_SUB_ADDR_MAC_6T_ADDR_L Port12 (SFP)"
-TNbar1 0x700110
-echo "C_SUB_ADDR_MAC_6T_ADDR_H Port12 (SFP)"
-TNbar1 0x700114
-echo "C_SUB_ADDR_MAC_6T_SRC_PTR Port12 (SFP)"
-TNbar1 0x700118
-echo "C_SUB_ADDR_MAC_6T_DST_PTR Port12 (SFP)"
-TNbar1 0x70011C
-echo "C_SUB_ADDR_MAC_SPEED Port12 (SFP)"
-TNbar1 0x700120
-echo "C_SUB_ADDR_MAC_DUPLEX Port12 (SFP)"
-TNbar1 0x700124
-echo "C_SUB_ADDR_MAC_OWN_MAC_ADDR_L Port13 (SFP)"
-TNbar1 0x740100
-echo "C_SUB_ADDR_MAC_OWN_MAC_ADDR_H Port13 (SFP)"
-TNbar1 0x740104
-echo "C_SUB_ADDR_MAC_6T_ADDR_L Port13 (SFP)"
-TNbar1 0x740110
-echo "C_SUB_ADDR_MAC_6T_ADDR_H Port13 (SFP)"
-TNbar1 0x740114
-echo "C_SUB_ADDR_MAC_6T_SRC_PTR Port13 (SFP)"
-TNbar1 0x740118
-echo "C_SUB_ADDR_MAC_6T_DST_PTR Port13 (SFP)"
-TNbar1 0x74011C
-echo "C_SUB_ADDR_MAC_SPEED Port13 (SFP)"
-TNbar1 0x740120
-echo "C_SUB_ADDR_MAC_DUPLEX Port13 (SFP)"
-TNbar1 0x740124
+echo "C_SUB_ADDR_NET_ENABLE (Enable all MACs)"
+tn_ll_mmi_read 0x400010
+tn_ll_mmi_write 0x400010 0x0000FFFF
+echo "C_SUB_ADDR_NET_SPEED (100 Mbps to all MACs)"
+tn_ll_mmi_read 0x400014
+tn_ll_mmi_write 0x400014 0x55555555
+echo "C_SUB_ADDR_NET_DUPLEX (Full Duplex to all MACs)"
+tn_ll_mmi_read 0x400018
+tn_ll_mmi_write 0x400018 0x0000FFFF
+echo "C_SUB_ADDR_NET_PAUSE (Enable PAUSE to all MACs)"
+tn_ll_mmi_read 0x40001C
+tn_ll_mmi_write 0x40001C 0x0000FFFF
+echo "C_SUB_ADDR_NET_OWN_MAC_ADDR_L (Own MAC: 00:12:24:36:...)"
+tn_ll_mmi_read 0x400020
+tn_ll_mmi_write 0x400020 0x36241200
+echo "C_SUB_ADDR_NET_OWN_MAC_ADDR_H (Own MAC: 00:02:04:06:18:2C)"
+tn_ll_mmi_read 0x400024
+tn_ll_mmi_write 0x400024 0x00002C18
+
+echo "C_SUB_ADDR_NET_6T_ADDR_L"
+tn_ll_mmi_read 0x400030
+tn_ll_mmi_write 0x400030 0xAABBCCDD
+echo "C_SUB_ADDR_NET_6T_ADDR_H"
+tn_ll_mmi_read 0x400034
+tn_ll_mmi_write 0x400034 0xEEFF1122
+echo "C_SUB_ADDR_NET_6T_SRC_PTR"
+tn_ll_mmi_read 0x400038
+tn_ll_mmi_write 0x400038 0x00000002
+echo "C_SUB_ADDR_NET_6T_DST_PTR"
+tn_ll_mmi_read 0x40003C
+tn_ll_mmi_write 0x40003C 0x00000002
+
+echo "C_SUB_ADDR_NET_TX_CONF_VLD"
+tn_ll_mmi_read 0x400040
+tn_ll_mmi_write 0x400040 0xFFFFFFFF
+
+echo "C_SUB_ADDR_NET_TX_CONF_L - TX-Conf-ID Port 0"
+tn_ll_mmi_read 0x400050
+tn_ll_mmi_write 0x400050 0xFFFFFFFF
+echo "C_SUB_ADDR_NET_TX_CONF_L - TX-Conf-Time Port 0"
+tn_ll_mmi_read 0x400054
+tn_ll_mmi_write 0x400054 0xFFFFFFFF
+
+echo "C_SUB_ADDR_NET_TX_CONF_L - TX-Conf-ID Port 1"
+tn_ll_mmi_read 0x400058
+tn_ll_mmi_write 0x400058 0xFFFFFFFF
+echo "C_SUB_ADDR_NET_TX_CONF_L - TX-Conf-Time Port 1"
+tn_ll_mmi_read 0x40005C
+tn_ll_mmi_write 0x40005C 0xFFFFFFFF
+
+echo "C_SUB_ADDR_NET_TX_CONF_L - TX-Conf-ID Port 2"
+tn_ll_mmi_read 0x400060
+tn_ll_mmi_write 0x400060 0xFFFFFFFF
+echo "C_SUB_ADDR_NET_TX_CONF_L - TX-Conf-Time Port 2"
+tn_ll_mmi_read 0x400064
+tn_ll_mmi_write 0x400064 0xFFFFFFFF
+
+echo "C_SUB_ADDR_NET_TX_CONF_L - TX-Conf-ID Port 3"
+tn_ll_mmi_read 0x400068
+tn_ll_mmi_write 0x400068 0xFFFFFFFF
+echo "C_SUB_ADDR_NET_TX_CONF_L - TX-Conf-Time Port 3"
+tn_ll_mmi_read 0x40006C
+tn_ll_mmi_write 0x40006C 0xFFFFFFFF
+
+echo "C_SUB_ADDR_NET_TX_CONF_L - TX-Conf-ID Port 4"
+tn_ll_mmi_read 0x400070
+tn_ll_mmi_write 0x400070 0xFFFFFFFF
+echo "C_SUB_ADDR_NET_TX_CONF_L - TX-Conf-Time Port 4"
+tn_ll_mmi_read 0x400074
+tn_ll_mmi_write 0x400074 0xFFFFFFFF
+
+echo "C_SUB_ADDR_NET_TX_CONF_L - TX-Conf-ID Port 5"
+tn_ll_mmi_read 0x400078
+tn_ll_mmi_write 0x400078 0xFFFFFFFF
+echo "C_SUB_ADDR_NET_TX_CONF_L - TX-Conf-Time Port 5"
+tn_ll_mmi_read 0x40007C
+tn_ll_mmi_write 0x40007C 0xFFFFFFFF
+
+echo "C_SUB_ADDR_NET_TX_CONF_L - TX-Conf-ID Port 6"
+tn_ll_mmi_read 0x400080
+tn_ll_mmi_write 0x400080 0xFFFFFFFF
+echo "C_SUB_ADDR_NET_TX_CONF_L - TX-Conf-Time Port 6"
+tn_ll_mmi_read 0x400084
+tn_ll_mmi_write 0x400084 0xFFFFFFFF
+
+echo "C_SUB_ADDR_NET_TX_CONF_L - TX-Conf-ID Port 7"
+tn_ll_mmi_read 0x400088
+tn_ll_mmi_write 0x400088 0xFFFFFFFF
+echo "C_SUB_ADDR_NET_TX_CONF_L - TX-Conf-Time Port 7"
+tn_ll_mmi_read 0x40008C
+tn_ll_mmi_write 0x40008C 0xFFFFFFFF
 
 echo "C_SUB_ADDR_RTC_BRIDGE_LOW"
-TNbar1 0x7F0000
+tn_ll_mmi_read 0x7F0000
 echo "C_SUB_ADDR_RTC_BRIDGE_HIGH"
-TNbar1 0x7F0004
+tn_ll_mmi_read 0x7F0004
 echo "C_SUB_ADDR_RTC_CTRLD_LOW"
-TNbar1 0x7F0008
+tn_ll_mmi_read 0x7F0008
 echo "C_SUB_ADDR_RTC_CTRLD_HIGH"
-TNbar1 0x7F000C
+tn_ll_mmi_read 0x7F000C
 echo "C_SUB_ADDR_RTC_CTRLD_OFFSET_LOW"
-TNbar1 0x7F0010
+tn_ll_mmi_read 0x7F0010
 echo "C_SUB_ADDR_RTC_CTRLD_OFFSET_HIGH"
-TNbar1 0x7F0014
+tn_ll_mmi_read 0x7F0014
 echo "C_SUB_ADDR_RTC_CTRLD_RATE"
-TNbar1 0x7F0018
+tn_ll_mmi_read 0x7F0018
+echo "C_SUB_ADDR_RTC_INTERRUPT"   
+tn_ll_mmi_read 0x7F001C
+echo "C_SUB_ADDR_RTC_INTERRUPT_EN"
+tn_ll_mmi_read 0x7F0020
+echo "C_SUB_ADDR_RTC_CLKSEL"
+tn_ll_mmi_read 0x7F0024
 
 echo "C_SUB_ADDR_HC_CNT_BAD_FRAMES Port0"
-TNbar1 0x800000
+tn_ll_mmi_read 0x800000
 echo "C_SUB_ADDR_HC_INTERRUPT Port0"
-TNbar1 0x800004
+tn_ll_mmi_read 0x800004
 echo "C_SUB_ADDR_HC_INTERRUPT_EN Port0"
-TNbar1 0x800008
+tn_ll_mmi_read 0x800008
 echo "C_SUB_ADDR_HC_CNT_BAD_FRAMES Port1"
-TNbar1 0x800100
+tn_ll_mmi_read 0x800100
 echo "C_SUB_ADDR_HC_INTERRUPT Port1"
-TNbar1 0x800104
+tn_ll_mmi_read 0x800104
 echo "C_SUB_ADDR_HC_INTERRUPT_EN Port1"
-TNbar1 0x800108
+tn_ll_mmi_read 0x800108
 echo "C_SUB_ADDR_HC_CNT_BAD_FRAMES Port2"
-TNbar1 0x800200
+tn_ll_mmi_read 0x800200
 echo "C_SUB_ADDR_HC_INTERRUPT Port2"
-TNbar1 0x800204
+tn_ll_mmi_read 0x800204
 echo "C_SUB_ADDR_HC_INTERRUPT_EN Port2"
-TNbar1 0x800208
+tn_ll_mmi_read 0x800208
 echo "C_SUB_ADDR_HC_CNT_BAD_FRAMES Port3"
-TNbar1 0x800300
+tn_ll_mmi_read 0x800300
 echo "C_SUB_ADDR_HC_INTERRUPT Port3"
-TNbar1 0x800304
+tn_ll_mmi_read 0x800304
 echo "C_SUB_ADDR_HC_INTERRUPT_EN Port3"
-TNbar1 0x800308
+tn_ll_mmi_read 0x800308
 echo "C_SUB_ADDR_HC_CNT_BAD_FRAMES Port4"
-TNbar1 0x800400
+tn_ll_mmi_read 0x800400
 echo "C_SUB_ADDR_HC_INTERRUPT Port4"
-TNbar1 0x800404
+tn_ll_mmi_read 0x800404
 echo "C_SUB_ADDR_HC_INTERRUPT_EN Port4"
-TNbar1 0x800408
+tn_ll_mmi_read 0x800408
 echo "C_SUB_ADDR_HC_CNT_BAD_FRAMES Port5"
-TNbar1 0x800500
+tn_ll_mmi_read 0x800500
 echo "C_SUB_ADDR_HC_INTERRUPT Port5"
-TNbar1 0x800504
+tn_ll_mmi_read 0x800504
 echo "C_SUB_ADDR_HC_INTERRUPT_EN Port5"
-TNbar1 0x800508
+tn_ll_mmi_read 0x800508
 echo "C_SUB_ADDR_HC_CNT_BAD_FRAMES Port6"
-TNbar1 0x800600
+tn_ll_mmi_read 0x800600
 echo "C_SUB_ADDR_HC_INTERRUPT Port6"
-TNbar1 0x800604
+tn_ll_mmi_read 0x800604
 echo "C_SUB_ADDR_HC_INTERRUPT_EN Port6"
-TNbar1 0x800608
+tn_ll_mmi_read 0x800608
 echo "C_SUB_ADDR_HC_CNT_BAD_FRAMES Port7"
-TNbar1 0x800700
+tn_ll_mmi_read 0x800700
 echo "C_SUB_ADDR_HC_INTERRUPT Port7"
-TNbar1 0x800704
+tn_ll_mmi_read 0x800704
 echo "C_SUB_ADDR_HC_INTERRUPT_EN Port7"
-TNbar1 0x800708
+tn_ll_mmi_read 0x800708
 echo "C_SUB_ADDR_HC_CNT_BAD_FRAMES Port8"
-TNbar1 0x800800
+tn_ll_mmi_read 0x800800
 echo "C_SUB_ADDR_HC_INTERRUPT Port8"
-TNbar1 0x800804
+tn_ll_mmi_read 0x800804
 echo "C_SUB_ADDR_HC_INTERRUPT_EN Port8"
-TNbar1 0x800808
+tn_ll_mmi_read 0x800808
 echo "C_SUB_ADDR_HC_CNT_BAD_FRAMES Port9"
-TNbar1 0x800900
+tn_ll_mmi_read 0x800900
 echo "C_SUB_ADDR_HC_INTERRUPT Port9"
-TNbar1 0x800904
+tn_ll_mmi_read 0x800904
 echo "C_SUB_ADDR_HC_INTERRUPT_EN Port9"
-TNbar1 0x800908
+tn_ll_mmi_read 0x800908
 echo "C_SUB_ADDR_HC_CNT_BAD_FRAMES Port10"
-TNbar1 0x800A00
+tn_ll_mmi_read 0x800A00
 echo "C_SUB_ADDR_HC_INTERRUPT Port10"
-TNbar1 0x800A04
+tn_ll_mmi_read 0x800A04
 echo "C_SUB_ADDR_HC_INTERRUPT_EN Port10"
-TNbar1 0x800A08
+tn_ll_mmi_read 0x800A08
 echo "C_SUB_ADDR_HC_CNT_BAD_FRAMES Port11"
-TNbar1 0x800B00
+tn_ll_mmi_read 0x800B00
 echo "C_SUB_ADDR_HC_INTERRUPT Port11"
-TNbar1 0x800B04
+tn_ll_mmi_read 0x800B04
 echo "C_SUB_ADDR_HC_INTERRUPT_EN Port11"
-TNbar1 0x800B08
+tn_ll_mmi_read 0x800B08
 echo "C_SUB_ADDR_HC_CNT_BAD_FRAMES Port12 (SFP)"
-TNbar1 0x800C00
+tn_ll_mmi_read 0x800C00
 echo "C_SUB_ADDR_HC_INTERRUPT Port12 (SFP)"
-TNbar1 0x800C04
+tn_ll_mmi_read 0x800C04
 echo "C_SUB_ADDR_HC_INTERRUPT_EN Port12 (SFP)"
-TNbar1 0x800C08
+tn_ll_mmi_read 0x800C08
 echo "C_SUB_ADDR_HC_CNT_BAD_FRAMES Port13 (SFP)"
-TNbar1 0x800D00
+tn_ll_mmi_read 0x800D00
 echo "C_SUB_ADDR_HC_INTERRUPT Port13 (SFP)"
-TNbar1 0x800D04
+tn_ll_mmi_read 0x800D04
 echo "C_SUB_ADDR_HC_INTERRUPT_EN Port13 (SFP)"
-TNbar1 0x800D08
+tn_ll_mmi_read 0x800D08
 echo "C_SUB_ADDR_HC_CNT_BAD_FRAMES Port14/PCIe0"
-TNbar1 0x800E00
+tn_ll_mmi_read 0x800E00
 echo "C_SUB_ADDR_HC_INTERRUPT Port14/PCIe0"
-TNbar1 0x800E04
+tn_ll_mmi_read 0x800E04
 echo "C_SUB_ADDR_HC_INTERRUPT_EN Port14/PCIe0"
-TNbar1 0x800E08
+tn_ll_mmi_read 0x800E08
 echo "C_SUB_ADDR_HC_CNT_BAD_FRAMES Port15/PCIe1"
-TNbar1 0x800F00
+tn_ll_mmi_read 0x800F00
 echo "C_SUB_ADDR_HC_INTERRUPT Port15/PCIe1"
-TNbar1 0x800F04
+tn_ll_mmi_read 0x800F04
 echo "C_SUB_ADDR_HC_INTERRUPT_EN Port15/PCIe1"
-TNbar1 0x800F08
+tn_ll_mmi_read 0x800F08
 
 echo "C_BASE_ADDR_HT0 Word0"
-TNbar1 0x808000
+tn_ll_mmi_read 0x808000
 echo "C_BASE_ADDR_HT0 Word1"
-TNbar1 0x808004
+tn_ll_mmi_read 0x808004
 echo "C_BASE_ADDR_HT0 Word2"
-TNbar1 0x808008
+tn_ll_mmi_read 0x808008
 echo "C_BASE_ADDR_HT0 Word3"
-TNbar1 0x80800C
+tn_ll_mmi_read 0x80800C
 echo "C_BASE_ADDR_HT1 Word0"
-TNbar1 0x808100
+tn_ll_mmi_read 0x808100
 echo "C_BASE_ADDR_HT1 Word1"
-TNbar1 0x808104
+tn_ll_mmi_read 0x808104
 echo "C_BASE_ADDR_HT1 Word2"
-TNbar1 0x808108
+tn_ll_mmi_read 0x808108
 echo "C_BASE_ADDR_HT1 Word3"
-TNbar1 0x80810C
+tn_ll_mmi_read 0x80810C
 echo "C_BASE_ADDR_HT2 Word0"
-TNbar1 0x808200
+tn_ll_mmi_read 0x808200
 echo "C_BASE_ADDR_HT2 Word1"
-TNbar1 0x808204
+tn_ll_mmi_read 0x808204
 echo "C_BASE_ADDR_HT2 Word2"
-TNbar1 0x808208
+tn_ll_mmi_read 0x808208
 echo "C_BASE_ADDR_HT2 Word3"
-TNbar1 0x80820C
+tn_ll_mmi_read 0x80820C
 echo "C_BASE_ADDR_HT3 Word0"
-TNbar1 0x808300
+tn_ll_mmi_read 0x808300
 echo "C_BASE_ADDR_HT3 Word1"
-TNbar1 0x808304
+tn_ll_mmi_read 0x808304
 echo "C_BASE_ADDR_HT3 Word2"
-TNbar1 0x808308
+tn_ll_mmi_read 0x808308
 echo "C_BASE_ADDR_HT3 Word3"
-TNbar1 0x80830C
+tn_ll_mmi_read 0x80830C
 echo "C_BASE_ADDR_HT4 Word0"
-TNbar1 0x808400
+tn_ll_mmi_read 0x808400
 echo "C_BASE_ADDR_HT4 Word1"
-TNbar1 0x808404
+tn_ll_mmi_read 0x808404
 echo "C_BASE_ADDR_HT4 Word2"
-TNbar1 0x808408
+tn_ll_mmi_read 0x808408
 echo "C_BASE_ADDR_HT4 Word3"
-TNbar1 0x80840C
+tn_ll_mmi_read 0x80840C
 echo "C_BASE_ADDR_HT5 Word0"
-TNbar1 0x808500
+tn_ll_mmi_read 0x808500
 echo "C_BASE_ADDR_HT5 Word1"
-TNbar1 0x808504
+tn_ll_mmi_read 0x808504
 echo "C_BASE_ADDR_HT5 Word2"
-TNbar1 0x808508
+tn_ll_mmi_read 0x808508
 echo "C_BASE_ADDR_HT5 Word3"
-TNbar1 0x80850C
+tn_ll_mmi_read 0x80850C
 echo "C_BASE_ADDR_HT6 Word0"
-TNbar1 0x808600
+tn_ll_mmi_read 0x808600
 echo "C_BASE_ADDR_HT6 Word1"
-TNbar1 0x808604
+tn_ll_mmi_read 0x808604
 echo "C_BASE_ADDR_HT6 Word2"
-TNbar1 0x808608
+tn_ll_mmi_read 0x808608
 echo "C_BASE_ADDR_HT6 Word3"
-TNbar1 0x80860C
+tn_ll_mmi_read 0x80860C
 echo "C_BASE_ADDR_HT7 Word0"
-TNbar1 0x808700
+tn_ll_mmi_read 0x808700
 echo "C_BASE_ADDR_HT7 Word1"
-TNbar1 0x808704
+tn_ll_mmi_read 0x808704
 echo "C_BASE_ADDR_HT7 Word2"
-TNbar1 0x808708
+tn_ll_mmi_read 0x808708
 echo "C_BASE_ADDR_HT7 Word3"
-TNbar1 0x80870C
+tn_ll_mmi_read 0x80870C
 echo "C_BASE_ADDR_HT8 Word0"
-TNbar1 0x808800
+tn_ll_mmi_read 0x808800
 echo "C_BASE_ADDR_HT8 Word1"
-TNbar1 0x808804
+tn_ll_mmi_read 0x808804
 echo "C_BASE_ADDR_HT8 Word2"
-TNbar1 0x808808
+tn_ll_mmi_read 0x808808
 echo "C_BASE_ADDR_HT8 Word3"
-TNbar1 0x80880C
+tn_ll_mmi_read 0x80880C
 echo "C_BASE_ADDR_HT9 Word0"
-TNbar1 0x808900
+tn_ll_mmi_read 0x808900
 echo "C_BASE_ADDR_HT9 Word1"
-TNbar1 0x808904
+tn_ll_mmi_read 0x808904
 echo "C_BASE_ADDR_HT9 Word2"
-TNbar1 0x808908
+tn_ll_mmi_read 0x808908
 echo "C_BASE_ADDR_HT9 Word3"
-TNbar1 0x80890C
+tn_ll_mmi_read 0x80890C
 echo "C_BASE_ADDR_HT10 Word0"
-TNbar1 0x808A00
+tn_ll_mmi_read 0x808A00
 echo "C_BASE_ADDR_HT10 Word1"
-TNbar1 0x808A04
+tn_ll_mmi_read 0x808A04
 echo "C_BASE_ADDR_HT10 Word2"
-TNbar1 0x808A08
+tn_ll_mmi_read 0x808A08
 echo "C_BASE_ADDR_HT10 Word3"
-TNbar1 0x808A0C
+tn_ll_mmi_read 0x808A0C
 echo "C_BASE_ADDR_HT11 Word0"
-TNbar1 0x808B00
+tn_ll_mmi_read 0x808B00
 echo "C_BASE_ADDR_HT11 Word1"
-TNbar1 0x808B04
+tn_ll_mmi_read 0x808B04
 echo "C_BASE_ADDR_HT11 Word2"
-TNbar1 0x808B08
+tn_ll_mmi_read 0x808B08
 echo "C_BASE_ADDR_HT11 Word3"
-TNbar1 0x808B0C
+tn_ll_mmi_read 0x808B0C
 echo "C_BASE_ADDR_HT12 Word0"
-TNbar1 0x808C00
+tn_ll_mmi_read 0x808C00
 echo "C_BASE_ADDR_HT12 Word1"
-TNbar1 0x808C04
+tn_ll_mmi_read 0x808C04
 echo "C_BASE_ADDR_HT12 Word2"
-TNbar1 0x808C08
+tn_ll_mmi_read 0x808C08
 echo "C_BASE_ADDR_HT12 Word3"
-TNbar1 0x808C0C
+tn_ll_mmi_read 0x808C0C
 echo "C_BASE_ADDR_HT13 Word0"
-TNbar1 0x808D00
+tn_ll_mmi_read 0x808D00
 echo "C_BASE_ADDR_HT13 Word1"
-TNbar1 0x808D04
+tn_ll_mmi_read 0x808D04
 echo "C_BASE_ADDR_HT13 Word2"
-TNbar1 0x808D08
+tn_ll_mmi_read 0x808D08
 echo "C_BASE_ADDR_HT13 Word3"
-TNbar1 0x808D0C
+tn_ll_mmi_read 0x808D0C
 echo "C_BASE_ADDR_HT14 Word0"
-TNbar1 0x808E00
+tn_ll_mmi_read 0x808E00
 echo "C_BASE_ADDR_HT14 Word1"
-TNbar1 0x808E04
+tn_ll_mmi_read 0x808E04
 echo "C_BASE_ADDR_HT14 Word2"
-TNbar1 0x808E08
+tn_ll_mmi_read 0x808E08
 echo "C_BASE_ADDR_HT14 Word3"
-TNbar1 0x808E0C
+tn_ll_mmi_read 0x808E0C
 echo "C_BASE_ADDR_HT15 Word0"
-TNbar1 0x808F00
+tn_ll_mmi_read 0x808F00
 echo "C_BASE_ADDR_HT15 Word1"
-TNbar1 0x808F04
+tn_ll_mmi_read 0x808F04
 echo "C_BASE_ADDR_HT15 Word2"
-TNbar1 0x808F08
+tn_ll_mmi_read 0x808F08
 echo "C_BASE_ADDR_HT15 Word3"
-TNbar1 0x808F0C
+tn_ll_mmi_read 0x808F0C
 
 echo "C_SUB_ADDR_ETH_SW_COMMON DP0"
-TNbar1 0x810000
+tn_ll_mmi_read 0x810000
 echo "C_SUB_ADDR_ETH_SW_NUM_SOF DP0"
-TNbar1 0x810010
+tn_ll_mmi_read 0x810010
 echo "C_SUB_ADDR_ETH_SW_NUM_LEARNED DP0"
-TNbar1 0x810014
+tn_ll_mmi_read 0x810014
 echo "C_SUB_ADDR_ETH_SW_NUM_AGED_OUT DP0"
-TNbar1 0x810018
+tn_ll_mmi_read 0x810018
 echo "C_SUB_ADDR_ETH_SW_NUM_FLOOD_UNKNOWN DP0"
-TNbar1 0x81001C
+tn_ll_mmi_read 0x81001C
 echo "C_SUB_ADDR_ETH_SW_NUM_FLOOD_FULL DP0"
-TNbar1 0x810020
+tn_ll_mmi_read 0x810020
 echo "C_SUB_ADDR_ETH_SW_NUM_PORT_ERROR DP0"
-TNbar1 0x810024
+tn_ll_mmi_read 0x810024
 echo "C_SUB_ADDR_ETH_SW_NUM_MATCH_SRC DP0"
-TNbar1 0x810028
+tn_ll_mmi_read 0x810028
 echo "C_SUB_ADDR_ETH_SW_NUM_MATCH_DST DP0"
-TNbar1 0x81002C
+tn_ll_mmi_read 0x81002C
 echo "C_SUB_ADDR_ETH_SW_CMP_SRC_MATCH_L DP0"
-TNbar1 0x810030
+tn_ll_mmi_read 0x810030
 echo "C_SUB_ADDR_ETH_SW_CMP_SRC_MATCH_H DP0"
-TNbar1 0x810034
+tn_ll_mmi_read 0x810034
 echo "C_SUB_ADDR_ETH_SW_CMP_DST_MATCH_L DP0"
-TNbar1 0x810038
+tn_ll_mmi_read 0x810038
 echo "C_SUB_ADDR_ETH_SW_CMP_DST_MATCH_H DP0"
-TNbar1 0x81003C
+tn_ll_mmi_read 0x81003C
 echo "C_SUB_ADDR_ETH_SW_TABLE_ADDR DP0"
-TNbar1 0x810050
+tn_ll_mmi_read 0x810050
 echo "C_SUB_ADDR_ETH_SW_TABLE_DATA_L DP0"
-TNbar1 0x810054
+tn_ll_mmi_read 0x810054
 echo "C_SUB_ADDR_ETH_SW_TABLE_DATA_H DP0"
-TNbar1 0x810058
+tn_ll_mmi_read 0x810058
 echo "C_SUB_ADDR_ETH_SW_BUCKET_FILL_7_0 DP0"
-TNbar1 0x810060
+tn_ll_mmi_read 0x810060
 echo "C_SUB_ADDR_ETH_SW_BUCKET_FILL_15_8 DP0"
-TNbar1 0x810064
+tn_ll_mmi_read 0x810064
 echo "C_SUB_ADDR_ETH_SW_BUCKET_FILL_23_16 DP0"
-TNbar1 0x810068
+tn_ll_mmi_read 0x810068
 echo "C_SUB_ADDR_ETH_SW_BUCKET_FILL_31_24 DP0"
-TNbar1 0x81006C
+tn_ll_mmi_read 0x81006C
 echo "C_SUB_ADDR_ETH_SW_BUCKET_FILL_39_32 DP0"
-TNbar1 0x810070
+tn_ll_mmi_read 0x810070
 echo "C_SUB_ADDR_ETH_SW_BUCKET_FILL_47_40 DP0"
-TNbar1 0x810074
+tn_ll_mmi_read 0x810074
 echo "C_SUB_ADDR_ETH_SW_BUCKET_FILL_55_48 DP0"
-TNbar1 0x810078
+tn_ll_mmi_read 0x810078
 echo "C_SUB_ADDR_ETH_SW_BUCKET_FILL_63_56 DP0"
-TNbar1 0x81007C
+tn_ll_mmi_read 0x81007C
 echo "C_SUB_ADDR_ETH_SW_BUCKET_FILL_71_64 DP0"
-TNbar1 0x810080
+tn_ll_mmi_read 0x810080
 echo "C_SUB_ADDR_ETH_SW_BUCKET_FILL_79_72 DP0"
-TNbar1 0x810084
+tn_ll_mmi_read 0x810084
 echo "C_SUB_ADDR_ETH_SW_BUCKET_FILL_87_80 DP0"
-TNbar1 0x810088
+tn_ll_mmi_read 0x810088
 echo "C_SUB_ADDR_ETH_SW_BUCKET_FILL_95_88 DP0"
-TNbar1 0x81008C
+tn_ll_mmi_read 0x81008C
 echo "C_SUB_ADDR_ETH_SW_BUCKET_FILL_103_96 DP0"
-TNbar1 0x810090
+tn_ll_mmi_read 0x810090
 echo "C_SUB_ADDR_ETH_SW_BUCKET_FILL_111_104 DP0"
-TNbar1 0x810094
+tn_ll_mmi_read 0x810094
 echo "C_SUB_ADDR_ETH_SW_BUCKET_FILL_119_112 DP0"
-TNbar1 0x810098
+tn_ll_mmi_read 0x810098
 echo "C_SUB_ADDR_ETH_SW_BUCKET_FILL_127_120 DP0"
-TNbar1 0x81009C
+tn_ll_mmi_read 0x81009C
 echo "C_SUB_ADDR_ETH_SW_COMMON DP1"
-TNbar1 0x820000
+tn_ll_mmi_read 0x820000
 echo "C_SUB_ADDR_ETH_SW_NUM_SOF DP1"
-TNbar1 0x820010
+tn_ll_mmi_read 0x820010
 echo "C_SUB_ADDR_ETH_SW_NUM_LEARNED DP1"
-TNbar1 0x820014
+tn_ll_mmi_read 0x820014
 echo "C_SUB_ADDR_ETH_SW_NUM_AGED_OUT DP1"
-TNbar1 0x820018
+tn_ll_mmi_read 0x820018
 echo "C_SUB_ADDR_ETH_SW_NUM_FLOOD_UNKNOWN DP1"
-TNbar1 0x82001C
+tn_ll_mmi_read 0x82001C
 echo "C_SUB_ADDR_ETH_SW_NUM_FLOOD_FULL DP1"
-TNbar1 0x820020
+tn_ll_mmi_read 0x820020
 echo "C_SUB_ADDR_ETH_SW_NUM_PORT_ERROR DP1"
-TNbar1 0x820024
+tn_ll_mmi_read 0x820024
 echo "C_SUB_ADDR_ETH_SW_NUM_MATCH_SRC DP1"
-TNbar1 0x820028
+tn_ll_mmi_read 0x820028
 echo "C_SUB_ADDR_ETH_SW_NUM_MATCH_DST DP1"
-TNbar1 0x82002C
+tn_ll_mmi_read 0x82002C
 echo "C_SUB_ADDR_ETH_SW_CMP_SRC_MATCH_L DP1"
-TNbar1 0x820030
+tn_ll_mmi_read 0x820030
 echo "C_SUB_ADDR_ETH_SW_CMP_SRC_MATCH_H DP1"
-TNbar1 0x820034
+tn_ll_mmi_read 0x820034
 echo "C_SUB_ADDR_ETH_SW_CMP_DST_MATCH_L DP1"
-TNbar1 0x820038
+tn_ll_mmi_read 0x820038
 echo "C_SUB_ADDR_ETH_SW_CMP_DST_MATCH_H DP1"
-TNbar1 0x82003C
+tn_ll_mmi_read 0x82003C
 echo "C_SUB_ADDR_ETH_SW_TABLE_ADDR DP1"
-TNbar1 0x820050
+tn_ll_mmi_read 0x820050
 echo "C_SUB_ADDR_ETH_SW_TABLE_DATA_L DP1"
-TNbar1 0x820054
+tn_ll_mmi_read 0x820054
 echo "C_SUB_ADDR_ETH_SW_TABLE_DATA_H DP1"
-TNbar1 0x820058
+tn_ll_mmi_read 0x820058
 echo "C_SUB_ADDR_ETH_SW_BUCKET_FILL_7_0 DP1"
-TNbar1 0x820060
+tn_ll_mmi_read 0x820060
 echo "C_SUB_ADDR_ETH_SW_BUCKET_FILL_15_8 DP1"
-TNbar1 0x820064
+tn_ll_mmi_read 0x820064
 echo "C_SUB_ADDR_ETH_SW_BUCKET_FILL_23_16 DP1"
-TNbar1 0x820068
+tn_ll_mmi_read 0x820068
 echo "C_SUB_ADDR_ETH_SW_BUCKET_FILL_31_24 DP1"
-TNbar1 0x82006C
+tn_ll_mmi_read 0x82006C
 echo "C_SUB_ADDR_ETH_SW_BUCKET_FILL_39_32 DP1"
-TNbar1 0x820070
+tn_ll_mmi_read 0x820070
 echo "C_SUB_ADDR_ETH_SW_BUCKET_FILL_47_40 DP1"
-TNbar1 0x820074
+tn_ll_mmi_read 0x820074
 echo "C_SUB_ADDR_ETH_SW_BUCKET_FILL_55_48 DP1"
-TNbar1 0x820078
+tn_ll_mmi_read 0x820078
 echo "C_SUB_ADDR_ETH_SW_BUCKET_FILL_63_56 DP1"
-TNbar1 0x82007C
+tn_ll_mmi_read 0x82007C
 echo "C_SUB_ADDR_ETH_SW_BUCKET_FILL_71_64 DP1"
-TNbar1 0x820080
+tn_ll_mmi_read 0x820080
 echo "C_SUB_ADDR_ETH_SW_BUCKET_FILL_79_72 DP1"
-TNbar1 0x820084
+tn_ll_mmi_read 0x820084
 echo "C_SUB_ADDR_ETH_SW_BUCKET_FILL_87_80 DP1"
-TNbar1 0x820088
+tn_ll_mmi_read 0x820088
 echo "C_SUB_ADDR_ETH_SW_BUCKET_FILL_95_88 DP1"
-TNbar1 0x82008C
+tn_ll_mmi_read 0x82008C
 echo "C_SUB_ADDR_ETH_SW_BUCKET_FILL_103_96 DP1"
-TNbar1 0x820090
+tn_ll_mmi_read 0x820090
 echo "C_SUB_ADDR_ETH_SW_BUCKET_FILL_111_104 DP1"
-TNbar1 0x820094
+tn_ll_mmi_read 0x820094
 echo "C_SUB_ADDR_ETH_SW_BUCKET_FILL_119_112 DP1"
-TNbar1 0x820098
+tn_ll_mmi_read 0x820098
 echo "C_SUB_ADDR_ETH_SW_BUCKET_FILL_127_120 DP1"
-TNbar1 0x82009C
+tn_ll_mmi_read 0x82009C
 
-echo "C_BASE_ADDR_STATISTIC_LOWER DP0 Word0"
-TNbar1 0x830000
-echo "C_BASE_ADDR_STATISTIC_LOWER DP0 Word1"
-TNbar1 0x830004
-echo "C_BASE_ADDR_STATISTIC_LOWER DP0 Word2"
-TNbar1 0x830008
-echo "C_BASE_ADDR_STATISTIC_LOWER DP0 Word3"
-TNbar1 0x83000C
-echo "C_BASE_ADDR_STATISTIC_LOWER DP1 Word0"
-TNbar1 0x850000
-echo "C_BASE_ADDR_STATISTIC_LOWER DP1 Word1"
-TNbar1 0x850004
-echo "C_BASE_ADDR_STATISTIC_LOWER DP1 Word2"
-TNbar1 0x850008
-echo "C_BASE_ADDR_STATISTIC_LOWER DP1 Word3"
-TNbar1 0x85000C
+echo "C_BASE_ADDR_STATISTIC_BADRSN_LOWER DP0 Word0"
+tn_ll_mmi_read 0x830000
+echo "C_BASE_ADDR_STATISTIC_BADRSN_LOWER DP0 Word1"
+tn_ll_mmi_read 0x830004
+echo "C_BASE_ADDR_STATISTIC_BADRSN_LOWER DP0 Word2"
+tn_ll_mmi_read 0x830008
+echo "C_BASE_ADDR_STATISTIC_BADRSN_LOWER DP0 Word3"
+tn_ll_mmi_read 0x83000C
+echo "C_BASE_ADDR_STATISTIC_BADRSN_LOWER DP1 Word0"
+tn_ll_mmi_read 0x850000
+echo "C_BASE_ADDR_STATISTIC_BADRSN_LOWER DP1 Word1"
+tn_ll_mmi_read 0x850004
+echo "C_BASE_ADDR_STATISTIC_BADRSN_LOWER DP1 Word2"
+tn_ll_mmi_read 0x850008
+echo "C_BASE_ADDR_STATISTIC_BADRSN_LOWER DP1 Word3"
+tn_ll_mmi_read 0x85000C
+
+echo "C_BASE_ADDR_STATISTIC_PKT_CNT_LOWER_0 DP0 Word 0"
+tn_ll_mmi_read 0x831000
+echo "C_BASE_ADDR_STATISTIC_PKT_CNT_LOWER_0 DP0 Word 1"
+tn_ll_mmi_read 0x831004
+echo "C_BASE_ADDR_STATISTIC_PKT_CNT_LOWER_0 DP0 Word 2"
+tn_ll_mmi_read 0x831008
+echo "C_BASE_ADDR_STATISTIC_PKT_CNT_LOWER_0 DP0 Word 3"
+tn_ll_mmi_read 0x83100c
+echo "C_BASE_ADDR_STATISTIC_PKT_CNT_LOWER_1 DP1 Word 0"
+tn_ll_mmi_read 0x851000
+echo "C_BASE_ADDR_STATISTIC_PKT_CNT_LOWER_1 DP1 Word 1"
+tn_ll_mmi_read 0x851004
+echo "C_BASE_ADDR_STATISTIC_PKT_CNT_LOWER_1 DP1 Word 2"
+tn_ll_mmi_read 0x851008
+echo "C_BASE_ADDR_STATISTIC_PKT_CNT_LOWER_1 DP1 Word 3"
+tn_ll_mmi_read 0x85100c
+
+echo "C_BASE_ADDR_STATISTIC_GOOD_FLOWID_LOWER_0 DP0 Word 0"
+tn_ll_mmi_read 0x832000
+echo "C_BASE_ADDR_STATISTIC_GOOD_FLOWID_LOWER_0 DP0 Word 1"
+tn_ll_mmi_read 0x832004
+echo "C_BASE_ADDR_STATISTIC_GOOD_FLOWID_LOWER_0 DP0 Word 2"
+tn_ll_mmi_read 0x832008
+echo "C_BASE_ADDR_STATISTIC_GOOD_FLOWID_LOWER_0 DP0 Word 3"
+tn_ll_mmi_read 0x83200c
+echo "C_BASE_ADDR_STATISTIC_GOOD_FLOWID_LOWER_1 DP1 Word 0"
+tn_ll_mmi_read 0x852000
+echo "C_BASE_ADDR_STATISTIC_GOOD_FLOWID_LOWER_1 DP1 Word 1"
+tn_ll_mmi_read 0x852004
+echo "C_BASE_ADDR_STATISTIC_GOOD_FLOWID_LOWER_1 DP1 Word 2"
+tn_ll_mmi_read 0x852008
+echo "C_BASE_ADDR_STATISTIC_GOOD_FLOWID_LOWER_1 DP1 Word 3"
+tn_ll_mmi_read 0x85200c
+
+echo "C_BASE_ADDR_STATISTIC_GOOD_INPRT_LOWER_0 DP0 Word 0"
+tn_ll_mmi_read 0x833000
+echo "C_BASE_ADDR_STATISTIC_GOOD_INPRT_LOWER_0 DP0 Word 1"
+tn_ll_mmi_read 0x833004
+echo "C_BASE_ADDR_STATISTIC_GOOD_INPRT_LOWER_0 DP0 Word 2"
+tn_ll_mmi_read 0x833008
+echo "C_BASE_ADDR_STATISTIC_GOOD_INPRT_LOWER_0 DP0 Word 3"
+tn_ll_mmi_read 0x83300c
+echo "C_BASE_ADDR_STATISTIC_GOOD_INPRT_LOWER_1 DP1 Word 0"
+tn_ll_mmi_read 0x853000
+echo "C_BASE_ADDR_STATISTIC_GOOD_INPRT_LOWER_1 DP1 Word 1"
+tn_ll_mmi_read 0x853004
+echo "C_BASE_ADDR_STATISTIC_GOOD_INPRT_LOWER_1 DP1 Word 2"
+tn_ll_mmi_read 0x853008
+echo "C_BASE_ADDR_STATISTIC_GOOD_INPRT_LOWER_1 DP1 Word 3"
+tn_ll_mmi_read 0x85300c
 
 echo "C_SUB_ADDR_USER_MOD_MMI_ID"
-TNbar1 0x880000
+tn_ll_mmi_read 0x880000
 echo "C_SUB_ADDR_USER_MOD_MMI_BEEP_EN"
-TNbar1 0x880004
+tn_ll_mmi_read 0x880004
 echo "C_SUB_ADDR_USER_MOD_MMI_DISPLAY_EN"
-TNbar1 0x880008
+tn_ll_mmi_read 0x880008
 echo "C_SUB_ADDR_USER_MOD_MMI_PKT_CNT0"
-TNbar1 0x88000C
+tn_ll_mmi_read 0x88000C
 echo "C_SUB_ADDR_USER_MOD_MMI_PKT_CNT_WIDE0"
-TNbar1 0x880010
+tn_ll_mmi_read 0x880010
 echo "C_SUB_ADDR_USER_MOD_MMI_PKT_CNT1"
-TNbar1 0x880014
+tn_ll_mmi_read 0x880014
 echo "C_SUB_ADDR_USER_MOD_MMI_PKT_CNT_WIDE1"
-TNbar1 0x880018
+tn_ll_mmi_read 0x880018
 
 echo "C_BASE_ADDR_NOC_ACTION_LOWER Word0"
-TNbar1 0x890000
+tn_ll_mmi_read 0x890000
 echo "C_BASE_ADDR_NOC_ACTION_LOWER Word1"
-TNbar1 0x890004
+tn_ll_mmi_read 0x890004
 echo "C_BASE_ADDR_NOC_ACTION_LOWER Word2"
-TNbar1 0x890008
+tn_ll_mmi_read 0x890008
 echo "C_BASE_ADDR_NOC_ACTION_LOWER Word3"
-TNbar1 0x89000C
+tn_ll_mmi_read 0x89000C
 
 echo "C_BASE_ADDR_FLOW_CACHE_HASH_LOWER Word0"
-TNbar1 0x900000
+tn_ll_mmi_read 0x900000
 echo "C_BASE_ADDR_FLOW_CACHE_HASH_LOWER Word1"
-TNbar1 0x900004
+tn_ll_mmi_read 0x900004
 echo "C_BASE_ADDR_FLOW_CACHE_HASH_LOWER Word2"
-TNbar1 0x900008
+tn_ll_mmi_read 0x900008
 echo "C_BASE_ADDR_FLOW_CACHE_HASH_LOWER Word3"
-TNbar1 0x90000C
+tn_ll_mmi_read 0x90000C
 echo "C_BASE_ADDR_FLOW_CACHE_FIELD_LOWER Word0"
-TNbar1 0xB00000
+tn_ll_mmi_read 0xB00000
 echo "C_BASE_ADDR_FLOW_CACHE_FIELD_LOWER Word1"
-TNbar1 0xB00004
+tn_ll_mmi_read 0xB00004
 echo "C_BASE_ADDR_FLOW_CACHE_FIELD_LOWER Word2"
-TNbar1 0xB00008
+tn_ll_mmi_read 0xB00008
 echo "C_BASE_ADDR_FLOW_CACHE_FIELD_LOWER Word3"
-TNbar1 0xB0000C
+tn_ll_mmi_read 0xB0000C
+echo "C_BASE_ADDR_FLOW_CACHE_FIELD_LOWER Word4"
+tn_ll_mmi_read 0xB00010
+echo "C_BASE_ADDR_FLOW_CACHE_FIELD_LOWER Word5"
+tn_ll_mmi_read 0xB00014
+echo "C_BASE_ADDR_FLOW_CACHE_FIELD_LOWER Word6"
+tn_ll_mmi_read 0xB00018
+echo "C_BASE_ADDR_FLOW_CACHE_FIELD_LOWER Word7"
+tn_ll_mmi_read 0xB0001C
+echo "C_BASE_ADDR_FLOW_CACHE_FIELD_LOWER Word8"
+tn_ll_mmi_read 0xB00020
 echo "C_BASE_ADDR_FLOW_CACHE_LINEAR_LOWER Word0"
-TNbar1 0xC00000
+tn_ll_mmi_read 0xC00000
 echo "C_BASE_ADDR_FLOW_CACHE_LINEAR_LOWER Word1"
-TNbar1 0xC00004
+tn_ll_mmi_read 0xC00004
 echo "C_BASE_ADDR_FLOW_CACHE_LINEAR_LOWER Word2"
-TNbar1 0xC00008
+tn_ll_mmi_read 0xC00008
 echo "C_BASE_ADDR_FLOW_CACHE_LINEAR_LOWER Word3"
-TNbar1 0xC0000C
+tn_ll_mmi_read 0xC0000C
+echo "C_BASE_ADDR_FLOW_CACHE_LINEAR_LOWER Word4"
+tn_ll_mmi_read 0xC00010
+echo "C_BASE_ADDR_FLOW_CACHE_LINEAR_LOWER Word5"
+tn_ll_mmi_read 0xC00014
+echo "C_BASE_ADDR_FLOW_CACHE_LINEAR_LOWER Word6"
+tn_ll_mmi_read 0xC00018
+echo "C_BASE_ADDR_FLOW_CACHE_LINEAR_LOWER Word7"
+tn_ll_mmi_read 0xC0001C
+echo "C_BASE_ADDR_FLOW_CACHE_LINEAR_LOWER Word8"
+tn_ll_mmi_read 0xC00020
 echo "C_BASE_ADDR_FLOW_CACHE_EMA_LOWER Word0"
-TNbar1 0xC10000
+tn_ll_mmi_read 0xC10000
 echo "C_BASE_ADDR_FLOW_CACHE_EMA_LOWER Word1"
-TNbar1 0xC10004
+tn_ll_mmi_read 0xC10004
 echo "C_BASE_ADDR_FLOW_CACHE_EMA_LOWER Word2"
-TNbar1 0xC10008
+tn_ll_mmi_read 0xC10008
 echo "C_BASE_ADDR_FLOW_CACHE_EMA_LOWER Word3"
-TNbar1 0xC1000C
+tn_ll_mmi_read 0xC1000C
+echo "C_BASE_ADDR_FLOW_CACHE_EMA_LOWER Word4"
+tn_ll_mmi_read 0xC10010
+echo "C_BASE_ADDR_FLOW_CACHE_EMA_LOWER Word5"
+tn_ll_mmi_read 0xC10014
+echo "C_BASE_ADDR_FLOW_CACHE_EMA_LOWER Word6"
+tn_ll_mmi_read 0xC10018
+echo "C_BASE_ADDR_FLOW_CACHE_EMA_LOWER Word7"
+tn_ll_mmi_read 0xC1001C
+echo "C_BASE_ADDR_FLOW_CACHE_EMA_LOWER Word8"
+tn_ll_mmi_read 0xC10020
 echo "C_BASE_ADDR_FLOW_CACHE_EMA_CAM Word0"
-TNbar1 0xC20000
+tn_ll_mmi_read 0xC20000
 echo "C_BASE_ADDR_FLOW_CACHE_EMA_CAM Word1"
-TNbar1 0xC20004
+tn_ll_mmi_read 0xC20004
 echo "C_BASE_ADDR_FLOW_CACHE_EMA_CAM Word2"
-TNbar1 0xC20008
+tn_ll_mmi_read 0xC20008
 echo "C_BASE_ADDR_FLOW_CACHE_EMA_CAM Word3"
-TNbar1 0xC2000C
+tn_ll_mmi_read 0xC2000C
 echo "C_BASE_ADDR_FLOW_CACHE"
-TNbar1 0xC30000
+tn_ll_mmi_read 0xC30000
 
 echo "C_SUB_ADDR_TM_QUEUE_THRES_FULL"
-TNbar1 0xD00000
-echo "C_BASE_ADDR_TM_SCHED_LOWER"
-TNbar1 0xD10000
+tn_ll_mmi_read 0xD00000
+
+echo "C_TM_SCHED_TAS_GATE_ENABLE: TAS disable"
+tn_ll_mmi_write 0xD20418 0x00000000
+tn_ll_mmi_write 0xD20C18 0x00000000
+tn_ll_mmi_write 0xD21418 0x00000000
+tn_ll_mmi_write 0xD21C18 0x00000000
+tn_ll_mmi_write 0xD22418 0x00000000
+tn_ll_mmi_write 0xD22C18 0x00000000
+tn_ll_mmi_write 0xD23418 0x00000000
+tn_ll_mmi_write 0xD23C18 0x00000000
+tn_ll_mmi_write 0xD24418 0x00000000
+tn_ll_mmi_write 0xD24C18 0x00000000
+tn_ll_mmi_write 0xD25418 0x00000000
+tn_ll_mmi_write 0xD25C18 0x00000000
+tn_ll_mmi_write 0xD26418 0x00000000
+tn_ll_mmi_write 0xD26C18 0x00000000
+tn_ll_mmi_write 0xD27418 0x00000000
+tn_ll_mmi_write 0xD27C18 0x00000000
+
+echo "C_TM_SCHED_TAS_ADMIN_GATE_STATES: TAS default output xFF"
+tn_ll_mmi_write 0xD20438 0x000000FF
+tn_ll_mmi_write 0xD20C38 0x000000FF
+tn_ll_mmi_write 0xD21438 0x000000FF
+tn_ll_mmi_write 0xD21C38 0x000000FF
+tn_ll_mmi_write 0xD22438 0x000000FF
+tn_ll_mmi_write 0xD22C38 0x000000FF
+tn_ll_mmi_write 0xD23438 0x000000FF
+tn_ll_mmi_write 0xD23C38 0x000000FF
+tn_ll_mmi_write 0xD24438 0x000000FF
+tn_ll_mmi_write 0xD24C38 0x000000FF
+tn_ll_mmi_write 0xD25438 0x000000FF
+tn_ll_mmi_write 0xD25C38 0x000000FF
+tn_ll_mmi_write 0xD26438 0x000000FF
+tn_ll_mmi_write 0xD26C38 0x000000FF
+tn_ll_mmi_write 0xD27438 0x000000FF
+tn_ll_mmi_write 0xD27C38 0x000000FF
+
+echo "C_TM_SCHED_TAS_CUR_TIME"
+read 00D20544
+
+echo "TAS output port 0 for 4 entries"
+echo "C_TM_SCHED_GCL_LOWER: the gcl entries"
+tn_ll_mmi_write 0xD20000 0x00000055
+tn_ll_mmi_write 0xD20004 0x000000AA
+tn_ll_mmi_write 0xD20008 0x00000055
+tn_ll_mmi_write 0xD2000C 0x000000AA
+tn_ll_mmi_write 0xD20010 0x00000055
+echo "C_TM_SCHED_GCL_TIME_LOWER"
+tn_ll_mmi_write 0xD20200 0x00005000
+tn_ll_mmi_write 0xD20204 0x00005010
+tn_ll_mmi_write 0xD20208 0x00005020
+tn_ll_mmi_write 0xD2020C 0x00005030
+tn_ll_mmi_write 0xD20210 0x00005040
+echo "C_TM_SCHED_TAS_CONFIG_REG_LOWER"
+tn_ll_mmi_write 0xD20400 0x00000004
+tn_ll_mmi_write 0xD20404 0x00005000
+tn_ll_mmi_write 0xD20408 0x00014000
+tn_ll_mmi_write 0xD2040C 0x00000000
+tn_ll_mmi_write 0xD20410 0x00005000
+tn_ll_mmi_write 0xD20414 0x00005000
+tn_ll_mmi_write 0xD20418 0x00000001
+tn_ll_mmi_write 0xD2041C 0x00000001
+tn_ll_mmi_write 0xD2041C 0x00000000
+
+echo "TAS output port 1 for 4 entries"
+echo "C_TM_SCHED_GCL_LOWER: the gcl entries"
+tn_ll_mmi_write 0xD20800 0x00000055
+tn_ll_mmi_write 0xD20804 0x000000AA
+tn_ll_mmi_write 0xD20808 0x00000055
+tn_ll_mmi_write 0xD2080C 0x000000AA
+tn_ll_mmi_write 0xD20810 0x00000055
+echo "C_TM_SCHED_GCL_TIME_LOWER"
+tn_ll_mmi_write 0xD20A00 0x00005000
+tn_ll_mmi_write 0xD20A04 0x00005010
+tn_ll_mmi_write 0xD20A08 0x00005020
+tn_ll_mmi_write 0xD20A0C 0x00005030
+tn_ll_mmi_write 0xD20A10 0x00005040
+echo "C_TM_SCHED_TAS_CONFIG_REG_LOWER"
+tn_ll_mmi_write 0xD20C00 0x00000004
+tn_ll_mmi_write 0xD20C04 0x00005000
+tn_ll_mmi_write 0xD20C08 0x00014000
+tn_ll_mmi_write 0xD20C0C 0x00000000
+tn_ll_mmi_write 0xD20C10 0x00005000
+tn_ll_mmi_write 0xD20C14 0x00005000
+tn_ll_mmi_write 0xD20C18 0x00000001
+tn_ll_mmi_write 0xD20C1C 0x00000001
+tn_ll_mmi_write 0xD20C1C 0x00000000
+
+echo "C_TM_SCHED_TAS_ADMIN_GCL_LEN: read TAS 0"
+tn_ll_mmi_read 0xD20400
+echo "C_TM_SCHED_TAS_ADMIN_BASE_TIME"
+tn_ll_mmi_read 0xD20404
+echo "C_TM_SCHED_TAS_ADMIN_CYCLE_TIME"
+tn_ll_mmi_read 0xD20408
+echo "C_TM_SCHED_TAS_ADMIN_CYCLE_TIME_EXT"
+tn_ll_mmi_read 0xD2040C
+echo "C_TM_SCHED_TAS_CONFIG_CHANGE_TIME"
+tn_ll_mmi_read 0xD20410
+echo "C_TM_SCHED_TAS_CYCLE_START_TIME"
+tn_ll_mmi_read 0xD20414
+echo "C_TM_SCHED_TAS_GATE_ENABLE"
+tn_ll_mmi_read 0xD20418
+echo "C_TM_SCHED_TAS_CONFIG_CHANGE"
+tn_ll_mmi_read 0xD2041C
+echo "C_TM_SCHED_TAS_CONFIG_CHANGE_PENDING"
+tn_ll_mmi_read 0xD20420
+echo "C_TM_SCHED_TAS_CONFIG_CHANGE_ACK"
+tn_ll_mmi_read 0xD20424
+echo "C_TM_SCHED_TAS_OPER_GCL_LEN"
+tn_ll_mmi_read 0xD20428
+echo "C_TM_SCHED_TAS_OPER_BASE_TIME"
+tn_ll_mmi_read 0xD2042C
+echo "C_TM_SCHED_TAS_OPER_CYCLE_TIME"
+tn_ll_mmi_read 0xD20430
+echo "C_TM_SCHED_TAS_OPER_CYCLE_TIME_EXT"
+tn_ll_mmi_read 0xD20434
+echo "C_TM_SCHED_TAS_ADMIN_GATE_STATES"
+tn_ll_mmi_read 0xD20438
+echo "C_TM_SCHED_TAS_OPER_GATE_STATES"
+tn_ll_mmi_read 0xD2043C
+
+echo "C_TM_SCHED_PROC_QUEUE_PRIO_LOWER"
+tn_ll_mmi_write 0xD20500 0x00000000
+echo "C_TM_SCHED_PROC_QUEUE_PRIO_HIGH"
+tn_ll_mmi_write 0xD20540 0x00000000
 
 echo "C_BASE_ADDR_TX_ROUTER_LOWER0 Word0"
-TNbar1 0xE10000
+tn_ll_mmi_read 0xE10000
 echo "C_BASE_ADDR_TX_ROUTER_LOWER0 Word1"
-TNbar1 0xE10004
+tn_ll_mmi_read 0xE10004
 echo "C_BASE_ADDR_TX_ROUTER_LOWER0 Word2"
-TNbar1 0xE10008
+tn_ll_mmi_read 0xE10008
 echo "C_BASE_ADDR_TX_ROUTER_LOWER0 Word3"
-TNbar1 0xE1000C
+tn_ll_mmi_read 0xE1000C
 echo "C_BASE_ADDR_TX_ROUTER_LOWER1 Word0"
-TNbar1 0xE20000
+tn_ll_mmi_read 0xE20000
 echo "C_BASE_ADDR_TX_ROUTER_LOWER1 Word1"
-TNbar1 0xE20004
+tn_ll_mmi_read 0xE20004
 echo "C_BASE_ADDR_TX_ROUTER_LOWER1 Word2"
-TNbar1 0xE20008
+tn_ll_mmi_read 0xE20008
 echo "C_BASE_ADDR_TX_ROUTER_LOWER1 Word3"
-TNbar1 0xE2000C
+tn_ll_mmi_read 0xE2000C
+
+echo "Done"

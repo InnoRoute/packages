@@ -1,8 +1,17 @@
 #!/bin/bash
 
 source /usr/share/InnoRoute/tn_env.sh
+source /usr/share/InnoRoute/tn_func_ll.sh
 
-echo "(Unmuting and) beeping once"
+if [[ $# == 0 ]]; then
+  echo "$0 <beep> is used to beep once"
+  echo "Parameter <beep> can have any value"
+  echo "If <beep> is given, the SystemController is unmuted and a single beep is issued."
+else
+  echo "Unmuting"
+  i2cset -y 0 0x04 0x03 0
+  echo "Beeping ..."
+  tn_ll_mmi_write $C_BASE_ADDR_PERIPH $C_SUB_ADDR_PERIPH_BEEP 1
 
-i2cset -y 0 0x04 0x03 0
-TNbar1 $(($C_BASE_ADDR_PERIPH*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_PERIPH_BEEP)) w 1 > /dev/null
+  echo "Done"
+fi
