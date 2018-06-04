@@ -20,9 +20,10 @@ case $TNmod in
 	5) TN_opto_prog  /usr/share/InnoRoute/tn_atom_ctrl.bin > /usr/share/InnoRoute/imageloader.log 2>&1 && echo "done";;
 	6) TN_opto_prog  /usr/share/InnoRoute/tn_fc.bit > /usr/share/InnoRoute/imageloader.log 2>&1 && echo "done";;
 	7) TN_opto_prog  /usr/share/InnoRoute/tn_combined.bit > /usr/share/InnoRoute/imageloader.log 2>&1 && echo "done";;
-	8) TN_opto_prog  /boot/trustnode_top.bit > /usr/share/InnoRoute/imageloader.log 2>&1 && echo "done";;
+	8) TN_opto_prog  /boot/trustnode_top.bit > /usr/share/InnoRoute/imageloader.log 2>&1 && /etc/init.d/TN_imageloader disable&& reboot && echo "done";;
 	9) TN_opto_prog  /usr/share/InnoRoute/trustnode_top_TSN.bit > /usr/share/InnoRoute/imageloader.log 2>&1 && /etc/init.d/TN_imageloader disable&& reboot&& echo "done";;
 	10) TN_opto_prog  /usr/share/InnoRoute/trustnode_top_110.bit > /usr/share/InnoRoute/imageloader.log 2>&1 && /etc/init.d/TN_imageloader disable&& reboot&& echo "done";;
+	11) TN_opto_prog  /usr/share/InnoRoute/tn_default.bit > /usr/share/InnoRoute/imageloader.log 2>&1 && /etc/init.d/TN_imageloader disable&& reboot&& echo "done";;
 	
 	*) echo "Invalid TrustNode modus or module deactivated" ;;
 esac
