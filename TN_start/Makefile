@@ -21,7 +21,7 @@ define Package/TN_start/install
 	$(INSTALL_DIR) $(1)/usr/share/InnoRoute/scripts
 	$(INSTALL_DIR) $(1)/boot
 	$(INSTALL_BIN) ./files/start_ovs.sh $(1)/usr/share/InnoRoute/scripts/
-#	$(INSTALL_CONF) ./files/INRsensor.conf $(1)/usr/share/InnoRoute/
+#	$(INSTALL_CONF) ./files/tn_sensor.conf $(1)/usr/share/InnoRoute/
 endef
 define Package/TN_start/postinst
 #!/bin/sh
