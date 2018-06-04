@@ -14,7 +14,7 @@ static irqreturn_t XPCIe_IRQHandler (int irq, void *dev_id);
 static irqreturn_t XPCIe_IRQHandler (int irq, void *dev_id, struct pt_regs *regs);
 #endif
 
-int INR_TX_push (struct net_device *nwdev,struct sk_buff *skb, uint8_t * data, uint16_t datalength, uint8_t eof, uint8_t port, uint8_t ll, uint8_t paged, uint16_t fragcount);
+int INR_TX_push (struct net_device *nwdev,struct sk_buff *skb, uint8_t * data, uint16_t datalength, uint8_t eof, uint8_t port, uint8_t ll, uint8_t paged, uint16_t fragcount,uint8_t time_queue);
 void INR_PCI_alloc_new_rx_skb (uint16_t current_descriptor, uint16_t ringindex);
 struct INR_PCI_rx_descriptor_ring_entry *INR_PCI_get_new_rx_descriptor_ring_entry (uint8_t index);
 int INR_PCI_rx_pageallocator (void *nix);
@@ -28,6 +28,10 @@ uint8_t get_tx_dbg(void);
 void set_russian(uint8_t mode);
 uint8_t get_russian(void);
 uint8_t get_INR_PCI_HW_timestamp (void);
+void INR_PCI_FPGA_PORT_status(uint8_t id, uint8_t status);
+uint8_t get_HW_user_feature(uint32_t featurerequest);
+void INR_PCI_BAR1_write_ext(uint32_t value,uint32_t addr);
+uint32_t INR_PCI_BAR1_read_ext(uint32_t addr);
 
 #define IfNotRuss if(TNrussian==0)
 
@@ -51,10 +55,10 @@ uint8_t get_INR_PCI_HW_timestamp (void);
 #define INR_PCI_BAR0_write64(content, addr)	writel(content&0xffffffff, (gBaseVirt0 + addr));writel((content>>32)&0xffffffff, (gBaseVirt0 + addr+0x4));	/*<write to bar0 */
 
 #define testdate_size 	300	/*<size of the dma-test packet in byte */
-#define data_size_rx 	64/*<size of the rx descriptors in byte*/	//das ist zu wenig...!
+#define data_size_rx 	72/*<size of the rx descriptors in byte*/	//das ist zu wenig...!
 #define data_size_tx 	64	/*<max fragmentsize of the transmitted packets in byte */
 #define INR_NW_TX_fragmentation 0	/*<enable TX fragmentation */
-#define zerocopy_rx	1	/*<enable rx zerocopy packet handling */
+#define zerocopy_rx	0	/*<enable rx zerocopy packet handling */
 #define zerocopy_tx	1	/*<enable tx zerocopy packet handling */
 #define INR_PCI_page_prealloc_count 32	/*<prealloc pages */
 
@@ -76,9 +80,15 @@ uint8_t get_INR_PCI_HW_timestamp (void);
 
 #define INR_PCI_enable_error_LED INR_PCI_BAR1_write(((INR_PCI_BAR1_read(INR_PCI_error_LED_addr))|(1<<10)),INR_PCI_error_LED_addr);
 #define INR_PCI_disable_error_LED INR_PCI_BAR1_write(((INR_PCI_BAR1_read(INR_PCI_error_LED_addr))&(~(1<<10))),INR_PCI_error_LED_addr);
+#ifndef C_PROC_PROV_NOC1
+	#define C_PROC_PROV_NOC1 0
+#endif
 
 #ifndef C_SUB_ADDR_COMMON_ADDR_MAP_REV
 	#define C_SUB_ADDR_COMMON_ADDR_MAP_REV 0
+#endif
+#ifndef C_BASE_ADDR_COMMON
+#define C_BASE_ADDR_COMMON C_BASE_ADDR_TN_COMMON_L
 #endif
 #ifndef C_BASE_ADDR_COMMON_L
 	#define C_BASE_ADDR_COMMON_L C_BASE_ADDR_COMMON
@@ -86,6 +96,11 @@ uint8_t get_INR_PCI_HW_timestamp (void);
 #ifndef C_BASE_ADDR_COMMON_LOWER
 	#define C_BASE_ADDR_COMMON_LOWER C_BASE_ADDR_COMMON_L
 #endif
+
+#define HW_feature_TAS (1<<0)
+#define HW_feature_frame_injection (1<<1)
+#define HW_feature_RTC (1<<2)
+#define HW_feature_TXconf (1<<3)
 
 //****************************************************************************************************************
 /**
@@ -95,6 +110,7 @@ struct INR_PCI_tx_descriptor_ring_entry
 {
     struct net_device *nwdev; /**<store network device*/
     struct sk_buff *skb; /**<store skb*/
+    uint8_t wait_for_timestamp:1; /**<TX timestamp request was set for this descriptor**/
     uint8_t eop:1;      /**<is last fragment of packet?*/
     uint8_t paged:1;    /**<is paged fragment?*/
     uint8_t *data;      /**<address of data*/

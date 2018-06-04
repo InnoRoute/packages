@@ -23,6 +23,7 @@
 #include "INR-PCI.h"
 #include "INR-NW.h"
 #include "INR-ctl.h"
+#include "INR-TIME.h"
 volatile uint8_t probed=0;
 static void remove (struct pci_dev *dev);
 
@@ -110,6 +111,7 @@ probe (struct pci_dev *dev, const struct pci_device_id *id)
     }
     INR_init_drv (dev);		//INIT pci and network
     INR_CTL_init_proc (dev);	//init proc fs
+    if (get_HW_user_feature(HW_feature_RTC))INR_TIME_init_ptp_clock(dev);//init ptp
     INR_STATUS_set (INR_STATUS_DRV_INIT_done);
     return 0;
 }
