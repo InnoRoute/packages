@@ -1,0 +1,10 @@
+--- a/include/linux/skbuff.h
++++ b/include/linux/skbuff.h_ext
+@@ -708,6 +708,7 @@
+ 				*data;
+ 	unsigned int		truesize;
+ 	atomic_t		users;
++	__u32			TN_extended;
+ };
+ 
+ #ifdef __KERNEL__
