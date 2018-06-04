@@ -11,4 +11,5 @@ void INR_PCI_MMI_write(uint32_t value, uint64_t addr);
 uint32_t INR_PCI_MMI_read(uint64_t addr);
 #define INR_PCI_BAR1_read(addr)		readl(gBaseVirt1_MMI+addr)	/*<read from bar1 */
 #define INR_PCI_BAR1_write(content, addr)	writel(content, (gBaseVirt1_MMI + addr))	/*<write to bar1 */
-
+#define INR_MMI_interrupt_status ((C_BASE_ADDR_BM<<8)|C_SUB_ADDR_BM_MMI_INTERRUPT)
+#define INR_MMI_interrupt_mask ((C_BASE_ADDR_MDIO<<8)|C_SUB_ADDR_MDIO_INTERRUPT_EN)
