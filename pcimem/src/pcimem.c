@@ -83,41 +83,44 @@ int main(int argc, char **argv) {
     //fflush(stdout);
 
     virt_addr = map_base + (target & MAP_MASK);
-    switch(access_type) {
-		case 'b':
-			read_result = *((uint8_t *) virt_addr);
-			break;
-		case 'h':
-			read_result = *((uint16_t *) virt_addr);
-			break;
-		case 'w':
-			read_result = *((uint32_t *) virt_addr);
-			break;
-		default:
-			fprintf(stderr, "Illegal data type '%c'.\n", access_type);
-			exit(2);
+	if(argc < 5) {
+		switch(access_type) {
+			case 'b':
+				read_result = *((uint8_t *) virt_addr);
+				break;
+			case 'h':
+				read_result = *((uint16_t *) virt_addr);
+				break;
+			case 'w':
+				read_result = *((uint32_t *) virt_addr);
+				break;
+			default:
+				fprintf(stderr, "Illegal data type '%c'.\n", access_type);
+				exit(2);
+		}
+		//printf("Value at offset 0x%X (%p): 0x%X\n", target, virt_addr, read_result);
+		printf("Value at offset 0x%X : 0x%X\n", target, read_result);
+		fflush(stdout);
 	}
-    //printf("Value at offset 0x%X (%p): 0x%X\n", target, virt_addr, read_result);
-    printf("Value at offset 0x%X : 0x%X\n", target, read_result);
-    fflush(stdout);
 
 	if(argc > 4) {
 		writeval = strtoul(argv[4], 0, 0);
 		switch(access_type) {
 			case 'b':
 				*((uint8_t *) virt_addr) = writeval;
-				read_result = *((uint8_t *) virt_addr);
+				//read_result = *((uint8_t *) virt_addr);
 				break;
 			case 'h':
 				*((uint16_t *) virt_addr) = writeval;
-				read_result = *((uint16_t *) virt_addr);
+				//read_result = *((uint16_t *) virt_addr);
 				break;
 			case 'w':
 				*((uint32_t *) virt_addr) = writeval;
-				read_result = *((uint32_t *) virt_addr);
+				//read_result = *((uint32_t *) virt_addr);
 				break;
 		}
-		printf("Written 0x%X; readback 0x%X\n", writeval, read_result);
+		//printf("Written 0x%X; readback 0x%X\n", writeval, read_result);
+		printf("Written 0x%X\n", writeval);
 		fflush(stdout);
 	}
 
