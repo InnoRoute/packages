@@ -107,14 +107,30 @@ printentry ()
 {uint8_t i=0;
 uint64_t baseaddress=0;
 printf("compiled: %s %s\n", __DATE__, __TIME__);
+#ifdef C_MMI_ADDR_MAP_REVISION 
 printconst(C_MMI_ADDR_MAP_REVISION);
+#endif
+#ifdef C_SUB_ADDR_COMMON_TN_MAJOR_REV
 printconst(C_SUB_ADDR_COMMON_TN_MAJOR_REV);
+#endif
+#ifdef C_SUB_ADDR_COMMON_TN_MINOR_REV
 printconst(C_SUB_ADDR_COMMON_TN_MINOR_REV);
+#endif
+#ifdef C_SUB_ADDR_COMMON_USER_REV
 printconst(C_SUB_ADDR_COMMON_USER_REV);
+#endif
+#ifdef C_SUB_ADDR_COMMON_ADDR_MAP_REV
 printconst(C_SUB_ADDR_COMMON_ADDR_MAP_REV);
+#endif
+#ifdef C_SUB_ADDR_MAC_6T_ADDR_L
 printconst(C_SUB_ADDR_MAC_6T_ADDR_L);
+#endif
+#ifdef C_SUB_ADDR_MAC_6T_ADDR_H
 printconst(C_SUB_ADDR_MAC_6T_ADDR_H);
+#endif
+#ifdef C_SUB_ADDR_MAC_6T_SRC_PTR
 printconst(C_SUB_ADDR_MAC_6T_SRC_PTR);
+#endif
 printconst(PHY0_base);
 for(i=0;i<12;i++){
   baseaddress=get_PHY_base(i);
@@ -152,6 +168,10 @@ main (int argc, char **argv)
   map_base  = mmap (0, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);//map files and mmi to memory
   if (map_base == (void *) -1)
     PRINT_ERROR;
+    if(ENABLE==0){
+    printf("6tree addresses not provided in tn_env.h\n");
+    goto done;
+    }
 if(argc==1) goto printhelp;//no parameters :/
   while ((i = getopt (argc, argv, "B:p:i:b:P")) != -1) {
     switch (i) {
