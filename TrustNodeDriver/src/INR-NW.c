@@ -140,6 +140,7 @@ INR_NW_open (struct net_device *nwdev)
     INR_LOG_debug (loglevel_info"HW-addr:%x Broadcast-addr:%x\n", nwdev->dev_addr, nwdev->broadcast);
     netif_start_queue (nwdev);
     INR_PCI_FPGA_PORT_status(priv->port,1);
+    netif_tx_start_all_queues(nwdev);
     return 0;
 }
 
@@ -152,6 +153,7 @@ int
 INR_NW_stop (struct net_device *nwdev)
 {
     struct INR_NW_priv *priv = netdev_priv (nwdev);
+    netif_tx_stop_all_queues(nwdev);
     INR_PCI_FPGA_PORT_status(priv->port,0);
     INR_LOG_debug (loglevel_info"NWDev stop\n");
     netif_stop_queue (nwdev);
@@ -180,6 +182,7 @@ INR_NW_tx (struct sk_buff *skb, struct net_device *nwdev)
         uint16_t TX_confirmastion_id=0;
         
         time_queue=0x3f&skb->TN_extended;
+        printk("INR_exended: %i\n",skb->TN_extended);
         // if(zerocopy_tx)skb_shinfo(skb)->tx_flags |= SKBTX_DEV_ZEROCOPY; //maybe this fix the memory drain
         //######Timestamping
         if (skb_shinfo(skb)->tx_flags & SKBTX_HW_TSTAMP) { //check if timestamp is requested
@@ -201,7 +204,7 @@ INR_NW_tx (struct sk_buff *skb, struct net_device *nwdev)
                 int i = 0;
                 if(get_INR_PCI_HW_timestamp()){
                 	uint64_t *timestamp = kmalloc (8, GFP_DMA | GFP_ATOMIC);
-                	ktime_t time=ktime_get();
+                	ktime_t time=ktime_get(); //real
                 	*timestamp=((uint64_t)TX_confirmastion_id<<32)|(0xffffffff&ktime_to_ns(time));
                 	error = INR_TX_push (nwdev,skb, timestamp, 8, 0, toport, get_send2cpu(), 0, 1,time_queue);
                 	if (error) {
@@ -345,7 +348,7 @@ errorhandling:
 int
 INR_NW_ioctl (struct net_device *nwdev, struct ifreq *rq, int cmd)
 {
-    INR_LOG_debug (loglevel_info"INR_NW_ioctl called, cmd=0x%lx\n",cmd);
+    //INR_LOG_debug (loglevel_info"INR_NW_ioctl called, cmd=0x%lx\n",cmd);
     struct INR_NW_priv *priv = netdev_priv(nwdev);
     struct hwtstamp_config config;
     if (copy_from_user(&config, rq->ifr_data, sizeof(config)))
@@ -471,6 +474,8 @@ INR_NW_init (struct net_device *nwdev)
     nwdev->features |= INR_NWDEV_features;
     nwdev->hw_features |= INR_NWDEV_features_HW;
     nwdev->ethtool_ops = &INR_NW_ethtool_ops;
+    nwdev->real_num_tx_queues=INR_NW_queue_count;
+    nwdev->real_num_rx_queues=0;
     //SET_ETHTOOL_OPS(nwdev, &INR_NW_ethtool_ops);
     ether_setup (nwdev);
     INR_LOG_debug (loglevel_info"Init NWDev %i done\n", priv->port);

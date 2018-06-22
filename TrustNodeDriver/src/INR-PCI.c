@@ -958,6 +958,7 @@ INR_TX_push (struct net_device *nwdev,struct sk_buff *skb, uint8_t * data, uint1
     uint32_t tmp66 = tx_head_backup;
     uint8_t error = 0;
     uint64_t head, tail;
+    //if (TX_DBG_mod)INR_LOG_debug("time_queue:%i\n",time_queue);
     if(get_HW_user_feature(HW_feature_frame_injection)==0)time_queue=0;
     if (INR_STATUS_get (INR_STATUS_DRV_INIT_done) == 0){//check if device ready after startup
         return 1;
@@ -1227,9 +1228,10 @@ INR_init_drv (struct pci_dev *dev)
         for (i = 0; i < INR_PCI_rx_descriptor_ring_count; i++)
             INR_NAPI_init (i);
     INR_LOG_debug (loglevel_info"Hardware setup done\n");
-    INR_MMI_interrupt_start((uint64_t)(uintptr_t)gBaseVirt1);
+    if(HW_addr_map_revision>=5)INR_MMI_interrupt_start((uint64_t)(uintptr_t)gBaseVirt1);
     INR_STATUS_set (INR_STATUS_HW_RUNNING);
     INR_PCI_disable_error_LED
+    if(HW_addr_map_revision>=5)INR_MMI_interrupt();
 #ifdef C_SUB_ADDR_NET_ENABLE
     if(HW_addr_map_revision>=5)INR_PCI_BAR1_write(FPGA_PORT_mask,(C_BASE_ADDR_NET_LOWER<<8)+C_SUB_ADDR_NET_ENABLE);// enable ports
     

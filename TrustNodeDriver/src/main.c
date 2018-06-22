@@ -50,7 +50,7 @@ INR_NWDEV_init (void)
 {
     uint8_t i = 0;
     for (i = 0; i < INR_NW_devcount; i++) {
-        INR_NW = alloc_netdev (sizeof (struct INR_NW_priv), "TN%d", NET_NAME_UNKNOWN, INR_NW_init);
+        INR_NW = alloc_netdev_mq (sizeof (struct INR_NW_priv), "TN%d", NET_NAME_UNKNOWN, INR_NW_init,INR_NW_queue_count);
         if (INR_NW == NULL) {
             INR_LOG_debug (loglevel_err"Cant alloc NWDEV %i !\n", i);
             return 1;

@@ -5,8 +5,11 @@
 **/
 #include <linux/netdev_features.h>
 #include <linux/netdevice.h>
-#define INR_NWDEV_features NETIF_F_SG | NETIF_F_FRAGLIST
-#define INR_NWDEV_features_HW NETIF_F_SG | NETIF_F_FRAGLIST
+#ifndef NETIF_F_MULTI_QUEUE
+	#define NETIF_F_MULTI_QUEUE	16384	
+#endif
+#define INR_NWDEV_features NETIF_F_SG | NETIF_F_FRAGLIST | NETIF_F_MULTI_QUEUE
+#define INR_NWDEV_features_HW NETIF_F_SG | NETIF_F_FRAGLIST | NETIF_F_MULTI_QUEUE
 //no, we dont support TCP-checsum.. NETIF_F_IP_CSUM
 /**
 *Network packet structure
@@ -21,6 +24,7 @@ struct INR_NW_packet
 
 #define INR_NW_devcount 16
 #define INR_NW_repeatonbusy 0
+#define INR_NW_queue_count 32
 //prototypes
 void INR_HW_tx (char *buf, int len);
 void INR_NW_rx (struct net_device *nwdev, struct INR_NW_packet *pkt);
