@@ -201,7 +201,9 @@ static void printpacket(struct msghdr *msg, int res,
 				       (long)stamp->tv_sec,
 				       (long)stamp->tv_nsec);
 				stamp++;
-				/* skip deprecated HW transformed */
+				printf("HW %ld.%09ld",
+				       (long)stamp->tv_sec,
+				       (long)stamp->tv_nsec);
 				stamp++;
 				printf("HW raw %ld.%09ld",
 				       (long)stamp->tv_sec,
