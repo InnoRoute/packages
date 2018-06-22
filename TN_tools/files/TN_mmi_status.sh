@@ -8,6 +8,7 @@ if [[ $# == 0 ]]; then
   echo "Parameter <ex> can have any value. Without it, this help is shown"
   echo "If nothing is shown, then the previous access cleared the statistics"
 else
+  echo "Checking for MMI access errors ..."
   tn_ll_mmi_status
   echo "Done"
 fi

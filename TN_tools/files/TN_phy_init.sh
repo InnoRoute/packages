@@ -56,19 +56,19 @@ else
   
   # Physical Layer Control 1 Register: Reg 0x13
   # * Value 0x0001: Default Value
-  let reg=0x13
-  let write_data=0x0001
-  for phy in `seq 0 9`; do
-    tn_ll_write_phy $phy $page $reg $write_data;
-  done
+  #let reg=0x13
+  #let write_data=0x0001
+  #for phy in `seq 0 9`; do
+  #  tn_ll_write_phy $phy $page $reg $write_data;
+  #done
   
   # Physical Layer Control 2 Register: Reg 0x14
   # * Value 0x8006: Default Value
-  let reg=0x14
-  let write_data=0x8006
-  for phy in `seq 0 9`; do
-    tn_ll_write_phy $phy $page $reg $write_data;
-  done
+  #let reg=0x14
+  #let write_data=0x8006
+  #for phy in `seq 0 9`; do
+  #  tn_ll_write_phy $phy $page $reg $write_data;
+  #done
   
   # Media-Independent Interface Control Register: Reg 0x17
   # * Value 0x8B00: Soft-strapping configured default value - Receive Timing Skew 0.0ns, Transmit Skew 1.5ns, 2.5V, Copper, RGMII
@@ -96,6 +96,8 @@ else
   
   ### INIT both alaskas (register 22 is the page register)
   
+  # Advertising 10/100/1000 FD
+  
   # Copper Auto-Negotiation Advertisement Register: Page 0, Reg 4
   # * Value 0xFE1: Setting all PHYs to advertise all technologies
   let page=0
@@ -114,14 +116,16 @@ else
     tn_ll_write_phy $phy $page $reg $write_data;
   done
   
+  # 
+  
   # Copper Specific Control Register 1: Page 0, Reg 16
   # * Value 0x3060: Default value
-  let page=0
-  let reg=16
-  let write_data=0x3060
-  for phy in `seq 10 11`; do
-    tn_ll_write_phy $phy $page $reg $write_data;
-  done
+  #let page=0
+  #let reg=16
+  #let write_data=0x3060
+  #for phy in `seq 10 11`; do
+  #  tn_ll_write_phy $phy $page $reg $write_data;
+  #done
   
   # Copper Specific Interrupt Enable Register: Page 0, Reg 18
   # * Value 0x6400: Enable interrupt at speed/duplex/link state change
@@ -134,21 +138,21 @@ else
   
   # Copper Specific Control Register 2: Page 0, Reg 20
   # * Value 0x0030: Accelerate 100BASE-T Link-Up
-  let page=0
-  let reg=20
-  let write_data=0x0030
-  for phy in `seq 10 11`; do
-    tn_ll_write_phy $phy $page $reg $write_data;
-  done
+  #let page=0
+  #let reg=20
+  #let write_data=0x0030
+  #for phy in `seq 10 11`; do
+  #  tn_ll_write_phy $phy $page $reg $write_data;
+  #done
   
   # Copper Specific Control Register 3: Page 0, Reg 26
   # * Value 0x0240: Speed Up Gigabit Link Down Time (not IEEE compliant)
-  let page=0
-  let reg=26
-  let write_data=0x0240
-  for phy in `seq 10 11`; do
-    tn_ll_write_phy $phy $page $reg $write_data;
-  done
+  #let page=0
+  #let reg=26
+  #let write_data=0x0240
+  #for phy in `seq 10 11`; do
+  #  tn_ll_write_phy $phy $page $reg $write_data;
+  #done
   
   # MAC Specific Control Register 1: Page 2, Reg 16
   # * Value 0x5C4D: Forward recovered 125 MHz clock only on link up and 100 or 1000Mbps
@@ -168,11 +172,11 @@ else
     tn_ll_write_phy $phy $page $reg $write_data;
   done
   
-  # MAC Specific Control Register 2 (RGMII): Page 2, Reg 21 to 0x1066
-  # * Value 0x1066: clock/data phase etc.
+  # MAC Specific Control Register 2 (RGMII): Page 2, Reg 21 to 0x1026
+  # * Value 0x1026: clock/data phase etc.: TXCLK not delayed, RXCLK delayed, 100Mbps default
   let page=2
   let reg=21
-  let write_data=0x1066
+  let write_data=0x1026
   for phy in `seq 10 11`; do
     tn_ll_write_phy $phy $page $reg $write_data;
   done

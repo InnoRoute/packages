@@ -7,7 +7,8 @@ source /usr/share/InnoRoute/tn_func_ll.sh
 
 if [[ $# == 0 ]]; then
   echo "$0 <verbosity> is used to read current system statistics."
-  echo "The parameter <verbosity> can be 0 (few outputs) or 1 (many outputs)"
+  echo "The parameter <verbosity> can be 0 (few outputs) or 1 (many outputs) or"
+  echo " 2 (many outputs, with waiting times)"
 #  echo "$0 <verbosity> [<port>] is used to read current system statistics."
 #TODO  echo "The parameter <port>, if given, limits the statistics to this specific port"
 else
@@ -16,7 +17,7 @@ else
   let page=0x0
   let reg=0x18
   #echo "GPHY PAGE:$page, REG:$reg"
-  echo " * GPHY ports:"
+  echo " - GPHY ports:"
   for phy in `seq 0 9`; do
     let reg=0x18
     tn_ll_read_phy $phy $page $reg;
@@ -38,7 +39,7 @@ else
   let page=0x0
   let reg=0x11
   #echo "Alaska PAGE:$page, REG:$reg"
-  echo " * Alaska ports:"
+  echo " - Alaska ports:"
   for phy in `seq 10 11`; do
     tn_ll_read_phy $phy $page $reg;
     ## check $read_data -> still busy?
@@ -54,7 +55,7 @@ else
     echo "Port=$phy, Valid=$valid, LinkUp=$link, Speed=$speed, Duplex=$duplex"
   done
   
-  echo " * MACs:"
+  echo " - MACs:"
   tn_ll_mmi_read $C_BASE_ADDR_NET_LOWER $C_SUB_ADDR_NET_ENABLE
   let enable=$read_data
   tn_ll_mmi_read $C_BASE_ADDR_NET_LOWER $C_SUB_ADDR_NET_SPEED
@@ -68,7 +69,7 @@ else
     echo "Port=$mac, Enabled=$mac_enable, Speed=$mac_speed, Duplex=$mac_duplex"
   done
 
-  if [[ $1 == 1 ]]; then
+  if [[ $1 > 0 ]]; then
     echo -e "\n### Please start the traffic NOW"
   
     echo -e "\n### GPHY: RX Packet Counters (saturating at 255, non-zero only)"
@@ -93,16 +94,21 @@ else
       tn_ll_write_phy $phy $page $reg $write_data;
       ## check $read_data -> still busy?
     done
-    echo "Waiting for 10 seconds to aggregate GPHY statistics"
-    sleep 10
+    if [[ $1 == 2 ]]; then
+      echo "Waiting for 10 seconds to aggregate statistics"
+      sleep 10
+    fi
     #echo "GPHY PAGE:$page, REG:$reg"
+    let total=0
     for phy in `seq 0 9`; do
       tn_ll_read_phy $phy $page $reg;
       ## check $read_data -> still busy? + read data
-      if [ $read_data -ne 0 ]; then
+      if [ $(($read_data & 0xFF)) -ne 0 ]; then
         printf "PHY $phy: %d packets received\n" $(($read_data & 0xFF))
+        let total+=$(($read_data & 0xFF))
       fi
     done
+    echo "Total RX: $total packets"
   
     echo -e "\n### GPHY: RX Error Counters (saturating at 255, non-zero only)"
     let page=0
@@ -126,16 +132,21 @@ else
       tn_ll_write_phy $phy $page $reg $write_data;
       ## check $read_data -> still busy?
     done
-    echo "Waiting for 10 seconds to aggregate GPHY statistics"
-    sleep 10
+    if [[ $1 == 2 ]]; then
+      echo "Waiting for 10 seconds to aggregate statistics"
+      sleep 10
+    fi
     #echo "GPHY PAGE:$page, REG:$reg"
+    let total=0
     for phy in `seq 0 9`; do
       tn_ll_read_phy $phy $page $reg;
       ## check $read_data -> still busy? + read data
-      if [ $read_data -ne 0 ]; then
+      if [ $(($read_data & 0xFF)) -ne 0 ]; then
         printf "PHY $phy: %d errors received\n" $(($read_data & 0xFF))
+        let total+=$(($read_data & 0xFF))
       fi
     done
+    echo "Total RX Errors: $total packets"
   
     echo -e "\n### GPHY: RX ESD Error Counters (saturating at 255, non-zero only)"
     let page=0
@@ -159,16 +170,21 @@ else
       tn_ll_write_phy $phy $page $reg $write_data;
       ## check $read_data -> still busy?
     done
-    echo "Waiting for 10 seconds to aggregate GPHY statistics"
-    sleep 10
+    if [[ $1 == 2 ]]; then
+      echo "Waiting for 10 seconds to aggregate statistics"
+      sleep 10
+    fi
     #echo "GPHY PAGE:$page, REG:$reg"
+    let total=0
     for phy in `seq 0 9`; do
       tn_ll_read_phy $phy $page $reg;
       ## check $read_data -> still busy? + read data
-      if [ $read_data -ne 0 ]; then
+      if [ $(($read_data & 0xFF)) -ne 0 ]; then
         printf "PHY $phy: %d ESD errors received\n" $(($read_data & 0xFF))
+        let total+=$(($read_data & 0xFF))
 	  fi
     done
+    echo "Total RX ESD Errors: $total packets"
   
     echo -e "\n### GPHY: RX SSD Error Counters (saturating at 255, non-zero only)"
     let page=0
@@ -192,16 +208,21 @@ else
       tn_ll_write_phy $phy $page $reg $write_data;
       ## check $read_data -> still busy?
     done
-    echo "Waiting for 10 seconds to aggregate GPHY statistics"
-    sleep 10
+    if [[ $1 == 2 ]]; then
+      echo "Waiting for 10 seconds to aggregate statistics"
+      sleep 10
+    fi
     #echo "GPHY PAGE:$page, REG:$reg"
+    let total=0
     for phy in `seq 0 9`; do
       tn_ll_read_phy $phy $page $reg;
       ## check $read_data -> still busy? + read data
-      if [ $read_data -ne 0 ]; then
+      if [ $(($read_data & 0xFF)) -ne 0 ]; then
         printf "PHY $phy: %d SSD errors received\n" $(($read_data & 0xFF))
+        let total+=$(($read_data & 0xFF))
 	  fi
     done
+    echo "Total RX SSD Errors: $total packets"
   
     ## IDLE Error Count in the lower octet -> let reg=0x0a
     ## Dev 0x03 -> let reg=0x16:    EEE wake time faults
@@ -211,13 +232,16 @@ else
     let page=0
     let reg=0x15
     #echo "Alaska PAGE:$page, REG:$reg"
+    let total=0
     for phy in `seq 10 11`; do
       tn_ll_read_phy $phy $page $reg;
       ## check $read_data -> still busy? + read data
-      if [ $read_data -ne 0 ]; then
+      if [ $(($read_data & 0xFFFF)) -ne 0 ]; then
         printf "PHY $phy: %d errors received\n" $(($read_data & 0xFFFF))
+        let total+=$(($read_data & 0xFFFF))
 	  fi
     done
+    echo "Total RX Errors: $total packets"
   
     echo -e "\n### Alaska: CRC Counters (saturating at 255, non-zero only)"
     let page=0x12
@@ -235,26 +259,34 @@ else
       tn_ll_write_phy $phy $page $reg $write_data;
       ## check $read_data -> still busy?
     done
-    echo "Waiting for 10 seconds to aggregate Alaska statistics"
-    sleep 10
+    if [[ $1 == 2 ]]; then
+      echo "Waiting for 10 seconds to aggregate statistics"
+      sleep 10
+    fi
     let page=0x12
     let reg=0x11
     let write_data=0x0012
     #echo "Alaska PAGE:$page, REG:$reg"
+    let total=0
+    let total_err=0
     for phy in `seq 10 11`; do
       # Read Counters
       let reg=0x11
       tn_ll_read_phy $phy $page $reg;
       ## check $read_data -> still busy? + read data
-      if [ $read_data -ne 0 ]; then
+      if [ $(($read_data & 0xFFFF)) -ne 0 ]; then
         printf "PHY $phy: %d packets received (%d with CRC errors)\n" $((($read_data >> 8) & 0xFF)) $(($read_data & 0xFF))
+        let total+=$(($read_data & 0xFF))
+        let total_err+=$((($read_data >> 8) & 0xFF))
 	  fi
       # Clear Counters
       let reg=0x12
       tn_ll_write_phy $phy $page $reg $write_data;
       ## check $read_data -> still busy?
     done
-  
+    echo "Total RX:        $total packets"
+    echo "Total RX Errors: $total_err packets"
+
     #echo -e "\n### Alaska: Copper Port CRC Counters (saturating at 255, non-zero only)"
     ## Enable CRC Checking
     #let page=0x6
@@ -265,24 +297,32 @@ else
     #  tn_ll_write_phy $phy $page $reg $write_data;
     #  ## check $read_data -> still busy?
     #done
-    #echo "Waiting for 10 seconds to aggregate Alaska statistics"
-    #sleep 10
+    #if [[ $1 == 2 ]]; then
+    #  echo "Waiting for 10 seconds to aggregate statistics"
+    #  sleep 10
+    #fi
     #let reg=0x11
     #let write_data=0x0010
     ##echo "Alaska PAGE:$page, REG:$reg"
+    #let total=0
+    #let total_err=0
     #for phy in `seq 10 11`; do
     #  # Read Counters
     #  let reg=0x11
     #  tn_ll_read_phy $phy $page $reg;
     #  ## check $read_data -> still busy? + read data
-    #  if [ $read_data -ne 0 ]; then
+    #  if [ $(($read_data & 0xFFFF)) -ne 0 ]; then
     #    printf "PHY $phy (Copper): %d packets received (%d with CRC errors)\n" $((($read_data >> 8) & 0xFF)) $(($read_data & 0xFF))
+    #    let total+=$(($read_data & 0xFF))
+    #    let total_err+=$((($read_data >> 8) & 0xFF))
 	#  fi
     #  # Clear Counters
     #  let reg=0x12
     #  tn_ll_write_phy $phy $page $reg $write_data;
     #  ## check $read_data -> still busy?
     #done
+    #echo "Total RX:        $total packets"
+    #echo "Total RX Errors: $total_err packets"
     ## IDLE Error Count in the lower octet -> let page=0; let reg=0x0a
     ## Dev 0x03 -> let reg=0x16: EEE wake time faults
     ## HD Copper Late Collision counters -> let page=0x06; let reg=0x17/0x18
@@ -304,18 +344,32 @@ else
 
   echo -e "\n### Displaying non-zero RX Statistics (good packets only)"
   let total=0
-  for i in `seq 0 31`; do
+  for i in `seq 0 15`; do
     tn_ll_mmi_read $C_BASE_ADDR_STATISTIC_GOOD_INPRT_LOWER_0 $(($i*4))
     if [ $read_data -ne 0 ]; then
       let total+=$read_data
-      echo "Input Port $i: $read_data"
+      echo "Input Port $i (PHY): $read_data"
     fi
   done
-  for i in `seq 0 31`; do
+  for i in `seq 0 15`; do
     tn_ll_mmi_read $C_BASE_ADDR_STATISTIC_GOOD_INPRT_LOWER_1 $(($i*4))
     if [ $read_data -ne 0 ]; then
       let total+=$read_data
-      echo "Input Port $i: $read_data"
+      echo "Input Port $i (PHY): $read_data"
+    fi
+  done
+  for i in `seq 16 31`; do
+    tn_ll_mmi_read $C_BASE_ADDR_STATISTIC_GOOD_INPRT_LOWER_0 $(($i*4))
+    if [ $read_data -ne 0 ]; then
+      let total+=$read_data
+      echo "Input Port $i (CPU): $read_data"
+    fi
+  done
+  for i in `seq 16 31`; do
+    tn_ll_mmi_read $C_BASE_ADDR_STATISTIC_GOOD_INPRT_LOWER_1 $(($i*4))
+    if [ $read_data -ne 0 ]; then
+      let total+=$read_data
+      echo "Input Port $i (CPU): $read_data"
     fi
   done
   echo "Total Good Input Port: $total packets"
@@ -362,7 +416,7 @@ else
   done
   echo "Total Bad: $total packets"
 
-  if [[ $1 == 1 ]]; then
+  if [[ $1 > 0 ]]; then
     echo -e "\n### Displaying non-zero frame count matrix (input-output) at RX Statistics"
     let total=0
     for i in `seq 0 1023`; do
@@ -439,33 +493,33 @@ else
     #echo "###############################################################"
     echo "DP0 Ethernet Switch:"
     tn_ll_mmi_read $C_BASE_ADDR_ETH_SW_0 $C_SUB_ADDR_ETH_SW_NUM_SOF          
-    echo " * Number of SoF segments:                    $read_data"
+    echo " - Number of SoF segments:                    $read_data"
     tn_ll_mmi_read $C_BASE_ADDR_ETH_SW_0 $C_SUB_ADDR_ETH_SW_NUM_LEARNED      
-    echo " * Number of learned addresses:               $read_data"
+    echo " - Number of learned addresses:               $read_data"
     tn_ll_mmi_read $C_BASE_ADDR_ETH_SW_0 $C_SUB_ADDR_ETH_SW_NUM_AGED_OUT     
-    echo " * Number of aged out addresses:              $read_data"
+    echo " - Number of aged out addresses:              $read_data"
     tn_ll_mmi_read $C_BASE_ADDR_ETH_SW_0 $C_SUB_ADDR_ETH_SW_NUM_FLOOD_UNKNOWN
-    echo " * Number of floods due to unknown addresses: $read_data"
+    echo " - Number of floods due to unknown addresses: $read_data"
     tn_ll_mmi_read $C_BASE_ADDR_ETH_SW_0 $C_SUB_ADDR_ETH_SW_NUM_FLOOD_FULL   
-    echo " * Number of floods due to saturated CAM:     $read_data"
+    echo " - Number of floods due to saturated CAM:     $read_data"
     tn_ll_mmi_read $C_BASE_ADDR_ETH_SW_0 $C_SUB_ADDR_ETH_SW_NUM_PORT_ERROR   
-    echo " * Number of port errors:                     $read_data"
+    echo " - Number of port mismatches:                 $read_data"
     #tn_ll_mmi_read $C_BASE_ADDR_ETH_SW_0 $C_SUB_ADDR_ETH_SW_NUM_MATCH_SRC <- needs selection of address ahead in time   
     #tn_ll_mmi_read $C_BASE_ADDR_ETH_SW_0 $C_SUB_ADDR_ETH_SW_NUM_MATCH_DST <- needs selection of address ahead in time   
 
     echo "DP1 Ethernet Switch:"
     tn_ll_mmi_read $C_BASE_ADDR_ETH_SW_1 $C_SUB_ADDR_ETH_SW_NUM_SOF          
-    echo " * Number of SoF segments:                    $read_data"
+    echo " - Number of SoF segments:                    $read_data"
     tn_ll_mmi_read $C_BASE_ADDR_ETH_SW_1 $C_SUB_ADDR_ETH_SW_NUM_LEARNED      
-    echo " * Number of learned addresses:               $read_data"
+    echo " - Number of learned addresses:               $read_data"
     tn_ll_mmi_read $C_BASE_ADDR_ETH_SW_1 $C_SUB_ADDR_ETH_SW_NUM_AGED_OUT     
-    echo " * Number of aged out addresses:              $read_data"
+    echo " - Number of aged out addresses:              $read_data"
     tn_ll_mmi_read $C_BASE_ADDR_ETH_SW_1 $C_SUB_ADDR_ETH_SW_NUM_FLOOD_UNKNOWN
-    echo " * Number of floods due to unknown addresses: $read_data"
+    echo " - Number of floods due to unknown addresses: $read_data"
     tn_ll_mmi_read $C_BASE_ADDR_ETH_SW_1 $C_SUB_ADDR_ETH_SW_NUM_FLOOD_FULL   
-    echo " * Number of floods due to saturated CAM:     $read_data"
+    echo " - Number of floods due to saturated CAM:     $read_data"
     tn_ll_mmi_read $C_BASE_ADDR_ETH_SW_1 $C_SUB_ADDR_ETH_SW_NUM_PORT_ERROR   
-    echo " * Number of port errors:                     $read_data"
+    echo " - Number of port mismatches:                 $read_data"
     #tn_ll_mmi_read $C_BASE_ADDR_ETH_SW_1 $C_SUB_ADDR_ETH_SW_NUM_MATCH_SRC <- needs selection of address ahead in time   
     #tn_ll_mmi_read $C_BASE_ADDR_ETH_SW_1 $C_SUB_ADDR_ETH_SW_NUM_MATCH_DST <- needs selection of address ahead in time   
   
@@ -505,16 +559,21 @@ else
       tn_ll_write_phy $phy $page $reg $write_data;
       ## check $read_data -> still busy?
     done
-    echo "Waiting for 10 seconds to aggregate GPHY statistics"
-    sleep 10
+    if [[ $1 == 2 ]]; then
+      echo "Waiting for 10 seconds to aggregate statistics"
+      sleep 10
+    fi
     #echo "GPHY PAGE:$page, REG:$reg"
+    let total=0
     for phy in `seq 0 9`; do
       tn_ll_read_phy $phy $page $reg;
       ## check $read_data -> still busy? + read data
-      if [ $read_data -ne 0 ]; then
+      if [ $(($read_data & 0xFF)) -ne 0 ]; then
         printf "PHY $phy: %d packets transmitted\n" $(($read_data & 0xFF))
+        let total+=$(($read_data & 0xFF))
 	  fi
     done
+    echo "Total TX: $total packets"
     
     echo -e "\n### GPHY: TX Error Counters (saturating at 255, non-zero only)"
     let page=0
@@ -538,16 +597,21 @@ else
       tn_ll_write_phy $phy $page $reg $write_data;
       ## check $read_data -> still busy?
     done
-    echo "Waiting for 10 seconds to aggregate GPHY statistics"
-    sleep 10
+    if [[ $1 == 2 ]]; then
+      echo "Waiting for 10 seconds to aggregate statistics"
+      sleep 10
+    fi
     #echo "GPHY PAGE:$page, REG:$reg"
+    let total=0
     for phy in `seq 0 9`; do
       tn_ll_read_phy $phy $page $reg;
       ## check $read_data -> still busy? + read data
-      if [ $read_data -ne 0 ]; then
+      if [ $(($read_data & 0xFF)) -ne 0 ]; then
         printf "PHY $phy: %d packets with errors transmitted\n" $(($read_data & 0xFF))
+        let total+=$(($read_data & 0xFF))
 	  fi
     done
+    echo "Total TX Errors: $total packets"
     
     echo -e "\n### GPHY: TX Collision Counters (saturating at 255, non-zero only)"
     let page=0
@@ -571,16 +635,21 @@ else
       tn_ll_write_phy $phy $page $reg $write_data;
       ## check $read_data -> still busy?
     done
-    echo "Waiting for 10 seconds to aggregate GPHY statistics"
-    sleep 10
+    if [[ $1 == 2 ]]; then
+      echo "Waiting for 10 seconds to aggregate statistics"
+      sleep 10
+    fi
     #echo "GPHY PAGE:$page, REG:$reg"
+    let total=0
     for phy in `seq 0 9`; do
       tn_ll_read_phy $phy $page $reg;
       ## check $read_data -> still busy? + read data
-      if [ $read_data -ne 0 ]; then
+      if [ $(($read_data & 0xFF)) -ne 0 ]; then
         printf "PHY $phy: %d collisions\n" $(($read_data & 0xFF))
+        let total+=$(($read_data & 0xFF))
 	  fi
     done
+    echo "Total Collisions: $total packets"
     echo "### No transmit counters for Alaskas"
   fi
   echo "Done"
