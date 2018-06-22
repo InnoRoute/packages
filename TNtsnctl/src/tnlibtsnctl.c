@@ -15,6 +15,7 @@
 uint8_t verbose = 0;
 uint64_t BASE = 0;
 uint64_t BASE_shadow = 0;
+uint8_t MEMDUMP = 0;
 
 //********************************************************************************************************************
 /**
@@ -117,9 +118,17 @@ TSNmemcpy (void *dst, const void *src, size_t len)
   size_t i;
   uint32_t *d = dst;
   uint32_t *s = src;
-  for (i = 0; i < len / sizeof (uint32_t); i++) {
-    d[i] = s[i];
-  }
+  
+    for (i = 0; i < len / sizeof (uint32_t); i++) {
+      d[i] = s[i];
+#ifndef __KERNEL__
+      if (MEMDUMP) {
+	
+	printf ("TNbar1 0x%llx w 0x%llx\n", dst - BASE + i * sizeof (uint32_t), s[i]);
+      }
+#endif
+    }
+ 
   return dst;
 }
 
@@ -507,15 +516,16 @@ uint32_t
 TSN_get_config (uint64_t reg, uint8_t port, uint8_t shadow)
 {
   if (TSN_enable) {
-    if (verbose)
-      printf ("accessing address:0x%llx\n", port * PORT_TSN_width + TSN_config_space_lower + reg);
+    
     uint64_t base = 0;
     if (shadow)
       base = BASE_shadow;
     else
       base = BASE;
     uint32_t *val = base + port * PORT_TSN_width + TSN_config_space_lower + reg;
-
+	if (verbose)
+      printf ("reding address:0x%llx value:0x%llx\n", port * PORT_TSN_width + TSN_config_space_lower + reg,*val);
+      if(MEMDUMP)printf("TNbar1 0x%lx w \n",port * PORT_TSN_width + TSN_config_space_lower + reg);
     return *val;
   }
 }
@@ -532,7 +542,8 @@ TSN_set_config (uint64_t reg, uint8_t port, uint32_t value)
 {
   if (TSN_enable) {
     if (verbose)
-      printf ("accessing address:0x%llx\n", port * PORT_TSN_width + TSN_config_space_lower + reg);
+      printf ("writing to address:0x%llx value:0x%llx\n", port * PORT_TSN_width + TSN_config_space_lower + reg,value);
+      if(MEMDUMP)printf("TNbar1 0x%lx w 0x%lx\n",port * PORT_TSN_width + TSN_config_space_lower + reg,value);
     uint32_t *val = BASE + port * PORT_TSN_width + TSN_config_space_lower + reg;
     *val = value;
     uint32_t *val_shadow = BASE_shadow + port * PORT_TSN_width + TSN_config_space_lower + reg;
@@ -657,3 +668,10 @@ ns2ticks (uint32_t ns)
 {
   return ns / HW_TIMEBASE;
 }
+void
+memdump_en ()
+{
+  MEMDUMP = 1;
+
+}
+

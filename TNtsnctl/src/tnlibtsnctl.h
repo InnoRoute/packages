@@ -178,5 +178,6 @@ uint32_t TSN_get_config (uint64_t reg, uint8_t port, uint8_t shadow);
 void TSN_apply (struct arguments *arguments);
 uint32_t ns2ticks (uint32_t ns);
 uint32_t tick2ns (uint32_t ticks);
+void memdump_en (void);
 
 void TSN_init (uint64_t * base, uint64_t * shadow_base);

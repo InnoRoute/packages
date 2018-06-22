@@ -28,17 +28,20 @@ const char *argp_program_version = "tsnctl 0.1";
 const char filename[] = "/sys/bus/pci/devices/0000:01:00.0/resource1";
 const char *argp_program_bug_address = "<ulbricht@innoroute.de>";
 struct flock lock;
+uint8_t MEMDUMP2=0;
 
 /*
    OPTIONS.  Field 1 in ARGP.
    Order of fields: {NAME, KEY, ARG, FLAGS, DOC}.
 */
 static struct argp_option options[] = {	//user interface
+	{0,0,0,0,"Using proprietary TSN implementation of Hilscher Gesellschaft fuer Systemautomation mbH, licensed for research projects and for use on the TrustNode only.\n",0},
   {0, 0, 0, 0, "General options:", 0},
   {"verbose", 'v', 0, 0, "Produce verbose output"},
-  {"machine", 'm', 0, 0, "Output in machine readable notation."},
+  {"machine", 'M', 0, 0, "Output in machine readable notation."},
   {"ID", 'i', "", 0, "ID of entry"},
   {"COUNT", 'c', "", 0, "number of entrys to do something"},
+  {"memdump", 'm', 0, 0, "print out TNbar1 accesses"},
   {0, 0, 0, 0, "General TSN config:", 1},
   {"PORT", 'P', "", 0, "TrustNode port to configure"},
 
@@ -79,8 +82,12 @@ parse_opt (int key, char *arg, struct argp_state *state)
     set_verbose (1);
     printallconst ();
     break;
-  case 'm':
+  case 'M':
     arguments->machinereadable = 1;
+    break;
+  case 'm':
+    memdump_en ();
+    MEMDUMP2=1;
     break;
   case 'n':
     arguments->numberout = 1;
@@ -180,16 +187,19 @@ parse_opt (int key, char *arg, struct argp_state *state)
   case ARGP_KEY_ARG:
     if (state->arg_num >= 2) {
       argp_usage (state);
-      break;
+       break;
     }
     arguments->args[state->arg_num] = arg;
     break;
   case ARGP_KEY_END:
     if (state->arg_num < 1) {
       argp_usage (state);
+      //if(MEMDUMP2==0)printf("Using proprietary TSN implementation of Hilscher Gesellschaft fuer Systemautomation mbH, licensed for research projects and for use on the TrustNode only.\n");
     }
     break;
   default:
+  	//if(MEMDUMP2==0)printf("Using proprietary TSN implementation of Hilscher Gesellschaft fuer Systemautomation mbH, licensed for research projects and for use on the TrustNode only.\n");
+ 
     return ARGP_ERR_UNKNOWN;
   }
   return 0;
@@ -340,7 +350,7 @@ main (int argc, char **argv)
     break;
   }
   if (TSN_enable == 0)
-    printf ("This program was compiled without TSN address map information, nothing will happen!\n");
+    printf ("This program was compiled without TSN address map information, nothing will happen!\nMissing TSN-capable FPGA design, please contact InnoRoute GmbH.\n");
   munmap (map_base, MAP_SIZE);	//unmap files and mmi from memory
   munmap (map_base_shadow, MAP_SIZE);
 
