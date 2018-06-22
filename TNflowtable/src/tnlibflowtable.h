@@ -55,6 +55,7 @@ uint32_t parseIPV4string (char *ipAddress);
 #endif
 //base addresses:
 //hashtable with hardcoded fields
+#define  INR_FC_ActT_valid_mask	0x3ff
 #define  INR_FC_ActT_entry_length 4	//length of entry in byte
 #define  INR_FC_ActT_entry_length_memcpy  4	//length of entry in byte
 #define  INR_FC_ActT_base (C_BASE_ADDR_NOC_ACTION_LOWER<<8)

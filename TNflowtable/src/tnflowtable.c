@@ -44,7 +44,7 @@ static struct argp_option options[] = {	//user interface
   {"ID", 'i', "", 0, "ID of entry"},
   {"COUNT", 'c', "", 0, "number of entrys to do something"},
   {"PQUEUE", 'q', "", 0, "select a processor queue"},
-  {"memdump", 'm', 0, 0, "select a processor queue"},
+  {"memdump", 'm', 0, 0, "print out TNbar1 accesses"},
   {0, 0, 0, 0, "Rule options:", 1},
   {"AUTOHASH", 'a', 0, 0, "automatic generate and write hash to hashtable"},
   {"AUTOACT", 'z', 0, 0, "automatic write action to Actiontable"},

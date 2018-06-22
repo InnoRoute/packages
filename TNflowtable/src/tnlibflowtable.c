@@ -741,17 +741,17 @@ INR_ActT_get_next_free_entry (uint64_t id,uint8_t have_PQUEUE, uint8_t PQUEUE)
 	    return NULL;		//error id not valid
 	  }
 	  do {
-	    entry = (struct INR_FC_ActT_RULE *) INR_ActT_shadow_get_addr (i+(PQUEUE<<7));
+	    entry = (struct INR_FC_ActT_RULE *) INR_ActT_shadow_get_addr (i+(((uint16_t)PQUEUE<<7)));
 	    i++;
-	  } while ((i < maxentry) && (entry->OutPort_enable || entry->Bad_enable || entry->Cut_enable || ((i+(PQUEUE<<7)) == ActT_default_flow)));
+	  } while ((i < maxentry) && (entry->OutPort_enable || entry->Bad_enable || entry->Cut_enable || (((uint16_t)PQUEUE<<7) == ActT_default_flow)));
 	  if (i == maxentry) {
 	    return 0;	 
   
   
   }
-  verblog printf("Found free ActT entry %i pqueue:0x%x\n",i-1+(PQUEUE<<7),(PQUEUE<<7));
+  verblog printf("Found free ActT entry %i pqueue:0x%x\n",i-1+((uint16_t)PQUEUE<<7),((uint16_t)PQUEUE<<7));
   
-  return (i - 1)+(PQUEUE<<7);
+  return (i - 1)+((uint16_t)PQUEUE<<7);
 }
 }
 //************************************************************************************************************************************

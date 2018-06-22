@@ -1274,12 +1274,12 @@ AT_add (struct arguments *arguments)
 {
   verblog printf ("__FUNCTION__ = %s\n", __FUNCTION__);
   verblog printf ("Adding rule to next free space up from ID:%i\n", arguments->ID);
-  if (INR_ActT_get_next_free_entry (arguments->ID,arguments->dohave_PQUEUE,arguments->PQUEUE)) {
-    struct INR_FC_ActT_RULE *entry = (struct INR_FC_ActT_RULE *) INR_ActT_get_addr (INR_ActT_get_next_free_entry (arguments->ID,arguments->dohave_PQUEUE,arguments->PQUEUE));
+  if (INR_FC_ActT_valid_mask&INR_ActT_get_next_free_entry (arguments->ID,arguments->dohave_PQUEUE,arguments->PQUEUE)) {
+    struct INR_FC_ActT_RULE *entry = (struct INR_FC_ActT_RULE *) INR_ActT_get_addr (INR_FC_ActT_valid_mask&INR_ActT_get_next_free_entry (arguments->ID,arguments->dohave_PQUEUE,arguments->PQUEUE));
     struct INR_FC_ActT_RULE *entry_shadow =
-      (struct INR_FC_ActT_RULE *) INR_ActT_shadow_get_addr (INR_ActT_get_next_free_entry (arguments->ID,arguments->dohave_PQUEUE,arguments->PQUEUE));
+      (struct INR_FC_ActT_RULE *) INR_ActT_shadow_get_addr (INR_FC_ActT_valid_mask&INR_ActT_get_next_free_entry (arguments->ID,arguments->dohave_PQUEUE,arguments->PQUEUE));
     if (entry != NULL) {
-      arguments->RULEPOINTER = INR_ActT_get_next_free_entry (arguments->ID,arguments->dohave_PQUEUE,arguments->PQUEUE);	//save where rule is stored
+      arguments->RULEPOINTER = INR_FC_ActT_valid_mask&INR_ActT_get_next_free_entry (arguments->ID,arguments->dohave_PQUEUE,arguments->PQUEUE);	//save where rule is stored
       arguments->TableID.ActT = arguments->RULEPOINTER;	//store table position in arguments structure
       arguments->ACTION_ID = arguments->RULEPOINTER;
       if (arguments->numberout)
