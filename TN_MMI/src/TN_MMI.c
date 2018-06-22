@@ -5,7 +5,7 @@
 #include "TN_MMI.h"
 #include "TN_MDIO.h"
 #include "tn_env.h"
-uint16_t INTERRRUPT_MASK=0xffffffff;
+uint16_t INTERRRUPT_MASK=0x13ff;
 
 void *gBaseVirt1_MMI = NULL;
 //*****************************************************************************************************************
@@ -91,7 +91,7 @@ if(ENABLE){
     INR_PCI_BAR1_read(INR_MDIO_interrupt);//read again to reset
     INR_PCI_BAR1_read(INR_MMI_interrupt_status);//read to reset
     
-    printk("HC interrupt 0:0x%x\n",INR_PCI_BAR1_read(INR_HC_INTERRUPT(0)));
+    /*printk("HC interrupt 0:0x%x\n",INR_PCI_BAR1_read(INR_HC_INTERRUPT(0)));
     printk("HC interrupt 1:0x%x\n",INR_PCI_BAR1_read(INR_HC_INTERRUPT(1)));
     printk("HC interrupt 2:0x%x\n",INR_PCI_BAR1_read(INR_HC_INTERRUPT(2)));
     printk("HC interrupt 3:0x%x\n",INR_PCI_BAR1_read(INR_HC_INTERRUPT(3)));
@@ -103,7 +103,19 @@ if(ENABLE){
     printk("HC interrupt 9:0x%x\n",INR_PCI_BAR1_read(INR_HC_INTERRUPT(9)));
     printk("HC interrupt 10:0x%x\n",INR_PCI_BAR1_read(INR_HC_INTERRUPT(10)));
     printk("HC interrupt 11:0x%x\n",INR_PCI_BAR1_read(INR_HC_INTERRUPT(11)));
-    
+    */
+    INR_PCI_BAR1_read(INR_HC_INTERRUPT(0));
+    INR_PCI_BAR1_read(INR_HC_INTERRUPT(1));
+    INR_PCI_BAR1_read(INR_HC_INTERRUPT(2));
+    INR_PCI_BAR1_read(INR_HC_INTERRUPT(3));
+    INR_PCI_BAR1_read(INR_HC_INTERRUPT(4));
+    INR_PCI_BAR1_read(INR_HC_INTERRUPT(5));
+    INR_PCI_BAR1_read(INR_HC_INTERRUPT(6));
+    INR_PCI_BAR1_read(INR_HC_INTERRUPT(7));
+    INR_PCI_BAR1_read(INR_HC_INTERRUPT(8));
+    INR_PCI_BAR1_read(INR_HC_INTERRUPT(9));
+    INR_PCI_BAR1_read(INR_HC_INTERRUPT(10));
+    INR_PCI_BAR1_read(INR_HC_INTERRUPT(11));
 }
 }
 //*****************************************************************************************************************

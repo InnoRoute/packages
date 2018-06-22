@@ -31,7 +31,9 @@ void INR_ALASKA_adapt_speed(uint8_t id);
 		#define ENABLE 0
 #endif
 
-
+#ifdef C_BASE_ADDR_NET_LOWER
+	#define ENABLE 1
+#endif
 
 #ifndef ENABLE
 	#define ENABLE 1
