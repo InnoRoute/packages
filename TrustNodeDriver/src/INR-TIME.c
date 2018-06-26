@@ -35,6 +35,7 @@ uint32_t CTRLD_rate=0x5000000;
 uint64_t CTRLD_offset=0;
 uint8_t TIME_DBG_mod=1;
 uint8_t INR_TIME_enable=0;
+uint8_t pollcount=0;
 //void *gBaseVirt1 = NULL;
 
 //*****************************************************************************************************************
@@ -106,7 +107,14 @@ void INR_TIME_TX_transmit_interrupt() {
     portmap=0xfff;
     if (TIME_DBG_mod)INR_LOG_debug(loglevel_warn"TX transmit interrupt handle portmap:0x%lx\n",portmap);
     for(i=0;i<32;i++)if(portmap&(1<<i)){
+    	pollcount=0;
     	while(entry_current!=0){
+    			pollcount++;
+    			if(pollcount>=INR_TIME_MAX_pollcount){
+    			INR_TIME_enable=0;
+    			INR_LOG_debug(loglevel_warn"time interrupt max pollcount reached, disabling TX timestamp interrupt\n");
+    			break;
+    			}
     	    entry_current=0xffff&INR_PCI_BAR1_read_ext((C_BASE_ADDR_NET_LOWER<<8)+C_SUB_ADDR_NET_TX_CONF_L+(i*2*4));
 	    timestamp=INR_PCI_BAR1_read_ext((C_BASE_ADDR_NET_LOWER<<8)+C_SUB_ADDR_NET_TX_CONF_L+((i*2)+1)*4);
 	    if(entry_current){

@@ -979,7 +979,7 @@ INR_TX_push (struct net_device *nwdev,struct sk_buff *skb, uint8_t * data, uint1
         if (TX_DBG_mod)INR_LOG_debug("drop tx pkg, pointer distance to small:%i\n",INR_PCI_pointerdistance (tail, head, INR_PCI_tx_descriptor_ring_length));
         return 1;
     }
-
+		
     if (TX_DBG_mod)// check if FPGA have forgotten a TX descriptor
         while (tx_head_backup != head) {
             volatile struct INR_PCI_tx_descriptor *TX_descriptor_headbackup = INR_PCI_tx_descriptor_ring[tx_head_backup];
@@ -1020,7 +1020,7 @@ INR_TX_push (struct net_device *nwdev,struct sk_buff *skb, uint8_t * data, uint1
     dma_sync_single_for_device (&globdev->dev, dma_addr, datalength, DMA_TO_DEVICE);
     if (TX_DBG_mod) {//dump packet content
         uint16_t tmp;
-        INR_LOG_debug (loglevel_info"TX-packet len:%i eop:%i port:%i ll:%i\n", datalength, eof, port,ll);
+        INR_LOG_debug (loglevel_info"TX-packet len:%i eop:%i port:%i ll:%i t_queue:%i\n", datalength, eof, port,ll,time_queue);
         printk (loglevel_info"TXdump:");
         for (tmp = 0; tmp < datalength; tmp++) {
             if ((tmp % 40) == 0)

@@ -178,11 +178,14 @@ INR_NW_tx (struct sk_buff *skb, struct net_device *nwdev)
         const u8 *data;
         unsigned int len;
         uint8_t time_queue=0;
+        uint32_t TXtimestamp=0;
         unsigned int consumed = 0;
         uint16_t TX_confirmastion_id=0;
         
-        time_queue=0x3f&skb->TN_extended;
-        printk("INR_exended: %i\n",skb->TN_extended);
+        time_queue=0x3f&skb->TN_TX_queue;
+        TXtimestamp=skb->TN_TX_timestamp;
+        
+        
         // if(zerocopy_tx)skb_shinfo(skb)->tx_flags |= SKBTX_DEV_ZEROCOPY; //maybe this fix the memory drain
         //######Timestamping
         if (skb_shinfo(skb)->tx_flags & SKBTX_HW_TSTAMP) { //check if timestamp is requested
@@ -204,8 +207,8 @@ INR_NW_tx (struct sk_buff *skb, struct net_device *nwdev)
                 int i = 0;
                 if(get_INR_PCI_HW_timestamp()){
                 	uint64_t *timestamp = kmalloc (8, GFP_DMA | GFP_ATOMIC);
-                	ktime_t time=ktime_get(); //real
-                	*timestamp=((uint64_t)TX_confirmastion_id<<32)|(0xffffffff&ktime_to_ns(time));
+                	//ktime_t time=ktime_get(); //real
+                	*timestamp=((uint64_t)TX_confirmastion_id<<32)|(0xffffffff&TXtimestamp);
                 	error = INR_TX_push (nwdev,skb, timestamp, 8, 0, toport, get_send2cpu(), 0, 1,time_queue);
                 	if (error) {
                    	 goto errorhandling;
@@ -230,8 +233,8 @@ INR_NW_tx (struct sk_buff *skb, struct net_device *nwdev)
                 skb_prepare_seq_read (skb, from, to, &st);
                 if(get_INR_PCI_HW_timestamp()){
                 	uint64_t *timestamp = kmalloc (8, GFP_DMA | GFP_ATOMIC);
-                	ktime_t time=ktime_get();
-                	*timestamp=ktime_to_ns(time);
+                	//ktime_t time=ktime_get();
+                	*timestamp=((uint64_t)TX_confirmastion_id<<32)|(0xffffffff&TXtimestamp);
                 	error = INR_TX_push (nwdev,skb, timestamp, 8, 0, toport, get_send2cpu(), 0, 1,time_queue);
                 	if (error) {
                    	 goto errorhandling;
@@ -260,8 +263,8 @@ INR_NW_tx (struct sk_buff *skb, struct net_device *nwdev)
                 uint64_t countfrag = 0;
 		if(get_INR_PCI_HW_timestamp()){
                 	uint64_t *timestamp = kmalloc (8, GFP_DMA | GFP_ATOMIC);
-                	ktime_t time=ktime_get();
-                	*timestamp=((uint64_t)TX_confirmastion_id<<32)|(0xffffffff&ktime_to_ns(time));
+                	//ktime_t time=ktime_get();
+                	*timestamp=((uint64_t)TX_confirmastion_id<<32)|(0xffffffff&TXtimestamp);
                 	error = INR_TX_push (nwdev,skb, timestamp, 8, 0, toport, get_send2cpu(), 0, 1,time_queue);
                 	if (error) {
                    	 goto errorhandling;
@@ -302,8 +305,8 @@ INR_NW_tx (struct sk_buff *skb, struct net_device *nwdev)
                     }
                     if(get_INR_PCI_HW_timestamp()){
                 	uint64_t *timestamp = kmalloc (8, GFP_DMA | GFP_ATOMIC);
-                	ktime_t time=ktime_get();
-                	*timestamp=((uint64_t)TX_confirmastion_id<<32)|(0xffffffff&ktime_to_ns(time));
+                	//ktime_t time=ktime_get();
+                	*timestamp=((uint64_t)TX_confirmastion_id<<32)|(0xffffffff&TXtimestamp);
                 	error = INR_TX_push (nwdev,skb, timestamp, 8, 0, toport, get_send2cpu(), 0, 1,time_queue);
                 	if (error) {
                    	 goto errorhandling;

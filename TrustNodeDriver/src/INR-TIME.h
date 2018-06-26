@@ -20,6 +20,7 @@ void INR_TIME_set_enable(uint8_t enable);
 
 #define INR_TIME_vortex_length 65536
 #define INR_TIME_base 1
+#define INR_TIME_MAX_pollcount 50
 
 struct INR_TIME_TX_entry
 {
