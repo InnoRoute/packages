@@ -41,17 +41,15 @@
 #include <sys/select.h>
 #include <sys/ioctl.h>
 #include <arpa/inet.h>
-#include <net/if.h>
+
 
 #include <asm/types.h>
 #include <linux/net_tstamp.h>
 #include <linux/errqueue.h>
+#include "tntimestamp.h"
 
 #ifndef SIOCSHWTSTAMP
 	# define SIOCSHWTSTAMP 0x89b0
-#endif
-#ifndef PACKET_INR_EXT
-	#define PACKET_INR_EXT	666
 #endif
 
 
@@ -67,12 +65,12 @@
 void die(char* s)
 {
     perror(s);
-    //exit(1);
+    exit(1);
 }
 static void bail(const char *error)
 {
 	printf("%s: %s\n", error, strerror(errno));
-	//exit(1);
+	exit(1);
 }
 int main(int argc, char *argv[])
 {
@@ -88,13 +86,17 @@ int main(int argc, char *argv[])
 	struct iphdr *iph = (struct iphdr *) (sendbuf + sizeof(struct ether_header));
 	struct sockaddr_ll socket_address;
 	char ifName[IFNAMSIZ];
+	uint32_t timequeue=0;
+	uint32_t timestamp=0;
 	
 	/* Get interface name */
 	if (argc > 1)
 		strcpy(ifName, argv[1]);
 	else
-		strcpy(ifName, DEFAULT_IF);
-
+		{printf("usage: %s <interface> <timequeue> <timestamp>\n",argv[0]);
+		exit(1);}
+	if(argc>2) timequeue=atoi(argv[2]);
+	if(argc>3) timestamp=atoi(argv[3]);
 	/* Open RAW socket to send on */
 	if ((sockfd = socket(AF_PACKET, SOCK_RAW, IPPROTO_RAW)) == -1) {
 	    perror("socket");
@@ -179,8 +181,11 @@ int main(int argc, char *argv[])
 	int one = 1;
 	if(setsockopt(sockfd, SOL_PACKET, PACKET_QDISC_BYPASS, &one, sizeof(one)) < 0)
 	bail("setsockopt PACKET_QDISC_BYPASS");
-	int inr_ext=666;
-	if(setsockopt(sockfd, SOL_PACKET, PACKET_INR_EXT, &inr_ext, sizeof(inr_ext)) < 0)
+	int inr_ext=timequeue;
+	if(setsockopt(sockfd, SOL_PACKET, PACKET_INR_TX_queue, &inr_ext, sizeof(inr_ext)) < 0)
+	bail("setsockopt PACKET_INR_EXT");
+	inr_ext=timestamp;
+	if(setsockopt(sockfd, SOL_PACKET, PACKET_INR_TX_timestamp, &inr_ext, sizeof(inr_ext)) < 0)
 	bail("setsockopt PACKET_INR_EXT");
 
 
