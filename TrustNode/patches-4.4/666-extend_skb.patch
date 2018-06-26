@@ -2,11 +2,13 @@ Index: linux-4.4.112/include/linux/skbuff.h
 ===================================================================
 --- linux-4.4.112.orig/include/linux/skbuff.h
 +++ linux-4.4.112/include/linux/skbuff.h
-@@ -709,6 +709,7 @@ struct sk_buff {
+@@ -709,6 +709,9 @@ struct sk_buff {
  				*data;
  	unsigned int		truesize;
  	atomic_t		users;
 +	__u32			TN_extended;
++	__u32			TN_TX_queue;
++	__u32			TN_TX_timestamp;
  };
  
  #ifdef __KERNEL__
@@ -14,11 +16,13 @@ Index: linux-4.4.112/include/uapi/linux/if_packet.h
 ===================================================================
 --- linux-4.4.112.orig/include/uapi/linux/if_packet.h
 +++ linux-4.4.112/include/uapi/linux/if_packet.h
-@@ -59,6 +59,7 @@ struct sockaddr_ll {
+@@ -59,6 +59,9 @@ struct sockaddr_ll {
  #define PACKET_ROLLOVER_STATS		21
  #define PACKET_FANOUT_DATA		22
  #define PACKET_RECV_TYPE		23
 +#define PACKET_INR_EXT			666  //devil is in the detail
++#define PACKET_INR_TX_queue		667
++#define PACKET_INR_TX_timestamp	668
  
  #define PACKET_FANOUT_HASH		0
  #define PACKET_FANOUT_LB		1
@@ -44,11 +48,13 @@ Index: linux-4.4.112/net/packet/af_packet.c
  		packet_pick_tx_queue(dev, skb);
  
  		skb->destructor = tpacket_destruct_skb;
-@@ -2634,6 +2634,7 @@ static struct sk_buff *packet_alloc_skb(
+@@ -2634,6 +2634,9 @@ static struct sk_buff *packet_alloc_skb(
  	skb_put(skb, linear);
  	skb->data_len = len - linear;
  	skb->len += len - linear;
 +	skb->TN_extended=sk->INR_EXT;
++	skb->TN_TX_queue=sk->INR_TX_queue;
++	skb->TN_TX_timestamp=sk->INR_TX_timestamp;
  
  	return skb;
  }
@@ -61,7 +67,7 @@ Index: linux-4.4.112/net/packet/af_packet.c
  	switch (optname) {
  	case PACKET_ADD_MEMBERSHIP:
  	case PACKET_DROP_MEMBERSHIP:
-@@ -3758,6 +3759,16 @@ packet_setsockopt(struct socket *sock, i
+@@ -3758,6 +3759,36 @@ packet_setsockopt(struct socket *sock, i
  		po->xmit = val ? packet_direct_xmit : dev_queue_xmit;
  		return 0;
  	}
@@ -75,15 +81,41 @@ Index: linux-4.4.112/net/packet/af_packet.c
 +		sk->INR_EXT=val;
 +		return 0;
 +	}
++	case PACKET_INR_TX_queue:
++	{	int val;
++
++		if (optlen != sizeof(val))
++			return -EINVAL;
++		if (copy_from_user(&val, optval, sizeof(val)))
++			return -EFAULT;
++		sk->INR_TX_queue=val;
++		return 0;
++	}
++	case PACKET_INR_TX_timestamp:
++	{	int val;
++
++		if (optlen != sizeof(val))
++			return -EINVAL;
++		if (copy_from_user(&val, optval, sizeof(val)))
++			return -EFAULT;
++		sk->INR_TX_timestamp=val;
++		return 0;
++	}
          case PACKET_RECV_TYPE:
          {
                  unsigned int val;
-@@ -3882,6 +3893,9 @@ static int packet_getsockopt(struct sock
+@@ -3882,6 +3893,15 @@ static int packet_getsockopt(struct sock
  	case PACKET_QDISC_BYPASS:
  		val = packet_use_direct_xmit(po);
  		break;
 +	case PACKET_INR_EXT:
 +		val = sk->INR_EXT;
++		break;
++	case PACKET_INR_TX_queue:
++		val = sk->INR_TX_queue;
++		break;
++	case PACKET_INR_TX_timestamp:
++		val = sk->INR_TX_timestamp;
 +		break;
  	default:
  		return -ENOPROTOOPT;
@@ -92,19 +124,23 @@ Index: linux-4.4.112/include/net/sock.h
 ===================================================================
 --- linux-4.4.112.orig/include/net/sock.h
 +++ linux-4.4.112/include/net/sock.h
-@@ -241,6 +241,7 @@ struct sock_common {
+@@ -241,6 +241,9 @@ struct sock_common {
  		u32		skc_tw_snd_nxt; /* struct tcp_timewait_sock */
  	};
  	/* public: */
-+	uint16_t INR_EXT;
++	uint32_t INR_EXT;
++	uint32_t INR_TX_queue;
++	uint32_t INR_TX_timestamp;
  };
  
  struct cg_proto;
-@@ -457,6 +458,8 @@ struct sock {
+@@ -457,6 +458,10 @@ struct sock {
  	int			(*sk_backlog_rcv)(struct sock *sk,
  						  struct sk_buff *skb);
  	void                    (*sk_destruct)(struct sock *sk);
-+	uint16_t		INR_EXT;
++	uint32_t		INR_EXT;
++	uint32_t		INR_TX_queue;
++	uint32_t		INR_TX_timestamp;
 +	
  };
  
@@ -113,11 +149,13 @@ Index: linux-4.4.112/net/core/skbuff.c
 ===================================================================
 --- linux-4.4.112.orig/net/core/skbuff.c
 +++ linux-4.4.112/net/core/skbuff.c
-@@ -250,6 +250,7 @@ struct sk_buff *__alloc_skb(unsigned int
+@@ -250,6 +250,9 @@ struct sk_buff *__alloc_skb(unsigned int
  	atomic_set(&skb->users, 1);
  	skb->head = data;
  	skb->data = data;
 +	skb->TN_extended=0;
++	skb->TN_TX_queue=0;
++	skb->TN_TX_timestamp=0;
  	skb_reset_tail_pointer(skb);
  	skb->end = skb->tail + size;
  	skb->mac_header = (typeof(skb->mac_header))~0U;
