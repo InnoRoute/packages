@@ -300,20 +300,33 @@ else
     echo " ** MMI Read Timeout **"
   fi
   
-  let    tm_buffer_underrun=`TNbar1 $(($C_BASE_ADDR_COMMON_LOWER*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_COMMON_BUFFER_FULL)) | cut -d " " -f 6`
-  echo   "Packet Buffer Full: $tm_buffer_underrun"
-  if [[ $tm_buffer_underrun -eq 0xEEEEEEEE ]]; then
-    echo " ** MMI Read Timeout **"
+  tn_ll_mmi_read $C_BASE_ADDR_TM $C_SUB_ADDR_TM_PTR_CNT
+  echo   "Packet Buffers in use: $read_data"
+  if [[ $read_data -gt 3000 ]]; then
+    echo " - ### Packet Buffer Underrun - System crashed ###"
+  fi;
+  if [[ $read_data -gt 2700 && $read_data -lt 3001 ]]; then
+    echo " - Possibly tail dropping received packets"
+  fi;
+  
+  tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_BUFFER_FULL
+  printf "Packet Buffer Full: %d\n" $(($read_data & 1))
+  if [[ $((($read_data & 0x00FF0000) >> 16)) -eq 3 ]]; then
+    echo   "RX Datapaths ready.";
+  else
+    printf "RX Datapaths experience backpressure: 0x%x\n" $((($read_data & 0x00FF0000) >> 24))
+  fi
+  if [[ $((($read_data & 0xFF000000) >> 24)) -eq 3 ]]; then
+    echo   "TX Datapaths ready.";
+  else
+    printf "TX Datapaths experience backpressure: 0x%x\n" $((($read_data & 0xFF000000) >> 24))
   fi
   
-  let    txf_full_bitmap=`TNbar1 $(($C_BASE_ADDR_COMMON_LOWER*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_COMMON_TXF_FULL)) | cut -d " " -f 6`
-  if [[ $txf_full_bitmap -eq 0 ]]; then
-    echo   "TX FIFO Full Port Bitmap: 0";
+  tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_TXF_FULL
+  if [[ $read_data -eq 0 ]]; then
+    echo   "TX FIFO Full Port Bitmap (current): 0";
   else
-    printf "TX FIFO Full Port Bitmap: 0x%08x\n" $txf_full_bitmap
-  fi
-  if [[ $txf_full_bitmap -eq 0xEEEEEEEE ]]; then
-    echo " ** MMI Read Timeout **"
+    printf "TX FIFO Full Port Bitmap (current): 0x%08x\n" $read_data
   fi
   
   echo -e "\n### Current MMI status:"

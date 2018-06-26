@@ -430,6 +430,57 @@ tn_ll_mmi_read 0x800F04
 echo "C_SUB_ADDR_HC_INTERRUPT_EN Port15/PCIe1"
 tn_ll_mmi_read 0x800F08
 
+echo "C_SUB_ADDR_NOC_MON_STATUS (RO,COR) Port 0"
+tn_ll_mmi_read 0x808000
+tn_ll_mmi_read 0x808000
+echo "C_SUB_ADDR_NOC_MON_STATUS (RO,COR) Port 1"
+tn_ll_mmi_read 0x808100
+tn_ll_mmi_read 0x808100
+echo "C_SUB_ADDR_NOC_MON_STATUS (RO,COR) Port 2"
+tn_ll_mmi_read 0x808200
+tn_ll_mmi_read 0x808200
+echo "C_SUB_ADDR_NOC_MON_STATUS (RO,COR) Port 3"
+tn_ll_mmi_read 0x808300
+tn_ll_mmi_read 0x808300
+echo "C_SUB_ADDR_NOC_MON_STATUS (RO,COR) Port 4"
+tn_ll_mmi_read 0x808400
+tn_ll_mmi_read 0x808400
+echo "C_SUB_ADDR_NOC_MON_STATUS (RO,COR) Port 5"
+tn_ll_mmi_read 0x808500
+tn_ll_mmi_read 0x808500
+echo "C_SUB_ADDR_NOC_MON_STATUS (RO,COR) Port 6"
+tn_ll_mmi_read 0x808600
+tn_ll_mmi_read 0x808600
+echo "C_SUB_ADDR_NOC_MON_STATUS (RO,COR) Port 7"
+tn_ll_mmi_read 0x808700
+tn_ll_mmi_read 0x808700
+echo "C_SUB_ADDR_NOC_MON_STATUS (RO,COR) Port 8"
+tn_ll_mmi_read 0x808800
+tn_ll_mmi_read 0x808800
+echo "C_SUB_ADDR_NOC_MON_STATUS (RO,COR) Port 9"
+tn_ll_mmi_read 0x808900
+tn_ll_mmi_read 0x808900
+echo "C_SUB_ADDR_NOC_MON_STATUS (RO,COR) Port 10"
+tn_ll_mmi_read 0x808A00
+tn_ll_mmi_read 0x808A00
+echo "C_SUB_ADDR_NOC_MON_STATUS (RO,COR) Port 11"
+tn_ll_mmi_read 0x808B00
+tn_ll_mmi_read 0x808B00
+echo "C_SUB_ADDR_NOC_MON_STATUS (RO,COR) Port 12 (SFP)"
+tn_ll_mmi_read 0x808C00
+tn_ll_mmi_read 0x808C00
+echo "C_SUB_ADDR_NOC_MON_STATUS (RO,COR) Port 13 (SFP)"
+tn_ll_mmi_read 0x808D00
+tn_ll_mmi_read 0x808D00
+echo "C_SUB_ADDR_NOC_MON_STATUS (RO,COR) Port 14/PCIe0"
+tn_ll_mmi_read 0x808E00
+tn_ll_mmi_read 0x808E00
+echo "C_SUB_ADDR_NOC_MON_STATUS (RO,COR) Port 15/PCIe1"
+tn_ll_mmi_read 0x808F00
+tn_ll_mmi_read 0x808F00
+
+echo "C_SUB_ADDR_NOC_MON_FIRST_ERR to be added"
+
 echo "C_BASE_ADDR_HT0 Word0"
 tn_ll_mmi_read 0x808000
 echo "C_BASE_ADDR_HT0 Word1"
@@ -893,7 +944,7 @@ tn_ll_mmi_write 0xD27438 0x000000FF
 tn_ll_mmi_write 0xD27C38 0x000000FF
 
 echo "C_TM_SCHED_TAS_CUR_TIME"
-read 00D20544
+tn_ll_mmi_read 0xD20544
 
 echo "TAS output port 0 for 4 entries"
 echo "C_TM_SCHED_GCL_LOWER: the gcl entries"

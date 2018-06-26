@@ -70,7 +70,9 @@ else
   done
 
   if [[ $1 > 0 ]]; then
-    echo -e "\n### Please start the traffic NOW"
+    if [[ $1 == 2 ]]; then
+      echo -e "\n### Please start the traffic NOW"
+	fi
   
     echo -e "\n### GPHY: RX Packet Counters (saturating at 255, non-zero only)"
     let page=0
@@ -229,6 +231,7 @@ else
     ## Dev 0x1F -> let reg=0x1EA/B: EEE Link-Fail Counter
   
     echo -e "\n### Alaska: Copper-specific Receive Error Counters: false carrier or symbol error (saturating at 65535, non-zero only)"
+	echo "Saturated at maximum, if not connected"
     let page=0
     let reg=0x15
     #echo "Alaska PAGE:$page, REG:$reg"
@@ -244,6 +247,7 @@ else
     echo "Total RX Errors: $total packets"
   
     echo -e "\n### Alaska: CRC Counters (saturating at 255, non-zero only)"
+	echo "Saturated at maximum, if not connected"
     let page=0x12
     let reg=0x12
     # Select Copper Counters:
@@ -428,11 +432,11 @@ else
 		if [ $inprt -eq $outprt ]; then
           echo "DP0 counter $i ($inprt loopback): $read_data"
 		elif [ $inprt -eq $(($outprt+16)) ]; then
-          echo "DP0 counter $i (CPU->$outprt):    $read_data"
+          echo "DP0 counter $i (CPU->$outprt):     $read_data"
 		elif [ $(($inprt+16)) -eq $outprt ]; then
           echo "DP0 counter $i ($inprt->CPU):     $read_data"
 		else
-          echo "DP0 counter $i ($inprt->$outprt): $read_data"
+          echo "DP0 counter $i ($inprt->$outprt):       $read_data"
 		fi
       fi
     done
@@ -445,11 +449,11 @@ else
 		if [ $inprt -eq $outprt ]; then
           echo "DP1 counter $i ($inprt loopback): $read_data"
 		elif [ $inprt -eq $(($outprt+16)) ]; then
-          echo "DP1 counter $i (CPU->$outprt):    $read_data"
+          echo "DP1 counter $i (CPU->$outprt):     $read_data"
 		elif [ $(($inprt+16)) -eq $outprt ]; then
           echo "DP1 counter $i ($inprt->CPU):     $read_data"
 		else
-          echo "DP1 counter $i ($inprt->$outprt): $read_data"
+          echo "DP1 counter $i ($inprt->$outprt):       $read_data"
 		fi
       fi
     done
@@ -533,9 +537,9 @@ else
     #echo "## Missing: HT Counters                                      ##"
     #echo "###############################################################"
   
-    echo "###############################################################"
-    echo "## Missing: TX Activity Counter                              ##"
-    echo "###############################################################"
+    #echo "###############################################################"
+    #echo "## Missing: TX Activity Counter                              ##"
+    #echo "###############################################################"
   
     echo -e "\n### GPHY: TX Packet Counters (saturating at 255, non-zero only)"
     let page=0
@@ -650,7 +654,7 @@ else
 	  fi
     done
     echo "Total Collisions: $total packets"
-    echo "### No transmit counters for Alaskas"
+    #echo "### No transmit counters for Alaskas"
   fi
   echo "Done"
 fi  
