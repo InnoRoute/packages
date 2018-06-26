@@ -6,6 +6,7 @@
 #include "TN_MDIO.h"
 #include "tn_env.h"
 uint16_t INTERRRUPT_MASK=0x13ff;
+uint8_t pollcount=0;
 
 void *gBaseVirt1_MMI = NULL;
 //*****************************************************************************************************************
@@ -84,7 +85,15 @@ void INR_MMI_interrupt_handler() {
 if(ENABLE){
     INR_MMI_PHY_interrupt(MDIO_int&INTERRRUPT_MASK);
     INR_PCI_BAR1_read(INR_MDIO_interrupt);
-    while(INTERRRUPT_MASK&INR_PCI_BAR1_read(INR_MDIO_interrupt))INR_MMI_PHY_interrupt(INTERRRUPT_MASK);//if not reset poll all
+    pollcount=0;
+    while(INTERRRUPT_MASK&INR_PCI_BAR1_read(INR_MDIO_interrupt)){
+    INR_MMI_PHY_interrupt(INTERRRUPT_MASK);//if not reset poll allu
+    pollcount++;
+    if(pollcount>=INR_MAX_POLL){
+    	INTERRRUPT_MASK=0;
+    	printk("INR int error, max pollcount reached, forcing interrupt mask to 0\n");
+    	break;}
+    }
     //if(MDIO_int&(3<<16))INR_MMI_ALASKA_PHY_PTP_interrupt((MDIO_int>>16)&3);
     //if(MDIO_int&(1<<30))INR_MMI_PHY_hard_reset();
     //if(MDIO_int&(1<<31))INR_MMI_PHY_hard_reset();
