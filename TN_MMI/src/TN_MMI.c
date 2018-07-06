@@ -7,7 +7,7 @@
 #include "tn_env.h"
 uint16_t INTERRRUPT_MASK=0x13ff;
 uint8_t pollcount=0;
-
+void (*TIME_int_handler)(void);
 void *gBaseVirt1_MMI = NULL;
 //*****************************************************************************************************************
 /**
@@ -61,6 +61,7 @@ void INR_MMI_init(uint64_t *bar1) {
     }
     printk("INR_MMI_init base:0x%lx\n",gBaseVirt1_MMI);
     //if(gBaseVirt1_MMI)INR_MDIO_init(gBaseVirt1_MMI);//init mdio
+    TIME_int_handler= symbol_get(INR_TIME_TX_transmit_interrupt);
 
 }
 //*****************************************************************************************************************
@@ -91,14 +92,27 @@ if(ENABLE){
     pollcount++;
     if(pollcount>=INR_MAX_POLL){
     	INTERRRUPT_MASK=0;
-    	printk("INR int error, max pollcount reached, forcing interrupt mask to 0\n");
+    	printk("INR int error, max pollcount reached for MDIO interrupt, forcing interrupt mask to 0\n");
     	break;}
     }
     //if(MDIO_int&(3<<16))INR_MMI_ALASKA_PHY_PTP_interrupt((MDIO_int>>16)&3);
     //if(MDIO_int&(1<<30))INR_MMI_PHY_hard_reset();
     //if(MDIO_int&(1<<31))INR_MMI_PHY_hard_reset();
     INR_PCI_BAR1_read(INR_MDIO_interrupt);//read again to reset
-    INR_PCI_BAR1_read(INR_MMI_interrupt_status);//read to reset
+    if(TIME_int_handler)TIME_int_handler();//call TX_timestamp interrupt
+	else {printk("error TIME_int_handler not registred\n");
+	TIME_int_handler=symbol_get(INR_TIME_TX_transmit_interrupt);
+	if(TIME_int_handler)TIME_int_handler();//call TX_timestamp interrupt
+	else printk("error TIME_int_handler not registred\n");
+	}
+    pollcount=0;
+    while(INR_PCI_BAR1_read(INR_MMI_interrupt_status)){//read to reset
+    pollcount++;
+    if(pollcount>=INR_MAX_POLL){
+    	INTERRRUPT_MASK=0;
+    	printk("INR int error, max pollcount reached for MMI interrupt, forcing interrupt mask to 0\n");
+    	break;}
+    }
     
     /*printk("HC interrupt 0:0x%x\n",INR_PCI_BAR1_read(INR_HC_INTERRUPT(0)));
     printk("HC interrupt 1:0x%x\n",INR_PCI_BAR1_read(INR_HC_INTERRUPT(1)));
@@ -113,18 +127,117 @@ if(ENABLE){
     printk("HC interrupt 10:0x%x\n",INR_PCI_BAR1_read(INR_HC_INTERRUPT(10)));
     printk("HC interrupt 11:0x%x\n",INR_PCI_BAR1_read(INR_HC_INTERRUPT(11)));
     */
-    INR_PCI_BAR1_read(INR_HC_INTERRUPT(0));
-    INR_PCI_BAR1_read(INR_HC_INTERRUPT(1));
-    INR_PCI_BAR1_read(INR_HC_INTERRUPT(2));
-    INR_PCI_BAR1_read(INR_HC_INTERRUPT(3));
-    INR_PCI_BAR1_read(INR_HC_INTERRUPT(4));
-    INR_PCI_BAR1_read(INR_HC_INTERRUPT(5));
-    INR_PCI_BAR1_read(INR_HC_INTERRUPT(6));
-    INR_PCI_BAR1_read(INR_HC_INTERRUPT(7));
-    INR_PCI_BAR1_read(INR_HC_INTERRUPT(8));
-    INR_PCI_BAR1_read(INR_HC_INTERRUPT(9));
-    INR_PCI_BAR1_read(INR_HC_INTERRUPT(10));
-    INR_PCI_BAR1_read(INR_HC_INTERRUPT(11));
+    INR_PCI_BAR1_read(INR_PCI_BAR1_read(INR_HC_INTERRUPT(0)));
+    INR_PCI_BAR1_read(INR_PCI_BAR1_read(INR_HC_INTERRUPT(1)));
+    INR_PCI_BAR1_read(INR_PCI_BAR1_read(INR_HC_INTERRUPT(2)));
+    INR_PCI_BAR1_read(INR_PCI_BAR1_read(INR_HC_INTERRUPT(3)));
+    INR_PCI_BAR1_read(INR_PCI_BAR1_read(INR_HC_INTERRUPT(4)));
+    INR_PCI_BAR1_read(INR_PCI_BAR1_read(INR_HC_INTERRUPT(5)));
+    INR_PCI_BAR1_read(INR_PCI_BAR1_read(INR_HC_INTERRUPT(6)));
+    INR_PCI_BAR1_read(INR_PCI_BAR1_read(INR_HC_INTERRUPT(7)));
+    INR_PCI_BAR1_read(INR_PCI_BAR1_read(INR_HC_INTERRUPT(8)));
+    INR_PCI_BAR1_read(INR_PCI_BAR1_read(INR_HC_INTERRUPT(9)));
+    INR_PCI_BAR1_read(INR_PCI_BAR1_read(INR_HC_INTERRUPT(10)));
+    INR_PCI_BAR1_read(INR_PCI_BAR1_read(INR_HC_INTERRUPT(11)));
+    /*
+    pollcount=0;
+    while(INR_PCI_BAR1_read(INR_PCI_BAR1_read(INR_HC_INTERRUPT(0)))){//read to reset
+    pollcount++;
+    if(pollcount>=INR_MAX_POLL){
+    	INTERRRUPT_MASK=0;
+    	printk("INR int error, max pollcount reached for INR_HC_INTERRUPT0, forcing interrupt mask to 0\n");
+    	break;}
+    	}
+    pollcount=0;
+    while(INR_PCI_BAR1_read(INR_PCI_BAR1_read(INR_HC_INTERRUPT(1)))){//read to reset
+    pollcount++;
+    if(pollcount>=INR_MAX_POLL){
+    	INTERRRUPT_MASK=0;
+    	printk("INR int error, max pollcount reached for INR_HC_INTERRUPT1, forcing interrupt mask to 0\n");
+    	break;}
+    }
+    pollcount=0;
+    while(INR_PCI_BAR1_read(INR_PCI_BAR1_read(INR_HC_INTERRUPT(2)))){//read to reset
+    pollcount++;
+    if(pollcount>=INR_MAX_POLL){
+    	INTERRRUPT_MASK=0;
+    	printk("INR int error, max pollcount reached for INR_HC_INTERRUPT2, forcing interrupt mask to 0\n");
+    	break;}
+    }
+    pollcount=0;
+    while(INR_PCI_BAR1_read(INR_PCI_BAR1_read(INR_HC_INTERRUPT(3)))){//read to reset
+    pollcount++;
+    if(pollcount>=INR_MAX_POLL){
+    	INTERRRUPT_MASK=0;
+    	printk("INR int error, max pollcount reached for INR_HC_INTERRUPT3, forcing interrupt mask to 0\n");
+    	break;}
+    }
+    pollcount=0;
+    while(INR_PCI_BAR1_read(INR_PCI_BAR1_read(INR_HC_INTERRUPT(4)))){//read to reset
+    pollcount++;
+    if(pollcount>=INR_MAX_POLL){
+    	INTERRRUPT_MASK=0;
+    	printk("INR int error, max pollcount reached for INR_HC_INTERRUPT4, forcing interrupt mask to 0\n");
+    	break;}
+    }
+    pollcount=0;
+    while(INR_PCI_BAR1_read(INR_PCI_BAR1_read(INR_HC_INTERRUPT(5)))){//read to reset
+    pollcount++;
+    if(pollcount>=INR_MAX_POLL){
+    	INTERRRUPT_MASK=0;
+    	printk("INR int error, max pollcount reached for INR_HC_INTERRUPT5, forcing interrupt mask to 0\n");
+    	break;}
+    }
+    pollcount=0;
+    while(INR_PCI_BAR1_read(INR_PCI_BAR1_read(INR_HC_INTERRUPT(6)))){//read to reset
+    pollcount++;
+    if(pollcount>=INR_MAX_POLL){
+    	INTERRRUPT_MASK=0;
+    	printk("INR int error, max pollcount reached for INR_HC_INTERRUPT6, forcing interrupt mask to 0\n");
+    	break;}
+    }
+    pollcount=0;
+    while(INR_PCI_BAR1_read(INR_PCI_BAR1_read(INR_HC_INTERRUPT(7)))){//read to reset
+    pollcount++;
+    if(pollcount>=INR_MAX_POLL){
+    	INTERRRUPT_MASK=0;
+    	printk("INR int error, max pollcount reached for INR_HC_INTERRUPT7, forcing interrupt mask to 0\n");
+    	break;}
+    }
+    pollcount=0;
+    while(INR_PCI_BAR1_read(INR_PCI_BAR1_read(INR_HC_INTERRUPT(8)))){//read to reset
+    pollcount++;
+    if(pollcount>=INR_MAX_POLL){
+    	INTERRRUPT_MASK=0;
+    	printk("INR int error, max pollcount reached for INR_HC_INTERRUPT8, forcing interrupt mask to 0\n");
+    	break;}
+    }
+    pollcount=0;
+    while(INR_PCI_BAR1_read(INR_PCI_BAR1_read(INR_HC_INTERRUPT(9)))){//read to reset
+    pollcount++;
+    if(pollcount>=INR_MAX_POLL){
+    	INTERRRUPT_MASK=0;
+    	printk("INR int error, max pollcount reached for INR_HC_INTERRUPT9, forcing interrupt mask to 0\n");
+    	break;}
+    }
+    pollcount=0;
+    while(INR_PCI_BAR1_read(INR_PCI_BAR1_read(INR_HC_INTERRUPT(10)))){//read to reset
+    pollcount++;
+    if(pollcount>=INR_MAX_POLL){
+    	INTERRRUPT_MASK=0;
+    	printk("INR int error, max pollcount reached for INR_HC_INTERRUPT10, forcing interrupt mask to 0\n");
+    	break;}
+    }
+    pollcount=0;
+    while(INR_PCI_BAR1_read(INR_PCI_BAR1_read(INR_HC_INTERRUPT(11)))){//read to reset
+    pollcount++;
+    if(pollcount>=INR_MAX_POLL){
+    	INTERRRUPT_MASK=0;
+    	printk("INR int error, max pollcount reached for INR_HC_INTERRUPT11, forcing interrupt mask to 0\n");
+    	break;}
+    }
+    */
+
 }
 }
 //*****************************************************************************************************************
@@ -133,7 +246,8 @@ if(ENABLE){
 *
 */
 void INR_MMI_exit() {
-    printk("%s\n", __func__);
+	symbol_put(INR_TIME_TX_transmit_interrupt);
+    	printk("%s\n", __func__);
 }
 //*****************************************************************************************************************
 /**
@@ -196,6 +310,11 @@ void INR_MMI_PHY_interrupt(uint16_t id) {
 			    break;
 			case (1<<0):
 			    printk("Port %i: link state change interrupt status\n",i);
+			    if(i==0){
+			    INR_PCI_BAR1_write(0x0,0xc00040);
+			    INR_PCI_BAR1_write(0x0,0xc00060);
+			    printk("del collT entry 0\n");
+			       }
 			    break;//link state change
 			default:
 			    break;
