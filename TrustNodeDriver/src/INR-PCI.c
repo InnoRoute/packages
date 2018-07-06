@@ -46,7 +46,7 @@ uint64_t INR_RX_Ring[INR_PCI_rx_descriptor_ring_count];	      /**<Address of RX-
 uint64_t INR_PCI_tx_descriptor_ring[INR_PCI_tx_descriptor_ring_length] = { 0 };/**<Saving the addresses of TX descriptors*/
 uint64_t INR_PCI_rx_descriptor_ring[INR_PCI_rx_descriptor_ring_length]
 [INR_PCI_rx_descriptor_ring_count] = {0};/**<Saving the addresses of RX descriptors*/
-uint32_t FPGA_PORT_mask=0;		/**<saving status of FPGA PHY ports*/		   	
+uint32_t FPGA_PORT_mask=0;		/**<saving status of FPGA PHY ports*/
 
 volatile uint8_t txsemophore = 0;
 uint64_t INR_PCI_tx_descriptor_base = NULL;					/**<Base address of TX ring*/
@@ -118,14 +118,15 @@ INR_PCI_zerovars() {
 *Change Status of an FPGA-PHY-port
 *@brief This is nor the real phy port, just a switch inside the FPGA to control the transmission of packetes to the CPU
 */
-void INR_PCI_FPGA_PORT_status(uint8_t id, uint8_t status){
+void INR_PCI_FPGA_PORT_status(uint8_t id, uint8_t status) {
 
-if (status) FPGA_PORT_mask|=(1<<id); else FPGA_PORT_mask&=~(1<<id);
+    if (status) FPGA_PORT_mask|=(1<<id);
+    else FPGA_PORT_mask&=~(1<<id);
 #ifdef C_SUB_ADDR_NET_ENABLE
-	if(gBaseVirt1){
-	
-	if(HW_addr_map_revision>=5)INR_PCI_BAR1_write(FPGA_PORT_mask,(C_BASE_ADDR_NET_LOWER<<8)+C_SUB_ADDR_NET_ENABLE);
-		}
+    if(gBaseVirt1) {
+
+        if(HW_addr_map_revision>=5)INR_PCI_BAR1_write(FPGA_PORT_mask,(C_BASE_ADDR_NET_LOWER<<8)+C_SUB_ADDR_NET_ENABLE);
+    }
 #endif
 
 
@@ -170,26 +171,27 @@ INR_PCI_tx_unmapper (struct INR_PCI_tx_descriptor_ring_entry *entry)//currently 
 /**
 *read features of Hardware
 */
-uint8_t get_HW_user_feature(uint32_t featurerequest){
-if(HW_features_user&featurerequest) return 1; else return 0;
+uint8_t get_HW_user_feature(uint32_t featurerequest) {
+    if(HW_features_user&featurerequest) return 1;
+    else return 0;
 }
 
 //*****************************************************************************************************************
 /**
 *read from bar1
 */
-uint32_t INR_PCI_BAR1_read_ext(uint32_t read_addr){
+uint32_t INR_PCI_BAR1_read_ext(uint32_t read_addr) {
 //INR_LOG_debug("Read from bar1: addr:0x%lx\n",read_addr);
-if(INR_STATUS_get (INR_STATUS_HW_RUNNING))return INR_PCI_BAR1_read(read_addr);
-return 0;
+    if(INR_STATUS_get (INR_STATUS_HW_RUNNING))return INR_PCI_BAR1_read(read_addr);
+    return 0;
 }
 
 //*****************************************************************************************************************
 /**
 *read from bar1
 */
-void INR_PCI_BAR1_write_ext(uint32_t value,uint32_t read_addr){
-if (INR_STATUS_get (INR_STATUS_HW_RUNNING))INR_PCI_BAR1_write(value,read_addr);
+void INR_PCI_BAR1_write_ext(uint32_t value,uint32_t read_addr) {
+    if (INR_STATUS_get (INR_STATUS_HW_RUNNING))INR_PCI_BAR1_write(value,read_addr);
 }
 //*****************************************************************************************************************
 /**
@@ -426,16 +428,17 @@ INR_PCI_process_rx_descriptor_ring (uint8_t index)
                 rx_skb[index]->dev = get_nwdev (index);
                 skb_reserve (rx_skb[index], 2);
                 skb_put (rx_skb[index], ETH_HLEN);
-                if(INR_PCI_HW_timestamp){
-                	memcpy (&hw_timestamp,data_rx[INR_PCI_rx_descriptor_current[index]]
-                        [index]->data, sizeof(hw_timestamp));// copy hardware timestamp
-                        
-                	memcpy (rx_skb[index]->data, data_rx[INR_PCI_rx_descriptor_current[index]]
-                        [index]->data+sizeof(hw_timestamp), ETH_HLEN);
-                        
-                       }else{
-                	memcpy (rx_skb[index]->data, data_rx[INR_PCI_rx_descriptor_current[index]]
-                        [index]->data, ETH_HLEN);}
+                if(INR_PCI_HW_timestamp) {
+                    memcpy (&hw_timestamp,data_rx[INR_PCI_rx_descriptor_current[index]]
+                            [index]->data, sizeof(hw_timestamp));// copy hardware timestamp
+
+                    memcpy (rx_skb[index]->data, data_rx[INR_PCI_rx_descriptor_current[index]]
+                            [index]->data+sizeof(hw_timestamp), ETH_HLEN);
+
+                } else {
+                    memcpy (rx_skb[index]->data, data_rx[INR_PCI_rx_descriptor_current[index]]
+                            [index]->data, ETH_HLEN);
+                }
             }
             else {			//if no zerocopy alloc big skb and coppy whole fragment into
                 rx_skb[index] = netdev_alloc_skb (get_nwdev (index), 1800 + 2);
@@ -450,18 +453,21 @@ INR_PCI_process_rx_descriptor_ring (uint8_t index)
                 skb_put (rx_skb[index], RX_descriptor->length-(sizeof(hw_timestamp)*INR_PCI_HW_timestamp));	//should everytime be true, but is not :/
                 memcpy (rx_skb[index]->data, data_rx[INR_PCI_rx_descriptor_current[index]]
                         [index]->data+(sizeof(hw_timestamp)*INR_PCI_HW_timestamp), RX_descriptor->length-(sizeof(hw_timestamp)*INR_PCI_HW_timestamp));	//copy whole fragment into SKB
-                        if(INR_PCI_HW_timestamp){
-                	memcpy (&hw_timestamp,data_rx[INR_PCI_rx_descriptor_current[index]]
-                        [index]->data, sizeof(hw_timestamp));// copy hardware timestamp
-                                       	                        
-                       }
+                if(INR_PCI_HW_timestamp) {
+                    memcpy (&hw_timestamp,data_rx[INR_PCI_rx_descriptor_current[index]]
+                            [index]->data, sizeof(hw_timestamp));// copy hardware timestamp
+
+                }
 
             }
             //###########Timestamping
             if (INR_PCI_HW_timestamp) {
                 struct skb_shared_hwtstamps *skbtimestamp = skb_hwtstamps(rx_skb[index]);
+                memset(skbtimestamp, 0, sizeof(struct skb_shared_hwtstamps));
                 if (RX_DBG_mod) INR_LOG_debug("HW timestamp:0x%lx, corrected value:0x%llx ns:0x%lli\n",hw_timestamp,INR_TIME_correct_HW_timestamp(hw_timestamp),ns_to_ktime(INR_TIME_correct_HW_timestamp(hw_timestamp)));
-                skbtimestamp->hwtstamp=ns_to_ktime(INR_TIME_correct_HW_timestamp(hw_timestamp)); //0: insert timestamp here...
+                skbtimestamp->hwtstamp=ns_to_ktime((u64)INR_TIME_correct_HW_timestamp(hw_timestamp)); //0: insert timestamp here...
+                //skb_tstamp_rx(rx_skb[index],&skbtimestamp);
+                __net_timestamp(rx_skb[index]);
 
             } else {
                 //skb_rx_timestamp(rx_skb[index]);
@@ -498,7 +504,7 @@ INR_PCI_process_rx_descriptor_ring (uint8_t index)
                 }
 
                 //if (data_rx[INR_PCI_rx_descriptor_current[index]][index]->fragmentindex == 0) {	//fragment are start of new page
-                if(1){//needed for deffeent buffersizes if timestamping is enabled
+                if(1) { //needed for deffeent buffersizes if timestamping is enabled
                     skb_add_rx_frag (rx_skb[index], skb_shinfo (rx_skb[index])->nr_frags, data_rx[INR_PCI_rx_descriptor_current[index]][index]->page,
                                      data_rx[INR_PCI_rx_descriptor_current[index]][index]->offset, RX_descriptor->length, ALIGN (RX_descriptor->length,
                                              L1_CACHE_BYTES));
@@ -632,7 +638,7 @@ XPCIe_IRQHandler (int irq, void *dev_id, struct pt_regs *regs)
             INR_LOG_debug(loglevel_warn"MMI interrupt\n");
         }
         INR_MMI_interrupt();
-        INR_TIME_TX_transmit_interrupt();
+        //INR_TIME_TX_transmit_interrupt();
     }
 
 //    }
@@ -640,7 +646,7 @@ XPCIe_IRQHandler (int irq, void *dev_id, struct pt_regs *regs)
         if (TX_DBG_mod) {
             INR_LOG_debug(loglevel_warn"old TX interrupt\n");
         }
-        
+
     }
     IfNotRuss if(intcause>=(1<<18)) {
         if (RX_DBG_mod)INR_LOG_debug(loglevel_warn"unknown Interrupt\n");
@@ -960,13 +966,15 @@ INR_TX_push (struct net_device *nwdev,struct sk_buff *skb, uint8_t * data, uint1
     uint64_t head, tail;
     //if (TX_DBG_mod)INR_LOG_debug("time_queue:%i\n",time_queue);
     if(get_HW_user_feature(HW_feature_frame_injection)==0)time_queue=0;
-    if (INR_STATUS_get (INR_STATUS_DRV_INIT_done) == 0){//check if device ready after startup
+    if (INR_STATUS_get (INR_STATUS_DRV_INIT_done) == 0) { //check if device ready after startup
         return 1;
-        if (TX_DBG_mod)INR_LOG_debug("drop tx pkg, driver not init\n");}
+        if (TX_DBG_mod)INR_LOG_debug("drop tx pkg, driver not init\n");
+    }
     preempt_disable ();
     if (fragcount > INR_PCI_TX_maxfragments)
-        {return 1;			// to much fragments, drop
-        if (TX_DBG_mod)INR_LOG_debug("drop tx pkg, fragcount to high:%i\n",fragcount);}
+    {   return 1;			// to much fragments, drop
+        if (TX_DBG_mod)INR_LOG_debug("drop tx pkg, fragcount to high:%i\n",fragcount);
+    }
     if (txsemophore) {		//INR_LOG_debug("error TX semaphore hit\n");
         return 1;
     }
@@ -979,7 +987,7 @@ INR_TX_push (struct net_device *nwdev,struct sk_buff *skb, uint8_t * data, uint1
         if (TX_DBG_mod)INR_LOG_debug("drop tx pkg, pointer distance to small:%i\n",INR_PCI_pointerdistance (tail, head, INR_PCI_tx_descriptor_ring_length));
         return 1;
     }
-		
+
     if (TX_DBG_mod)// check if FPGA have forgotten a TX descriptor
         while (tx_head_backup != head) {
             volatile struct INR_PCI_tx_descriptor *TX_descriptor_headbackup = INR_PCI_tx_descriptor_ring[tx_head_backup];
@@ -1035,14 +1043,14 @@ INR_TX_push (struct net_device *nwdev,struct sk_buff *skb, uint8_t * data, uint1
         dma_unmap_single (&globdev->dev, TX_descriptor->buffer, TX_descriptor->length, DMA_TO_DEVICE);	//unmap DMA
         if (data_tx[INR_PCI_tx_descriptor_current].eop)
             if (data_tx[INR_PCI_tx_descriptor_current].skb)
-                
+
                 if(data_tx[INR_PCI_tx_descriptor_current].wait_for_timestamp==0) kfree_skb (data_tx[INR_PCI_tx_descriptor_current].skb);	//if last fragment of skb->free skb
-                
+
         if (!data_tx[INR_PCI_tx_descriptor_current].paged)
             if (data_tx[INR_PCI_tx_descriptor_current].data)
                 kfree (data_tx[INR_PCI_tx_descriptor_current].data);	//if not paged free kmalloc mem
     }
-    
+
     TX_descriptor->buffer = cpu_to_le64 (dma_addr);	//store address of packet in descriptor-ring
     TX_descriptor->length = datalength;
     TX_descriptor->CSO = 0xff & 0x00;
@@ -1053,7 +1061,8 @@ INR_TX_push (struct net_device *nwdev,struct sk_buff *skb, uint8_t * data, uint1
     TX_descriptor->VLAN = 0xffff & time_queue;//maping of TAS processoer queue feature to vlan field
     data_tx[INR_PCI_tx_descriptor_current].nwdev = nwdev;
     data_tx[INR_PCI_tx_descriptor_current].skb = skb;
-    if (skb_shinfo(skb)->tx_flags& SKBTX_IN_PROGRESS) data_tx[INR_PCI_tx_descriptor_current].wait_for_timestamp=1; else data_tx[INR_PCI_tx_descriptor_current].wait_for_timestamp=0;
+    if (skb_shinfo(skb)->tx_flags& SKBTX_IN_PROGRESS) data_tx[INR_PCI_tx_descriptor_current].wait_for_timestamp=1;
+    else data_tx[INR_PCI_tx_descriptor_current].wait_for_timestamp=0;
     data_tx[INR_PCI_tx_descriptor_current].length = datalength;
     data_tx[INR_PCI_tx_descriptor_current].paged = 1 & paged;
     data_tx[INR_PCI_tx_descriptor_current].eop = 1 & eof;
@@ -1184,7 +1193,7 @@ INR_init_drv (struct pci_dev *dev)
         INR_LOG_debug (loglevel_err"Init: Could not remap memory.\n");
         return (1);
     }
-    
+
     if (request_mem_region (gBaseHdwr1, REGISTER_SIZE, "INR_mem"))
         INR_STATUS_set (INR_STATUS_BAR1);
 
@@ -1198,7 +1207,7 @@ INR_init_drv (struct pci_dev *dev)
     if (request_mem_region (gBaseHdwr0, REGISTER_SIZE, "INR_mem"))
         INR_STATUS_set (INR_STATUS_BAR0);
     INR_LOG_debug (loglevel_info"Init: dma mem requested\n");
-    
+
     if(C_SUB_ADDR_COMMON_ADDR_MAP_REV)INR_PCI_HW_timestamp=(INR_PCI_BAR1_read((C_BASE_ADDR_COMMON_LOWER<<8)+C_SUB_ADDR_COMMON_ADDR_MAP_REV)>>31)&1;
     INR_LOG_debug (loglevel_info"Hardware timestamping:%i.\n",INR_PCI_HW_timestamp);
 #ifdef C_SUB_ADDR_COMMON_ADDR_MAP_REV
@@ -1211,9 +1220,9 @@ INR_init_drv (struct pci_dev *dev)
     if((HW_features_user==0xffffffff)||(HW_features_user==0xEEEEEEEE))HW_features_user=0;
     INR_LOG_debug("HW user features:0x%llx\n",HW_features_user);
     if((HW_addr_map_revision==0xffffffff)||(HW_addr_map_revision==0xEEEEEEEE))HW_addr_map_revision=0;
-    #ifdef C_SUB_ADDR_NET_ENABLE
+#ifdef C_SUB_ADDR_NET_ENABLE
     if(HW_addr_map_revision>=5)INR_TIME_set_enable(1);//enable timing interrupt only if HW version support addresses
-    #endif
+#endif
     if (INR_int_enable (dev))
         return 1;
     else
@@ -1234,7 +1243,7 @@ INR_init_drv (struct pci_dev *dev)
     if(HW_addr_map_revision>=5)INR_MMI_interrupt();
 #ifdef C_SUB_ADDR_NET_ENABLE
     if(HW_addr_map_revision>=5)INR_PCI_BAR1_write(FPGA_PORT_mask,(C_BASE_ADDR_NET_LOWER<<8)+C_SUB_ADDR_NET_ENABLE);// enable ports
-    
+
 #endif
 
 }

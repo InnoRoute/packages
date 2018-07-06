@@ -26,9 +26,12 @@
 #include "INR-TIME.h"
 volatile uint8_t nwdev_counter = 0;
 volatile uint8_t send2cpu = 0;
+volatile uint8_t EN_TSN_sock_opt = 0;
+volatile uint32_t TSN_TX_ts =0;
+volatile uint8_t TSN_TX_queue=0;
 struct net_device *globnwdev[INR_NW_devcount];
 struct hwtstamp_config INR_tstamp_config;
-
+volatile uint8_t INR_force_HW_ts=0;
 /**
 *return pointer to net-dev
 *@param index index of NW-device
@@ -70,7 +73,33 @@ set_send2cpu (uint8_t flag)
 {
     send2cpu = flag;
 }
-
+/**
+*set TSN value socket option
+*@param flag
+*/
+void
+set_TSN_sock_opt (uint8_t flag)
+{
+    EN_TSN_sock_opt=flag;
+}
+/**
+*set TSN ts value
+*@param flag
+*/
+void
+set_TSN_ts (uint32_t flag)
+{
+    TSN_TX_ts=flag;
+}
+/**
+*set TSN ts value
+*@param flag
+*/
+void
+set_TSN_queue (uint8_t flag)
+{
+    TSN_TX_queue=flag;
+}
 /**
 *get send2cpu-flag
 */
@@ -181,14 +210,21 @@ INR_NW_tx (struct sk_buff *skb, struct net_device *nwdev)
         uint32_t TXtimestamp=0;
         unsigned int consumed = 0;
         uint16_t TX_confirmastion_id=0;
-        
-        time_queue=0x3f&skb->TN_TX_queue;
-        TXtimestamp=skb->TN_TX_timestamp;
-        
-        
+
+
+        if (EN_TSN_sock_opt) {
+            time_queue=0x3f&skb->TN_TX_queue;
+            if(get_tx_dbg())printk("TX queue:%i   (%i)\n",skb->TN_TX_queue,time_queue);
+            TXtimestamp=skb->TN_TX_timestamp;
+        } else {
+            time_queue=0x3f&TSN_TX_queue;
+            TXtimestamp=TSN_TX_ts;
+        }
+
+
         // if(zerocopy_tx)skb_shinfo(skb)->tx_flags |= SKBTX_DEV_ZEROCOPY; //maybe this fix the memory drain
         //######Timestamping
-        if (skb_shinfo(skb)->tx_flags & SKBTX_HW_TSTAMP) { //check if timestamp is requested
+        if ((skb_shinfo(skb)->tx_flags & SKBTX_HW_TSTAMP)||INR_force_HW_ts) { //check if timestamp is requested or forced
             if(get_INR_PCI_HW_timestamp()&&get_HW_user_feature(HW_feature_TXconf)) { //hw timestamping
                 skb_shinfo(skb)->tx_flags |= SKBTX_IN_PROGRESS; //announce HW will do timestamping
                 TX_confirmastion_id=INR_TIME_TX_add(skb);// store skb for later
@@ -196,7 +232,7 @@ INR_NW_tx (struct sk_buff *skb, struct net_device *nwdev)
                 skb_tx_timestamp(skb);
             }
         }
-        //if (skb_shinfo(skb)->tx_flags & SKBTX_SW_TSTAMP)skb_tx_timestamp(skb);
+        if (skb_shinfo(skb)->tx_flags & SKBTX_SW_TSTAMP)skb_tx_timestamp(skb);
 
 
 
@@ -205,14 +241,14 @@ INR_NW_tx (struct sk_buff *skb, struct net_device *nwdev)
         if (skb_shinfo (skb)->nr_frags) {
             if (zerocopy_tx) {
                 int i = 0;
-                if(get_INR_PCI_HW_timestamp()){
-                	uint64_t *timestamp = kmalloc (8, GFP_DMA | GFP_ATOMIC);
-                	//ktime_t time=ktime_get(); //real
-                	*timestamp=((uint64_t)TX_confirmastion_id<<32)|(0xffffffff&TXtimestamp);
-                	error = INR_TX_push (nwdev,skb, timestamp, 8, 0, toport, get_send2cpu(), 0, 1,time_queue);
-                	if (error) {
-                   	 goto errorhandling;
-                	}
+                if(get_INR_PCI_HW_timestamp()) {
+                    uint64_t *timestamp = kmalloc (8, GFP_DMA | GFP_ATOMIC);
+                    //ktime_t time=ktime_get(); //real
+                    *timestamp=((uint64_t)TX_confirmastion_id<<32)|(0xffffffff&TXtimestamp);
+                    error = INR_TX_push (nwdev,skb, timestamp, 8, 0, toport, get_send2cpu(), 0, 1,time_queue);
+                    if (error) {
+                        goto errorhandling;
+                    }
                 }
                 error = INR_TX_push (nwdev,skb, skb->data, skb_headlen (skb), 0, toport, get_send2cpu(), 1, skb_shinfo (skb)->nr_frags,time_queue);
                 if (error) {
@@ -231,14 +267,14 @@ INR_NW_tx (struct sk_buff *skb, struct net_device *nwdev)
                 }
             } else {
                 skb_prepare_seq_read (skb, from, to, &st);
-                if(get_INR_PCI_HW_timestamp()){
-                	uint64_t *timestamp = kmalloc (8, GFP_DMA | GFP_ATOMIC);
-                	//ktime_t time=ktime_get();
-                	*timestamp=((uint64_t)TX_confirmastion_id<<32)|(0xffffffff&TXtimestamp);
-                	error = INR_TX_push (nwdev,skb, timestamp, 8, 0, toport, get_send2cpu(), 0, 1,time_queue);
-                	if (error) {
-                   	 goto errorhandling;
-                	}
+                if(get_INR_PCI_HW_timestamp()) {
+                    uint64_t *timestamp = kmalloc (8, GFP_DMA | GFP_ATOMIC);
+                    //ktime_t time=ktime_get();
+                    *timestamp=((uint64_t)TX_confirmastion_id<<32)|(0xffffffff&TXtimestamp);
+                    error = INR_TX_push (nwdev,skb, timestamp, 8, 0, toport, get_send2cpu(), 0, 1,time_queue);
+                    if (error) {
+                        goto errorhandling;
+                    }
                 }
                 while ((len = skb_seq_read (consumed, &data, &st)) != 0) {
                     if (consumed + len == to) {
@@ -261,14 +297,14 @@ INR_NW_tx (struct sk_buff *skb, struct net_device *nwdev)
                 uint16_t offset = 0, nextfrag = 0;
                 uint8_t last = 0;
                 uint64_t countfrag = 0;
-		if(get_INR_PCI_HW_timestamp()){
-                	uint64_t *timestamp = kmalloc (8, GFP_DMA | GFP_ATOMIC);
-                	//ktime_t time=ktime_get();
-                	*timestamp=((uint64_t)TX_confirmastion_id<<32)|(0xffffffff&TXtimestamp);
-                	error = INR_TX_push (nwdev,skb, timestamp, 8, 0, toport, get_send2cpu(), 0, 1,time_queue);
-                	if (error) {
-                   	 goto errorhandling;
-                	}
+                if(get_INR_PCI_HW_timestamp()) {
+                    uint64_t *timestamp = kmalloc (8, GFP_DMA | GFP_ATOMIC);
+                    //ktime_t time=ktime_get();
+                    *timestamp=((uint64_t)TX_confirmastion_id<<32)|(0xffffffff&TXtimestamp);
+                    error = INR_TX_push (nwdev,skb, timestamp, 8, 0, toport, get_send2cpu(), 0, 1,time_queue);
+                    if (error) {
+                        goto errorhandling;
+                    }
                 }
                 while (rest) {
                     if (rest > INR_PCI_FPGA_max_tx_length) {
@@ -303,15 +339,15 @@ INR_NW_tx (struct sk_buff *skb, struct net_device *nwdev)
                         INR_LOG_debug (loglevel_err"Cant alloc tx data\n");
                         goto errorhandling;
                     }
-                    if(get_INR_PCI_HW_timestamp()){
-                	uint64_t *timestamp = kmalloc (8, GFP_DMA | GFP_ATOMIC);
-                	//ktime_t time=ktime_get();
-                	*timestamp=((uint64_t)TX_confirmastion_id<<32)|(0xffffffff&TXtimestamp);
-                	error = INR_TX_push (nwdev,skb, timestamp, 8, 0, toport, get_send2cpu(), 0, 1,time_queue);
-                	if (error) {
-                   	 goto errorhandling;
-                	}
-                }
+                    if(get_INR_PCI_HW_timestamp()) {
+                        uint64_t *timestamp = kmalloc (8, GFP_DMA | GFP_ATOMIC);
+                        //ktime_t time=ktime_get();
+                        *timestamp=((uint64_t)TX_confirmastion_id<<32)|(0xffffffff&TXtimestamp);
+                        error = INR_TX_push (nwdev,skb, timestamp, 8, 0, toport, get_send2cpu(), 0, 1,time_queue);
+                        if (error) {
+                            goto errorhandling;
+                        }
+                    }
                     error = INR_TX_push (nwdev,skb, skb_data, skb->len, 1, toport, get_send2cpu(), 0, 1,time_queue);
                     if (error) {
                         if (skb_data) {
@@ -369,6 +405,7 @@ INR_NW_ioctl (struct net_device *nwdev, struct ifreq *rq, int cmd)
         switch (config.tx_type) {
         case HWTSTAMP_TX_OFF:
             INR_tstamp_config.tx_type=config.tx_type;
+            INR_force_HW_ts=0;
             break;
 
         case HWTSTAMP_TX_ON:
@@ -377,6 +414,7 @@ INR_NW_ioctl (struct net_device *nwdev, struct ifreq *rq, int cmd)
             }
             else {
                 INR_tstamp_config.tx_type=config.tx_type;
+                INR_force_HW_ts=1;
             }
             break;
 
@@ -389,25 +427,27 @@ INR_NW_ioctl (struct net_device *nwdev, struct ifreq *rq, int cmd)
             break;
 
         case HWTSTAMP_FILTER_ALL:
-        case HWTSTAMP_FILTER_SOME:
-        case HWTSTAMP_FILTER_PTP_V1_L4_EVENT:
-        case HWTSTAMP_FILTER_PTP_V1_L4_SYNC:
-	case HWTSTAMP_FILTER_PTP_V1_L4_DELAY_REQ:
-	case HWTSTAMP_FILTER_PTP_V2_L4_EVENT:
-	case HWTSTAMP_FILTER_PTP_V2_L4_SYNC:
-	case HWTSTAMP_FILTER_PTP_V2_L4_DELAY_REQ:
-	case HWTSTAMP_FILTER_PTP_V2_L2_EVENT:
-	case HWTSTAMP_FILTER_PTP_V2_L2_SYNC:
-	case HWTSTAMP_FILTER_PTP_V2_L2_DELAY_REQ:
-	case HWTSTAMP_FILTER_PTP_V2_EVENT:
-	case HWTSTAMP_FILTER_PTP_V2_SYNC:
-	case HWTSTAMP_FILTER_PTP_V2_DELAY_REQ:
+        case HWTSTAMP_FILTER_PTP_V2_L2_EVENT:
+        case HWTSTAMP_FILTER_PTP_V2_L4_EVENT:
             if((get_INR_PCI_HW_timestamp()==0)) {
                 return -EOPNOTSUPP;
             }
             else {
                 INR_tstamp_config.rx_filter=config.rx_filter;
             }
+            break;
+        case HWTSTAMP_FILTER_SOME:
+        case HWTSTAMP_FILTER_PTP_V1_L4_EVENT:
+        case HWTSTAMP_FILTER_PTP_V1_L4_SYNC:
+        case HWTSTAMP_FILTER_PTP_V1_L4_DELAY_REQ:
+        case HWTSTAMP_FILTER_PTP_V2_L4_SYNC:
+        case HWTSTAMP_FILTER_PTP_V2_L4_DELAY_REQ:
+        case HWTSTAMP_FILTER_PTP_V2_L2_SYNC:
+        case HWTSTAMP_FILTER_PTP_V2_L2_DELAY_REQ:
+        case HWTSTAMP_FILTER_PTP_V2_EVENT:
+        case HWTSTAMP_FILTER_PTP_V2_SYNC:
+        case HWTSTAMP_FILTER_PTP_V2_DELAY_REQ:
+            return -EOPNOTSUPP;
             break;
         default:
             return -ERANGE;
@@ -501,9 +541,13 @@ static int INR_NW_get_ts_info(struct net_device *nwdev, struct ethtool_ts_info *
         SOF_TIMESTAMPING_SOFTWARE;// |
     if(get_INR_PCI_HW_timestamp()) {
         info->so_timestamping|=
+            SOF_TIMESTAMPING_TX_HARDWARE|
             SOF_TIMESTAMPING_RX_HARDWARE |
             SOF_TIMESTAMPING_RAW_HARDWARE;
     }
+    info->tx_types =
+        (1<<HWTSTAMP_TX_OFF) |
+        (1<<HWTSTAMP_TX_ON);
     if(get_HW_user_feature(HW_feature_TXconf))info->so_timestamping|=SOF_TIMESTAMPING_TX_HARDWARE;
 
     if(get_HW_user_feature(HW_feature_RTC)) {

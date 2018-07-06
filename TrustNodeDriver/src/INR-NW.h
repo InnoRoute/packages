@@ -6,10 +6,10 @@
 #include <linux/netdev_features.h>
 #include <linux/netdevice.h>
 #ifndef NETIF_F_MULTI_QUEUE
-	#define NETIF_F_MULTI_QUEUE	16384	
+#define NETIF_F_MULTI_QUEUE	16384
 #endif
-#define INR_NWDEV_features NETIF_F_SG | NETIF_F_FRAGLIST | NETIF_F_MULTI_QUEUE
-#define INR_NWDEV_features_HW NETIF_F_SG | NETIF_F_FRAGLIST | NETIF_F_MULTI_QUEUE
+#define INR_NWDEV_features NETIF_F_SG | NETIF_F_FRAGLIST //| NETIF_F_MULTI_QUEUE
+#define INR_NWDEV_features_HW NETIF_F_SG | NETIF_F_FRAGLIST //| NETIF_F_MULTI_QUEUE
 //no, we dont support TCP-checsum.. NETIF_F_IP_CSUM
 /**
 *Network packet structure
@@ -46,6 +46,9 @@ void set_send2cpu (uint8_t flag);
 uint8_t get_send2cpu(void);
 void INR_NW_zerovars(void);
 static int INR_NW_get_ts_info(struct net_device *dev, struct ethtool_ts_info *info);
+void set_TSN_queue (uint8_t flag);
+void set_TSN_ts (uint32_t flag);
+void set_TSN_sock_opt (uint8_t flag);
 
 //*****************************************************************************************************************
 /**

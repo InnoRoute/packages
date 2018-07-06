@@ -24,11 +24,189 @@
 #include "INR-PCI.h"
 #include "INR-NW.h"
 #include "INR-ctl.h"
+#include "INR-TIME.h"
 
 #define PROCFS_MAX_SIZE		1024
 static char procfs_buffer[PROCFS_MAX_SIZE];
 static size_t procfs_buffer_size = 0;
-static struct proc_dir_entry *reg1, *reg2,*reg3,*reg4, *INR_proc_dir;
+static struct proc_dir_entry *reg1, *reg2,*reg3,*reg4, *INR_proc_dir, *INR_proc_dir2,*reg5,*reg6,*reg7,*reg8;
+//*****************************************************************************************************************
+/**
+*  proc write function
+*
+*/
+int
+set_TSN_debug_write (struct file *file, const char *buffer, size_t count, void *data)
+{
+    procfs_buffer_size = count;
+    if (procfs_buffer_size > PROCFS_MAX_SIZE) {
+        procfs_buffer_size = PROCFS_MAX_SIZE;
+    }
+    if (copy_from_user (procfs_buffer, buffer, procfs_buffer_size)) {
+        return -EFAULT;
+    }
+    uint32_t tmp = 0;
+    sscanf (procfs_buffer, "%d", &tmp);
+    INR_LOG_debug (loglevel_info"write %d to set_TSN_queue\n", tmp);
+    INR_TIME_set_debug(tmp);
+    return procfs_buffer_size;
+}
+
+//*****************************************************************************************************************
+/**
+*  proc print function
+*
+*/
+static int
+set_TSN_debug_proc_show (struct seq_file *m, void *v)
+{
+    seq_printf (m, "not implemented\n");
+    return 0;
+}
+
+//*****************************************************************************************************************
+/**
+*  proc open function
+*
+*/
+static int
+set_TSN_debug_proc_open (struct inode *inode, struct file *file)
+{
+    return single_open (file, set_TSN_debug_proc_show, NULL);
+}
+
+//*****************************************************************************************************************
+/**
+*  proc write function
+*
+*/
+int
+set_TSN_queue_write (struct file *file, const char *buffer, size_t count, void *data)
+{
+    procfs_buffer_size = count;
+    if (procfs_buffer_size > PROCFS_MAX_SIZE) {
+        procfs_buffer_size = PROCFS_MAX_SIZE;
+    }
+    if (copy_from_user (procfs_buffer, buffer, procfs_buffer_size)) {
+        return -EFAULT;
+    }
+    uint32_t tmp = 0;
+    sscanf (procfs_buffer, "%d", &tmp);
+    INR_LOG_debug (loglevel_info"write %d to set_TSN_queue\n", tmp);
+    set_TSN_queue(tmp);
+    return procfs_buffer_size;
+}
+
+//*****************************************************************************************************************
+/**
+*  proc print function
+*
+*/
+static int
+set_TSN_queue_proc_show (struct seq_file *m, void *v)
+{
+    seq_printf (m, "not implemented\n");
+    return 0;
+}
+
+//*****************************************************************************************************************
+/**
+*  proc open function
+*
+*/
+static int
+set_TSN_queue_proc_open (struct inode *inode, struct file *file)
+{
+    return single_open (file, set_TSN_queue_proc_show, NULL);
+}
+//*****************************************************************************************************************
+/**
+*  proc write function
+*
+*/
+int
+set_TSN_ts_write (struct file *file, const char *buffer, size_t count, void *data)
+{
+    procfs_buffer_size = count;
+    if (procfs_buffer_size > PROCFS_MAX_SIZE) {
+        procfs_buffer_size = PROCFS_MAX_SIZE;
+    }
+    if (copy_from_user (procfs_buffer, buffer, procfs_buffer_size)) {
+        return -EFAULT;
+    }
+    uint32_t tmp = 0;
+    sscanf (procfs_buffer, "%d", &tmp);
+    INR_LOG_debug (loglevel_info"write %d to set_TSN_ts\n", tmp);
+    set_TSN_ts(tmp);
+    return procfs_buffer_size;
+}
+
+//*****************************************************************************************************************
+/**
+*  proc print function
+*
+*/
+static int
+set_TSN_ts_proc_show (struct seq_file *m, void *v)
+{
+    seq_printf (m, "not implemented\n");
+    return 0;
+}
+
+//*****************************************************************************************************************
+/**
+*  proc open function
+*
+*/
+static int
+set_TSN_ts_proc_open (struct inode *inode, struct file *file)
+{
+    return single_open (file, set_TSN_ts_proc_show, NULL);
+}
+//*****************************************************************************************************************
+/**
+*  proc write function
+*
+*/
+int
+set_TSN_sock_opt_write (struct file *file, const char *buffer, size_t count, void *data)
+{
+    procfs_buffer_size = count;
+    if (procfs_buffer_size > PROCFS_MAX_SIZE) {
+        procfs_buffer_size = PROCFS_MAX_SIZE;
+    }
+    if (copy_from_user (procfs_buffer, buffer, procfs_buffer_size)) {
+        return -EFAULT;
+    }
+    uint32_t tmp = 0;
+    sscanf (procfs_buffer, "%d", &tmp);
+    INR_LOG_debug (loglevel_info"write %d to set_TSN_sock_opt\n", tmp);
+    set_TSN_sock_opt(tmp);
+    return procfs_buffer_size;
+}
+
+//*****************************************************************************************************************
+/**
+*  proc print function
+*
+*/
+static int
+set_TSN_sock_opt_proc_show (struct seq_file *m, void *v)
+{
+    seq_printf (m, "not implemented\n");
+    return 0;
+}
+
+//*****************************************************************************************************************
+/**
+*  proc open function
+*
+*/
+static int
+set_TSN_sock_opt_proc_open (struct inode *inode, struct file *file)
+{
+    return single_open (file, set_TSN_sock_opt_proc_show, NULL);
+}
 
 //*****************************************************************************************************************
 /**
@@ -138,6 +316,7 @@ TXdbg_write (struct file *file, const char *buffer, size_t count, void *data)
     sscanf (procfs_buffer, "%d", &tmp);
     INR_LOG_debug (loglevel_info"write %d to TXdbg\n", tmp);
     set_tx_dbg(tmp);
+
     return procfs_buffer_size;
 }
 
@@ -249,8 +428,46 @@ INR_CTL_init_proc (struct pci_dev *dev)
         .llseek = seq_lseek,
         .release = single_release,
     };
+    static const struct file_operations set_TSN_sock_opt = {
+        .owner = THIS_MODULE,
+        .open = set_TSN_sock_opt_proc_open,
+        .write = set_TSN_sock_opt_write,
+        .read = seq_read,
+        .llseek = seq_lseek,
+        .release = single_release,
+    };
+    static const struct file_operations set_TSN_ts = {
+        .owner = THIS_MODULE,
+        .open = set_TSN_ts_proc_open,
+        .write = set_TSN_ts_write,
+        .read = seq_read,
+        .llseek = seq_lseek,
+        .release = single_release,
+    };
+    static const struct file_operations set_TSN_queue = {
+        .owner = THIS_MODULE,
+        .open = set_TSN_queue_proc_open,
+        .write = set_TSN_queue_write,
+        .read = seq_read,
+        .llseek = seq_lseek,
+        .release = single_release,
+    };
+    static const struct file_operations set_TSN_debug = {
+        .owner = THIS_MODULE,
+        .open = set_TSN_debug_proc_open,
+        .write = set_TSN_debug_write,
+        .read = seq_read,
+        .llseek = seq_lseek,
+        .release = single_release,
+    };
     INR_proc_dir = proc_mkdir("TrustNode",NULL);
     if(!INR_proc_dir)
+    {
+        printk(KERN_ALERT "Error creating proc entry");
+        return -ENOMEM;
+    }
+    INR_proc_dir2 = proc_mkdir("TSN",INR_proc_dir);
+    if(!INR_proc_dir2)
     {
         printk(KERN_ALERT "Error creating proc entry");
         return -ENOMEM;
@@ -283,6 +500,30 @@ INR_CTL_init_proc (struct pci_dev *dev)
         printk (KERN_ALERT "Error: Could not initialize /proc/%s\n", "TN_russian");
         return -ENOMEM;
     }
+    reg5 = proc_create ("set_TSN_sock_opt", 0644, INR_proc_dir2, &set_TSN_sock_opt);
+    if (reg5 == NULL) {
+        remove_proc_entry ("set_TSN_sock_opt", INR_proc_dir2);
+        printk (KERN_ALERT "Error: Could not initialize /proc/TrustNode/TSN/%s\n", "set_TSN_sock_opt");
+        return -ENOMEM;
+    }
+    reg6 = proc_create ("set_TSN_ts", 0644, INR_proc_dir2, &set_TSN_ts);
+    if (reg6 == NULL) {
+        remove_proc_entry ("set_TSN_ts", INR_proc_dir2);
+        printk (KERN_ALERT "Error: Could not initialize /proc/TrustNode/TSN/%s\n", "set_TSN_ts");
+        return -ENOMEM;
+    }
+    reg7 = proc_create ("set_TSN_queue", 0644, INR_proc_dir2, &set_TSN_queue);
+    if (reg7 == NULL) {
+        remove_proc_entry ("set_TSN_queue", INR_proc_dir2);
+        printk (KERN_ALERT "Error: Could not initialize /proc/TrustNode/TSN/%s\n", "set_TSN_queue");
+        return -ENOMEM;
+    }
+    reg8 = proc_create ("set_TSN_debug", 0644, INR_proc_dir2, &set_TSN_debug);
+    if (reg8 == NULL) {
+        remove_proc_entry ("set_TSN_debug", INR_proc_dir2);
+        printk (KERN_ALERT "Error: Could not initialize /proc/TrustNode/TSN/%s\n", "set_TSN_debug");
+        return -ENOMEM;
+    }
     printk (KERN_INFO "/proc/%s created\n", "TN_russian");
 
     return 0;
@@ -304,6 +545,16 @@ INR_CTL_remove_proc (struct pci_dev *dev)
     printk (KERN_INFO "/proc/TrustNode/%s removed\n", "TN_RXdbg");
     remove_proc_entry ("TN_russian", INR_proc_dir);
     printk (KERN_INFO "/proc/TrustNode/%s removed\n", "TN_russian");
+    remove_proc_entry ("set_TSN_sock_opt", INR_proc_dir2);
+    printk (KERN_INFO "/proc/TrustNode/TSN/%s removed\n", "set_TSN_sock_opt");
+    remove_proc_entry ("set_TSN_ts", INR_proc_dir2);
+    printk (KERN_INFO "/proc/TrustNode/TSN/%s removed\n", "set_TSN_ts");
+    remove_proc_entry ("set_TSN_queue", INR_proc_dir2);
+    printk (KERN_INFO "/proc/TrustNode/TSN/%s removed\n", "set_TSN_queue");
+    remove_proc_entry ("set_TSN_debug", INR_proc_dir2);
+    printk (KERN_INFO "/proc/TrustNode/TSN/%s removed\n", "set_TSN_debug");
+    remove_proc_entry ("TSN", INR_proc_dir);
+    printk (KERN_INFO "/proc/TrustNode/%s removed\n", "TSN");
     remove_proc_entry ("TrustNode", NULL);
     printk (KERN_INFO "/proc/%s removed\n", "TrustNode");
 

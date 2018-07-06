@@ -81,20 +81,20 @@ uint32_t INR_PCI_BAR1_read_ext(uint32_t addr);
 #define INR_PCI_enable_error_LED INR_PCI_BAR1_write(((INR_PCI_BAR1_read(INR_PCI_error_LED_addr))|(1<<10)),INR_PCI_error_LED_addr);
 #define INR_PCI_disable_error_LED INR_PCI_BAR1_write(((INR_PCI_BAR1_read(INR_PCI_error_LED_addr))&(~(1<<10))),INR_PCI_error_LED_addr);
 #ifndef C_PROC_PROV_NOC1
-	#define C_PROC_PROV_NOC1 0
+#define C_PROC_PROV_NOC1 0
 #endif
 
 #ifndef C_SUB_ADDR_COMMON_ADDR_MAP_REV
-	#define C_SUB_ADDR_COMMON_ADDR_MAP_REV 0
+#define C_SUB_ADDR_COMMON_ADDR_MAP_REV 0
 #endif
 #ifndef C_BASE_ADDR_COMMON
 #define C_BASE_ADDR_COMMON C_BASE_ADDR_TN_COMMON_L
 #endif
 #ifndef C_BASE_ADDR_COMMON_L
-	#define C_BASE_ADDR_COMMON_L C_BASE_ADDR_COMMON
+#define C_BASE_ADDR_COMMON_L C_BASE_ADDR_COMMON
 #endif
 #ifndef C_BASE_ADDR_COMMON_LOWER
-	#define C_BASE_ADDR_COMMON_LOWER C_BASE_ADDR_COMMON_L
+#define C_BASE_ADDR_COMMON_LOWER C_BASE_ADDR_COMMON_L
 #endif
 
 #define HW_feature_TAS (1<<0)
