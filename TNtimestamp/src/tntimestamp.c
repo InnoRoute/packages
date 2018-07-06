@@ -178,15 +178,14 @@ int main(int argc, char *argv[])
 	       
 	if(setsockopt(sockfd, SOL_SOCKET, SO_TIMESTAMPING, &so_timestamping_flags, sizeof(so_timestamping_flags)) < 0)
 	bail("setsockopt SO_TIMESTAMPING");
-	int one = 1;
-	if(setsockopt(sockfd, SOL_PACKET, PACKET_QDISC_BYPASS, &one, sizeof(one)) < 0)
-	bail("setsockopt PACKET_QDISC_BYPASS");
-	int inr_ext=timequeue;
-	if(setsockopt(sockfd, SOL_PACKET, PACKET_INR_TX_queue, &inr_ext, sizeof(inr_ext)) < 0)
-	bail("setsockopt PACKET_INR_EXT");
-	inr_ext=timestamp;
-	if(setsockopt(sockfd, SOL_PACKET, PACKET_INR_TX_timestamp, &inr_ext, sizeof(inr_ext)) < 0)
-	bail("setsockopt PACKET_INR_EXT");
+	int inr_timequeue=timequeue;
+	printf("set TX queue to %i\n",timequeue);
+	if(setsockopt(sockfd, SOL_PACKET, PACKET_INR_TX_queue, &inr_timequeue, sizeof(inr_timequeue)) < 0)
+	bail("setsockopt PACKET_INR_TX_queue");
+	int inr_timestamp=timestamp;
+	printf("set TX timestamp to %i\n",timestamp);
+	if(setsockopt(sockfd, SOL_PACKET, PACKET_INR_TX_timestamp, &inr_timestamp, sizeof(inr_timestamp)) < 0)
+	bail("setsockopt PACKET_INR_TX_timestamp");
 
 
 
