@@ -733,7 +733,8 @@ INR_ActT_get_next_free_entry (uint64_t id,uint8_t have_PQUEUE, uint8_t PQUEUE)
 	    return 0;
   }
   return i - 1;
-  }else{PQUEUE&=0x1f;//limit length
+  }else{
+  PQUEUE&=0x1f;//limit length
   
   	uint16_t maxentry=~(ActT_queue_entrys_queue_mask-1);
 	 struct INR_FC_ActT_RULE *entry = NULL;

@@ -81,6 +81,9 @@ FC_MT_have_action (struct arguments *arguments)
     if (entry->CutValue != arguments->CutValue) {
       match = 0;
     }
+    if (entry->PQUEUE != arguments->PQUEUE) {
+      match = 0;
+     }
     if (match) {
       return entry->TableID.ActT;	//match found, return entry in action table
     }

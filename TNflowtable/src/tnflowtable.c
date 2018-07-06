@@ -55,19 +55,69 @@ static struct argp_option options[] = {	//user interface
   {"RULEACTION", 'Y', "", 0, "Action which is performed by rule"},
   //{"RULENEXT", 'n', "", 0, "Has rule an extension?"},
   {0, 0, 0, 0, "Rule Type 1 options:", 2},
+#if EMH_hash_revision == 1
   {"RC_MAC_SRC", 'S', "", 0, "source Mac address (hex Format)"},
   {"RC_MAC_DST", 'D', "", 0, "destination Mac address (hex Format)"},
   {"RC_VLAN", 'V', "", 0, "ID of VLAN"},
   {"RC_ETHERTYPE", 'E', "", 0, "ETHERTYPE"},
+#endif
+#if EMH_hash_revision == 2
+  {"RC_PROTO", 'P', "", 0, "Protocol type of packet"},
+  {"RC_IPv4_SRC", 'C', "", 0, "IPv4 source address"},
+  {"RC_IPv4_DST", 'T', "", 0, "IPv4 destination address"},
+  {"RC_MAC_DST", 'D', "", 0, "destination Mac address (hex Format)"},
+  {"RC_ETHERTYPE", 'E', "", 0, "ETHERTYPE"},
+#endif
+#if EMH_hash_revision == 3
+  {"RC_EMA_INPORT", 'I', "", 0, "Ingressport of packet"},
+#endif
   {0, 0, 0, 0, "Rule Type 2 options:", 3},
+#if EMH_hash_revision == 1
   {"RC_IPv4_SRC", 'C', "", 0, "IPv4 source address"},
   {"RC_IPv4_DST", 'T', "", 0, "IPv4 destination address"},
   {"RC_PROTO", 'P', "", 0, "Protocol type of packet"},
   {"RC_PORT_SRC", 'R', "", 0, "UDP/TCP source port"},
   {"RC_PORT_DST", 'A', "", 0, "UDP/TCP destination port"},
+#endif
+#if EMH_hash_revision == 2
+  {"RC_IPv4_DST", 'T', "", 0, "IPv4 destination address"},
+  {"RC_IPv4_SRC", 'C', "", 0, "IPv4 source address"},
+  {"RC_PORT_DST", 'A', "", 0, "UDP/TCP destination port"},
+  {"RC_MAC_DST", 'D', "", 0, "destination Mac address (hex Format)"},
+  {"RC_ETHERTYPE", 'E', "", 0, "ETHERTYPE"},
+#endif
+#if EMH_hash_revision == 3
+ 	{"RC_EMA_VLAN_PRIO", 'U', "", 0, "Priority of VLAN"},
+#endif
   {0, 0, 0, 0, "Rule Type 3 options:", 4},
+ #if EMH_hash_revision == 2
+  {"RC_IPv4_SRC", 'C', "", 0, "IPv4 source address"},
+  {"RC_IPv4_DST", 'T', "", 0, "IPv4 destination address"},
+  {"RC_MAC_DST", 'D', "", 0, "destination Mac address (hex Format)"},
+#endif
+#if EMH_hash_revision == 3
+  {"RC_VLAN", 'V', "", 0, "ID of VLAN"},
+  {"RC_MAC_DST", 'D', "", 0, "destination Mac address (hex Format)"},
+#endif
   {0, 0, 0, 0, "Rule Type 4 options:", 5},
+#if EMH_hash_revision == 2
+  {"RC_MAC_DST", 'D', "", 0, "destination Mac address (hex Format)"},
+#endif
+#if EMH_hash_revision == 3
+  {"RC_VLAN", 'V', "", 0, "ID of VLAN"},
+  {"RC_MAC_DST", 'D', "", 0, "destination Mac address (hex Format)"},
+  {"RC_EMA_VLAN_PRIO", 'U', "", 0, "Priority of VLAN"},
+#endif
   {0, 0, 0, 0, "EMA_Rule Type options:", 6},
+  {"RC_IPv4_SRC", 'C', "", 0, "IPv4 source address"},
+  {"RC_IPv4_DST", 'T', "", 0, "IPv4 destination address"},
+  {"RC_PROTO", 'P', "", 0, "Protocol type of packet"},
+  {"RC_PORT_SRC", 'R', "", 0, "UDP/TCP source port"},
+  {"RC_PORT_DST", 'A', "", 0, "UDP/TCP destination port"},
+  {"RC_MAC_SRC", 'S', "", 0, "source Mac address (hex Format)"},
+  {"RC_MAC_DST", 'D', "", 0, "destination Mac address (hex Format)"},
+  {"RC_VLAN", 'V', "", 0, "ID of VLAN"},
+  {"RC_ETHERTYPE", 'E', "", 0, "ETHERTYPE"},
   {"RC_EMA_VLAN_PRIO", 'U', "", 0, "Priority of VLAN"},
   {"RC_EMA_TOS", 'W', "", 0, "ToS field"},
   {"RC_EMA_INPORT", 'I', "", 0, "Ingressport of packet"},
@@ -190,7 +240,7 @@ parse_opt (int key, char *arg, struct argp_state *state)
     break;
   case 'q':
     arguments->PQUEUE = strtoul (arg, 0, 0);
-    arguments->dohave_PQUEUE = 1;
+    if(arguments->PQUEUE)arguments->dohave_PQUEUE = 1; else arguments->dohave_PQUEUE = 0; // have to be >0 or nothing have to happen
     break;
   case 'W':
     arguments->TOS = strtoul (arg, 0, 0);
