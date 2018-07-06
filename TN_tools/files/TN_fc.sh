@@ -30,7 +30,7 @@ else
   else
     echo "Disabling EMA"
   fi
-  tn_ll_mmi_write $C_BASE_ADDR_FLOW_CACHE 0 $bitmap
+  tn_ll_mmi_write $C_BASE_ADDR_FLOW_CACHE $C_SUB_ADDR_FLOW_CACHE_ENABLE $bitmap
 
   echo "Done"
 fi

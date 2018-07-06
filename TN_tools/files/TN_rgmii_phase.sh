@@ -11,8 +11,10 @@ if [[ $# == 0 ]]; then
 elif [[ $# == 12 ]]; then
   # write data range: 0-31
   for i in `seq 1 12`; do
-    let write_data=(((${$i} & 0x1F) << 16) | (1 << ($i-1)))
-    echo "Writing $write_data to TAP address: ${$i} to port $i"
+    let phase=$1
+	shift
+    let write_data=$(( $(( $(($phase & 0x1F)) << 16)) | $((1 << $(($i-1)) )) ))
+    echo "Writing $write_data to TAP address: $phase to port $i"
     tn_ll_mmi_write $C_BASE_ADDR_NET_LOWER $C_SUB_ADDR_NET_TAP $write_data
   done
   echo "Done"

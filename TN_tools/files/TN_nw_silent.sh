@@ -15,7 +15,8 @@ else
   for i in `ifconfig -a | grep Link | cut -d " " -f 1`; do
     ifconfig $i -arp;
   done
-  
+  ovs-vsctl del-br TNbr
+  echo "Disabling OVS bridge, read the manual and run TN_firstboot to enable it again."
   #echo "Stopping DHCP deamon"
   #/etc/init.d/dhcpcd stop
 
