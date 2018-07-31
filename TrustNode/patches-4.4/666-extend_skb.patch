@@ -1,8 +1,16 @@
-Index: linux-4.4.112/include/linux/skbuff.h 
+Index: linux-4.4.121/include/linux/skbuff.h
 ===================================================================
---- linux-4.4.112.orig/include/linux/skbuff.h
-+++ linux-4.4.112/include/linux/skbuff.h
-@@ -709,6 +709,9 @@ struct sk_buff {
+--- linux-4.4.121.orig/include/linux/skbuff.h
++++ linux-4.4.121/include/linux/skbuff.h
+@@ -274,6 +274,7 @@ static inline void skb_frag_size_sub(skb
+  */
+ struct skb_shared_hwtstamps {
+ 	ktime_t	hwtstamp;
++	ktime_t	hwtstamp2;
+ };
+ 
+ /* Definitions for tx_flags in struct skb_shared_info */
+@@ -709,6 +710,9 @@ struct sk_buff {
  				*data;
  	unsigned int		truesize;
  	atomic_t		users;
@@ -12,10 +20,10 @@ Index: linux-4.4.112/include/linux/skbuff.h
  };
  
  #ifdef __KERNEL__
-Index: linux-4.4.112/include/uapi/linux/if_packet.h
+Index: linux-4.4.121/include/uapi/linux/if_packet.h
 ===================================================================
---- linux-4.4.112.orig/include/uapi/linux/if_packet.h
-+++ linux-4.4.112/include/uapi/linux/if_packet.h
+--- linux-4.4.121.orig/include/uapi/linux/if_packet.h
++++ linux-4.4.121/include/uapi/linux/if_packet.h
 @@ -59,6 +59,9 @@ struct sockaddr_ll {
  #define PACKET_ROLLOVER_STATS		21
  #define PACKET_FANOUT_DATA		22
@@ -26,10 +34,10 @@ Index: linux-4.4.112/include/uapi/linux/if_packet.h
  
  #define PACKET_FANOUT_HASH		0
  #define PACKET_FANOUT_LB		1
-Index: linux-4.4.112/net/packet/af_packet.c
+Index: linux-4.4.121/net/packet/af_packet.c
 ===================================================================
---- linux-4.4.112.orig/net/packet/af_packet.c
-+++ linux-4.4.112/net/packet/af_packet.c
+--- linux-4.4.121.orig/net/packet/af_packet.c
++++ linux-4.4.121/net/packet/af_packet.c
 @@ -2540,7 +2540,7 @@ static int tpacket_snd(struct packet_soc
  		skb = sock_alloc_send_skb(&po->sk,
  				hlen + tlen + sizeof(struct sockaddr_ll),
@@ -58,7 +66,7 @@ Index: linux-4.4.112/net/packet/af_packet.c
  
  	return skb;
  }
-@@ -3544,7 +3545,7 @@ packet_setsockopt(struct socket *sock, i
+@@ -3544,7 +3547,7 @@ packet_setsockopt(struct socket *sock, i
  
  	if (level != SOL_PACKET)
  		return -ENOPROTOOPT;
@@ -67,7 +75,7 @@ Index: linux-4.4.112/net/packet/af_packet.c
  	switch (optname) {
  	case PACKET_ADD_MEMBERSHIP:
  	case PACKET_DROP_MEMBERSHIP:
-@@ -3758,6 +3759,36 @@ packet_setsockopt(struct socket *sock, i
+@@ -3758,6 +3761,36 @@ packet_setsockopt(struct socket *sock, i
  		po->xmit = val ? packet_direct_xmit : dev_queue_xmit;
  		return 0;
  	}
@@ -104,7 +112,7 @@ Index: linux-4.4.112/net/packet/af_packet.c
          case PACKET_RECV_TYPE:
          {
                  unsigned int val;
-@@ -3882,6 +3893,15 @@ static int packet_getsockopt(struct sock
+@@ -3882,6 +3915,15 @@ static int packet_getsockopt(struct sock
  	case PACKET_QDISC_BYPASS:
  		val = packet_use_direct_xmit(po);
  		break;
@@ -120,10 +128,10 @@ Index: linux-4.4.112/net/packet/af_packet.c
  	default:
  		return -ENOPROTOOPT;
  	}
-Index: linux-4.4.112/include/net/sock.h
+Index: linux-4.4.121/include/net/sock.h
 ===================================================================
---- linux-4.4.112.orig/include/net/sock.h
-+++ linux-4.4.112/include/net/sock.h
+--- linux-4.4.121.orig/include/net/sock.h
++++ linux-4.4.121/include/net/sock.h
 @@ -241,6 +241,9 @@ struct sock_common {
  		u32		skc_tw_snd_nxt; /* struct tcp_timewait_sock */
  	};
@@ -134,7 +142,7 @@ Index: linux-4.4.112/include/net/sock.h
  };
  
  struct cg_proto;
-@@ -457,6 +458,10 @@ struct sock {
+@@ -457,6 +460,10 @@ struct sock {
  	int			(*sk_backlog_rcv)(struct sock *sk,
  						  struct sk_buff *skb);
  	void                    (*sk_destruct)(struct sock *sk);
@@ -145,10 +153,10 @@ Index: linux-4.4.112/include/net/sock.h
  };
  
  #define __sk_user_data(sk) ((*((void __rcu **)&(sk)->sk_user_data)))
-Index: linux-4.4.112/net/core/skbuff.c
+Index: linux-4.4.121/net/core/skbuff.c
 ===================================================================
---- linux-4.4.112.orig/net/core/skbuff.c
-+++ linux-4.4.112/net/core/skbuff.c
+--- linux-4.4.121.orig/net/core/skbuff.c
++++ linux-4.4.121/net/core/skbuff.c
 @@ -250,6 +250,9 @@ struct sk_buff *__alloc_skb(unsigned int
  	atomic_set(&skb->users, 1);
  	skb->head = data;
@@ -159,3 +167,31 @@ Index: linux-4.4.112/net/core/skbuff.c
  	skb_reset_tail_pointer(skb);
  	skb->end = skb->tail + size;
  	skb->mac_header = (typeof(skb->mac_header))~0U;
+Index: linux-4.4.121/include/uapi/linux/errqueue.h
+===================================================================
+--- linux-4.4.121.orig/include/uapi/linux/errqueue.h
++++ linux-4.4.121/include/uapi/linux/errqueue.h
+@@ -30,7 +30,7 @@ struct sock_extended_err {
+  *	recvmsg(). See Documentation/networking/timestamping.txt for details.
+  */
+ struct scm_timestamping {
+-	struct timespec ts[3];
++	struct timespec ts[4]; //changed frim 3 to 4 to provide one more timestamp
+ };
+ 
+ /* The type of scm_timestamping, passed in sock_extended_err ee_info.
+Index: linux-4.4.121/net/socket.c
+===================================================================
+--- linux-4.4.121.orig/net/socket.c
++++ linux-4.4.121/net/socket.c
+@@ -668,7 +668,10 @@ void __sock_recv_timestamp(struct msghdr
+ 	if (shhwtstamps &&
+ 	    (sk->sk_tsflags & SOF_TIMESTAMPING_RAW_HARDWARE) &&
+ 	    ktime_to_timespec_cond(shhwtstamps->hwtstamp, tss.ts + 2))
++	    {
+ 		empty = 0;
++		ktime_to_timespec_cond(shhwtstamps->hwtstamp2, tss.ts + 3);//provide one more timestamp
++		}
+ 	if (!empty)
+ 		put_cmsg(msg, SOL_SOCKET,
+ 			 SCM_TIMESTAMPING, sizeof(tss), &tss);
