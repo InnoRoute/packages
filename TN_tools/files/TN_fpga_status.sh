@@ -15,35 +15,16 @@ else
 
   ###>>> Param=0 or 1 or 2
   if [[ $1 -ne 3 ]]; then
-    echo -e "\n### Reading system status from common_mmi module:"
-    
+    echo -e  "\n### COMMON_MMI status:"
+
     tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_TN_MAJOR_REV
     let    major=$read_data
     tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_TN_MINOR_REV
     let    minor=$read_data
     tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_USER_REV
     let     user=$read_data
-    echo   "TrustNode FPGA design revision is $major.$minor, with a user sub-version of $user"
-    
-    tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_ADDR_MAP_REV
-    let    addrmap=$(($read_data & 0x7FFFFFFF))
-    echo   "MMI address map revision is $addrmap"
-    if [[ $(($read_data & 0x80000000)) -gt 0 ]]; then
-      echo "Processor provides and expects second half of the NoC header"
-    else
-      echo "Processor does not provide or expect NoC header information"
-    fi
-    
-    tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_FPGA_ID0
-    let    fpgaid0=$read_data
-    tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_FPGA_ID1
-    let    fpgaid1=$read_data
-    printf "Device DNA is 0x%07x%08x\n" $fpgaid1 $fpgaid0
-    
-    tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_EFUSE
-    let    efuse=$read_data
-    echo   "eFUSE key is $efuse"
-    
+    echo     "TrustNode FPGA design revision is $major.$minor, with a user sub-version of $user"
+
     tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_BITGEN_TIME
     let       day=$((($read_data & 0xF8000000) >> 27))
     let     month=$((($read_data & 0x07800000) >> 23))
@@ -52,10 +33,20 @@ else
     let    minute=$((($read_data & 0x00000FC0) >> 6))
     let    second=$((($read_data & 0x0000003F) >> 0))
     printf   "Bitstream generation start was at %02d.%02d.20%02d %02d:%02d:%02d\n" $day $month $year $hour $minute $second
-    
+
+    tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_FPGA_ID0
+    let    fpgaid0=$read_data
+    tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_FPGA_ID1
+    let    fpgaid1=$read_data
+    printf   "Device DNA is 0x%07x%08x\n" $fpgaid1 $fpgaid0
+
+    tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_EFUSE
+    let    efuse=$read_data
+    printf   "eFUSE key is  0x%08x\n" $efuse
+
     tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_FPGA_TEMP
     let    temp=$read_data*504/4096-273
-    echo   "FPGA temperature is $temp degrees celsius"
+    echo     "FPGA temperature is $temp degrees celsius"
   fi
 
   ####
@@ -66,29 +57,44 @@ else
 
   elif [[ $1 -ne 3 ]]; then
     ###>>> Param=0 or 2
-  
+
+	echo -e  "\n### Features & Parameters"
+	
     ####
+    tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_ADDR_MAP_REV
+    let    addrmap=$(($read_data & 0x7FFFFFFF))
+    echo     "MMI address map revision:    $addrmap"
+    if [[ $(($read_data & 0x80000000)) -gt 0 ]]; then
+      echo   "PCIe NoC1 exchange:          provided and expected"
+    else
+      echo   "PCIe NoC1 exchange:          No"
+    fi
+
     tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_FEATURES_USER
-    printf "User Feature Bitmap: 0x%08x\n" $read_data
-    
+    printf   "User Feature/bit:            0x%08x\n" $read_data
+
     tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_FEATURES_6TREE
     let    feature_bitmap=$read_data
     let               st_en=$((($feature_bitmap &  1) >> 0))
     let              st_mmi=$((($feature_bitmap &  2) >> 1))
     let    st_uplink_bitmap=$((($feature_bitmap     ) >> 16))
     if [[ $st_en -eq 0 ]]; then
-      echo   "6Tree Enabled: 0"
+      echo   "6Tree Enabled:               No"
     else
-      printf "6Tree Enabled: $st_en (Display(0) or MMI(1):$st_mmi; Uplink Port Bitmap: 0x%04x)\n" $st_uplink_bitmap
+      echo   "6Tree Enabled:               Yes"
+      printf "  (Display(0) or MMI(1):$st_mmi; Uplink Port Bitmap: 0x%04x)\n" $st_uplink_bitmap
     fi
     #tn_ll_mmi_read $C_BASE_ADDR_NET_LOWER $C_SUB_ADDR_NET_6T_ADDR_L
     #tn_ll_mmi_read $C_BASE_ADDR_NET_LOWER $C_SUB_ADDR_NET_6T_ADDR_H
     #tn_ll_mmi_read $C_BASE_ADDR_NET_LOWER $C_SUB_ADDR_NET_6T_DST_PTR
     #tn_ll_mmi_read $C_BASE_ADDR_NET_LOWER $C_SUB_ADDR_NET_6T_SRC_PTR
-    
+
     tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_FEATURES_ETH_SW
-    let    feature=$read_data
-    echo   "Ethernet Switch Enabled: $feature"
+    if [[ $read_data -eq 0 ]]; then
+      echo   "Ethernet Switch Enabled:     No"
+    else
+      echo   "Ethernet Switch Enabled:     Yes"
+    fi
     tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_FEATURES_FLOWCACHE
     let    feature_bitmap=$read_data
     let             fc_en=$((($feature_bitmap &  1) >> 0))
@@ -97,9 +103,10 @@ else
     let         fc_ema_en=$((($feature_bitmap &  8) >> 3))
     let   default_is_proc=$((($feature_bitmap & 16) >> 4))
     if [[ $fc_en -eq 0 ]]; then
-      echo   "Flow Cache Enabled: 0"
+      echo   "Flow Cache Enabled:          No"
     else
-      echo   "Flow Cache Enabled: $fc_en (EMH:$fc_emh_en, LinSearch:$fc_ls_en, EMA:$fc_ema_en, DefaultIsProc:$default_is_proc)"
+      echo   "Flow Cache Enabled:          Yes"
+      echo   "  (EMH:$fc_emh_en, LinSearch:$fc_ls_en, EMA:$fc_ema_en, DefaultIsProc:$default_is_proc)"
     fi
     tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_FEATURES_ACC_DP
     let    feature_bitmap=$read_data
@@ -107,135 +114,304 @@ else
     let         accdp_cnt=$((($feature_bitmap &     0xFF00) >>  8))
     let     accdp_entries=$((($feature_bitmap & 0xFFFF0000) >> 16))
     if [[ $accdp_en -eq 0 ]]; then
-      echo   "Acceleration Datapath Enabled: 0"
+      echo   "AccDP Enabled:               No"
     else
-      echo   "Acceleration Datapath Enabled: $accdp_en (AccDP Count:$accdp_cnt, AccDP Entry Count:$accdp_entries)"
+      echo   "AccDP Enabled:               Yes"
+      echo   "  (AccDP Count:$accdp_cnt, AccDP Entry Count:$accdp_entries)"
     fi
     tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_FEATURES_TX_ROUTER
-    let    feature=$read_data
-    echo   "TX Route Enabled: $feature"
+    if [[ $read_data -eq 0 ]]; then
+      echo   "TX Router Enabled:           No"
+    else
+      echo   "TX Router Enabled:           Yes"
+    fi
     tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_FEATURES_SFP
     let    feature_bitmap=$read_data
     let            sfp_en=$((($feature_bitmap &          1)))
     let           sfp_cnt=$((($feature_bitmap &     0xFF00) >>  8))
     if [[ $sfp_en -eq 0 ]]; then
-      echo   "SFP Interface Enabled: 0"
+      echo   "SFP Enabled:                 No"
     else
-      echo   "SFP Interface Enabled: $sfp_en ($sfp_cnt ports)"
+      echo   "SFP Enabled:                 Yes"
+      echo   "  ($sfp_cnt ports)"
     fi
     tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_FEATURES_SODIMM
-    let    feature=$read_data
-    echo   "SODIMM Interface Enabled: $feature"
-    
+    if [[ $read_data -eq 0 ]]; then
+      echo   "SODIMM Enabled:              No"
+    else
+      echo   "SODIMM Enabled:              Yes"
+    fi
+
     tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_PARAM_PRT_CNT
     let    param=$read_data
-    echo   "Physical Port Count:       $param"
+    echo     "Physical Port Count:         $param"
     tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_PARAM_DP_CNT
     let    param=$read_data
-    echo   "Datapath Count (RX/TX):     $param"
+    echo     "DP Count (RX/TX):            $param"
     tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_PARAM_BUF_CNT
     let    param=$read_data
-    echo   "Segment buffer count:     $param"
+    echo     "Segment buffer count:        $param"
     tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_PARAM_RX_MIN
     let    param=$read_data
-    echo   "Minimum Frame Size (RX/TX): $param"
+    echo     "Min. Frame Size:             $param"
     tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_PARAM_RX_MAX
     let    param=$read_data
-    echo   "Maximum Frame Size (RX):  $param"
+    echo     "Max. Frame Size (RX):        $param"
     tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_PARAM_TX_PRE
     let    param=$read_data
-    echo   "TX Preamble Length:         $param"
+    echo     "Preamble Length (TX):        $param"
     tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_PARAM_TX_IFG
     let    param=$read_data
-    echo   "TX Minimum Inter-Frame Gap: $param"
-    
-    echo "System connection codings are 0=Unused, 1=Slave Serial Interface, 2=MMI, 3=6Tree Application, 4=User"
-    
-    tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_PARAM_DISPLAY
-    let    param=$read_data
-    echo   "Display Connection:                $param"
-    tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_PARAM_LED_SYNCE
-    let    param=$read_data
-    echo   "SyncE LED Connection:              $param"
-    tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_PARAM_LED_INTERNAL
-    let    param=$read_data
-    echo   "Internal LED Connection:           $param"
-    tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_PARAM_BEEP
-    let    param=$read_data
-    echo   "Beeper Connection:                 $param"
-    tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_PARAM_PHY_RESET
-    let    param=$read_data
-    echo   "PHY Reset Connection:              $param"
-    tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_PARAM_PINHEADER
-    let    param=$read_data
-    echo   "Internal Big Pinheader Connection: $param"
-    tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_PARAM_PMOD
-    let    param=$read_data
-    echo   "Internal PMod Connection:          $param"
-    
+    echo     "Minimum IFG (TX):            $param"
+
     tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_PARAM_EXT_BYPASS
-    let    param=$read_data
-    echo   "External Bypass active: $param"
-    
+    if [[ $read_data -eq 0 ]]; then
+      echo   "External Bypass Enabled:     No"
+    else
+      echo   "External Bypass Enabled:     Yes"
+    fi
+
     tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_WIDTH_HC_BAD
     let    width=$read_data
-    echo   "MMI Header Creation Fragment Counter Width: $width"
+    echo     "Fragment Counter Width:      $width"
     tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_WIDTH_ETH_SW
     let    width=$((2**$read_data))
-    echo   "Number of Ethernet Switch Entries per Datapath: $width"
+    echo     "EthSW Entries/DP:            $width"
     tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_WIDTH_RX_STAT_BAD
     let    width=$read_data
-    echo   "RX Statistics Counter Width: $width"
-      
-    tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_BUFFER_FULL
-    printf "Packet Buffer Full: %d\n" $(($read_data & 1))
-  
+    echo     "RX Statistics Counter Width: $width"
+
     tn_ll_mmi_read $C_BASE_ADDR_TM $C_SUB_ADDR_TM_QUEUE_THRES_FULL
-    printf "Packet Buffer Queue Threshold: %d\n" $read_data
-  
-    if [[ $((($read_data & 0x00FF0000) >> 16)) -eq 3 ]]; then
-      echo   "RX Datapaths ready.";
+    printf   "Queue Threshold:             %d\n" $read_data
+
+    echo -e  "\n### System connection codings: 0=Unused, 1=System Controller, 2=MMI, 3=6Tree, 4=User"
+
+    tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_PARAM_DISPLAY
+    let    param=$read_data
+    echo     "Display:                     $param"
+    tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_PARAM_LED_SYNCE
+    let    param=$read_data
+    echo     "SyncE LEDs:                  $param"
+    tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_PARAM_LED_INTERNAL
+    let    param=$read_data
+    echo     "Internal LEDs:               $param"
+    tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_PARAM_BEEP
+    let    param=$read_data
+    echo     "Beeper:                      $param"
+    tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_PARAM_PHY_RESET
+    let    param=$read_data
+    echo     "PHY Reset:                   $param"
+    tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_PARAM_PINHEADER
+    let    param=$read_data
+    echo     "Internal Big Header:         $param"
+    tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_PARAM_PMOD
+    let    param=$read_data
+    echo     "Internal PMod:               $param"
+
+    ###>>> Param=2
+    if [[ $1 -eq 2 ]]; then
+      echo -e  "\n### Peripherals status"
+
+      tn_ll_mmi_read $C_BASE_ADDR_PERIPH $C_SUB_ADDR_PERIPH_BUTTONS
+      let peripherals_button_bitmap=$read_data
+      let    button_front=$((($peripherals_button_bitmap & 0x0000FFFF)))
+      let     button_user=$((($peripherals_button_bitmap & 0x00010000) >> 16))
+      if [[ $button_front -eq 0 ]]; then
+        echo   "Front Button:                No button pressed";
+      else
+        printf "Front Button/bit:            0x%04x\n" $button_front
+      fi
+      if [[ $button_user -eq 0 ]]; then
+        echo   "User Button:                 Not pressed"
+      else
+        echo   "User Button:                 Pressed"
+      fi
+
+      tn_ll_mmi_read $C_BASE_ADDR_PERIPH $C_SUB_ADDR_PERIPH_GPIOS
+      let peripherals_gpio_bitmap=$read_data
+      let      pinheader1_gpio_in=$((($peripherals_gpio_bitmap & 0x000003FF)))
+      let           pmod0_gpio_in=$((($peripherals_gpio_bitmap & 0x00003C00) >> 10))
+      let     pinheader1_gpio_tri=$((($peripherals_gpio_bitmap & 0x03FF0000) >> 16))
+      let          pmod0_gpio_tri=$((($peripherals_gpio_bitmap & 0x3C000000) >> 26))
+      if [[ $pinheader1_gpio_in -eq 0 && $pinheader1_gpio_tri -eq 0 ]]; then
+        echo   "Pinheader1 GPIO:             0";
+      else
+        printf "Pinheader1 GPIO/bit:         0x%03x (Read Data Valid: 0x%03x)\n" $pinheader1_gpio_in $pinheader1_gpio_tri
+      fi
+      if [[ $pmod0_gpio_in -eq 0 && $pmod0_gpio_tri -eq 0 ]]; then
+        echo   "PMOD0 GPIO:                  0";
+      else
+        printf "PMOD0 GPIO/bit:              0x%x (Read Data Valid: 0x%x)\n" $pmod0_gpio_in $pmod0_gpio_tri
+      fi
+
+      echo -e  "\n### MDIO interrupt status"
+
+      tn_ll_mmi_read $C_BASE_ADDR_MDIO $C_SUB_ADDR_MDIO_INTERRUPT
+      let peripherals_interrupt_bitmap=$read_data
+      let                 gphy_md_ints=$((($peripherals_interrupt_bitmap & 0x000003FF)))
+      let              alaska_ptp_ints=$((($peripherals_interrupt_bitmap & 0x00000C00) >> 10))
+      let    alaska_ptp_event_triggers=$((($peripherals_interrupt_bitmap & 0x00030000) >> 16))
+      if [[ $gphy_md_ints -eq 0 ]]; then
+        echo   "GPHY MDIO INT:               None";
+      else
+        printf "GPHY MDIO INT/bit:           0x%03x\n" $gphy_md_ints
+      fi
+      if [[ $alaska_ptp_ints -eq 0 ]]; then
+        echo   "Alaska PTP INT:              None";
+      else
+        printf "Alaska PTP INT/bit:          0x%x\n" $alaska_ptp_ints
+      fi
+      if [[ $alaska_ptp_event_triggers -eq 0 ]]; then
+        echo   "Alaska PTP Triggers:         None";
+      else
+        printf "Alaska PTP Triggers:         0x%x\n" $alaska_ptp_event_triggers
+      fi
+
+      echo -e  "\n### Header Creation interrupts"
+
+      for prt in `seq 0 11`; do
+        let hcbase=C_BASE_ADDR_HC_$prt
+        tn_ll_mmi_read $hcbase $C_SUB_ADDR_HC_INTERRUPT_EN
+        let interrupt_en=$read_data
+        tn_ll_mmi_read $hcbase $C_SUB_ADDR_HC_INTERRUPT
+        if [[ $read_data -gt 0 && $read_data -ne 0xEEEEEEEE ]]; then
+          printf "* Port $prt:               %d\n" $read_data
+          printf "  (enable: 0x%08x)\n" $interrupt_en
+        fi
+      done
+      for prt in `seq 0 1`; do
+        let hcbase=C_BASE_ADDR_HC_PCIE_$prt
+        tn_ll_mmi_read $hcbase $C_SUB_ADDR_HC_INTERRUPT_EN
+        let interrupt_en=$read_data
+        tn_ll_mmi_read $hcbase $C_SUB_ADDR_HC_INTERRUPT
+        if [[ $read_data -gt 0 && $read_data -ne 0xEEEEEEEE ]]; then
+          printf "* PCIe Port $prt:          %d\n" $read_data
+          printf "  (enable: 0x%08x)\n" $interrupt_en
+        fi
+      done
+	fi
+
+	echo -e  "\n### Status & Events"
+
+    ####
+    tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_FPGA_ALARM
+    let    fpga_alarm_bitmap=$read_data
+    let            alarm=$((($fpga_alarm_bitmap &  1) >> 0))
+    let        over_temp=$((($fpga_alarm_bitmap &  2) >> 1))
+    let        user_temp=$((($fpga_alarm_bitmap &  4) >> 2))
+    let     vccaux_alarm=$((($fpga_alarm_bitmap &  8) >> 3))
+    let     vccint_alarm=$((($fpga_alarm_bitmap & 16) >> 4))
+    let      vbram_alarm=$((($fpga_alarm_bitmap & 32) >> 5))
+    if [[ $alarm -eq 0 ]]; then
+      echo     "FPGA Alarm:                  None";
     else
-      printf "RX Datapaths experience backpressure: 0x%x\n" $((($read_data & 0x00FF0000) >> 24))
+      echo     "FPGA Alarm:                  $alarm";
+      echo     "  (Overtemperature:$over_temp, User Temperature:$user_temp, AUX Voltage:$vccaux_alarm, Logic Voltage:$vccint_alarm, BRAM Voltage:$vbram_alarm)";
     fi
-    if [[ $((($read_data & 0xFF000000) >> 24)) -eq 3 ]]; then
-      echo   "TX Datapaths ready.";
+    
+    ####
+    tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_CONFIG_CHECK
+    let      config_check_bitmap=$read_data
+    let           crc_error=$((($config_check_bitmap & 1) >> 0))
+    let           ecc_error=$((($config_check_bitmap & 2) >> 1))
+    let    single_ecc_error=$((($config_check_bitmap & 4) >> 2))
+    echo       "FPGA State: CRC Error=$crc_error, ECC Error=$ecc_error (Single=$single_ecc_error)"
+    
+    tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_PCIE_ERROR0
+    let    pcie_error_bitmap0=$read_data
+    tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_PCIE_ERROR1
+    let    pcie_error_bitmap1=$read_data
+    if [[ $pcie_error_bitmap1 -eq 0 && $pcie_error_bitmap0 -eq 0 ]]; then
+      echo     "PCIe Errors:                 None"
     else
-      printf "TX Datapaths experience backpressure: 0x%x\n" $((($read_data & 0xFF000000) >> 24))
+      printf   "PCIe Error/bit:              0x%08x%08x\n" $pcie_error_bitmap1 $pcie_error_bitmap0
+    fi
+    
+    tn_ll_mmi_read $C_BASE_ADDR_TM $C_SUB_ADDR_TM_PTR_CNT
+    echo       "Segments stored:             $read_data"
+    if [[ $read_data -gt 3000 ]]; then
+      echo     " - ### Packet Buffer Underrun - System crashed ###"
+    fi;
+    if [[ $read_data -gt 2700 && $read_data -lt 3001 ]]; then
+      echo     " - ### Packet buffer full - possibly tail dropping newly received packets ###"
+    fi;
+
+    tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_FIFO_OVERFLOW0
+    let    overflow_bitmap0=$read_data
+    tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_FIFO_OVERFLOW1
+    let    overflow_bitmap1=$read_data
+    tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_FIFO_OVERFLOW2
+    let    overflow_bitmap2=$read_data
+    tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_FIFO_OVERFLOW3
+    let    overflow_bitmap3=$read_data
+    if [[ $overflow_bitmap0 -eq 0 && $overflow_bitmap1 -eq 0 && $overflow_bitmap2 -eq 0 && $overflow_bitmap3 -eq 0 ]]; then
+      echo     "FIFO Overflow:               None"
+    else
+      printf   "FIFO Overflow/bit:           0x%08x%08x%08x%08x\n" $overflow_bitmap3 $overflow_bitmap2 $overflow_bitmap1 $overflow_bitmap0
+    fi
+    
+    tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_FIFO_UNDERRUN0
+    let    underrun_bitmap0=$read_data
+    tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_FIFO_UNDERRUN1
+    let    underrun_bitmap1=$read_data
+    tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_FIFO_UNDERRUN2
+    let    underrun_bitmap2=$read_data
+    tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_FIFO_UNDERRUN3
+    let    underrun_bitmap3=$read_data
+    if [[ $underrun_bitmap0 -eq 0 && $underrun_bitmap1 -eq 0 && $underrun_bitmap2 -eq 0 && $underrun_bitmap3 -eq 0 ]]; then
+      echo     "FIFO Underrun:               None"
+    else
+      printf   "FIFO Underrun/bit:           0x%08x%08x%08x%08x\n" $underrun_bitmap3 $underrun_bitmap2 $underrun_bitmap1 $underrun_bitmap0
     fi
     
     tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_TXF_FULL
     if [[ $read_data -eq 0 ]]; then
-      echo   "TX FIFO Full Port Bitmap (current): 0";
+      echo   "TXF Full/Port:               No";
     else
-      printf "TX FIFO Full Port Bitmap (current): 0x%08x\n" $read_data
+      printf "TXF Full/Port:               0x%08x\n" $read_data
     fi
-    
+
+    tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_BUFFER_FULL
+    printf   "Packet Buffer Full:          %d\n" $(($read_data & 1))
+
+    if [[ $((($read_data & 0x00FF0000) >> 16)) -eq 3 ]]; then
+      echo   "RX DPs:                      currently ready";
+    else
+      printf "RX DP backpressure:          0x%x\n" $((($read_data & 0x00FF0000) >> 24))
+    fi
+    if [[ $((($read_data & 0xFF000000) >> 24)) -eq 3 ]]; then
+      echo   "TX DPs:                      currently ready";
+    else
+      printf "TX DP backpressure:          0x%x\n" $((($read_data & 0xFF000000) >> 24))
+    fi
+
+    echo -e  "\n### Current MMI status:"
+
     tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_PCIE_TIMEOUT_CNT
     let    pcie_timeouts=$read_data
-    echo   "Number of MMI Timeouts (Read/Write, saturating counter): $pcie_timeouts"
-    
-    echo -e "\n### Current MMI status:"
-    let    status=`TNbar1 $(($C_BASE_ADDR_BM*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_BM_MMI_STATUS))   | cut -d " " -f 6`             
-    let     err_acc_rd=$((($status & 1) >> 0))                                                                   
-    let     err_acc_wr=$((($status & 2) >> 1))                                                                  
-    let    err_time_rd=$((($status & 4) >> 2))                                                                  
+    echo     "MMI Timeouts (sat.):         $pcie_timeouts"
+
+    let    status=`TNbar1 $(($C_BASE_ADDR_BM*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_BM_MMI_STATUS))   | cut -d " " -f 6`
+    let     err_acc_rd=$((($status & 1) >> 0))
+    let     err_acc_wr=$((($status & 2) >> 1))
+    let    err_time_rd=$((($status & 4) >> 2))
     let    err_time_wr=$((($status & 8) >> 3))
     let        err_cnt=$((($status & 0xFFF0) >> 4))
     let        acc_cnt=$((($status & 0xFFFF0000) >> 16))
-    printf "MMI Statistics (COR): 0x%04x accesses, thereof 0x%03x failing (Errors: AccessErrRd=%d,AccessErrWr=%d,TimeoutRd=%d,TimeoutWr=%d)\n" $acc_cnt $err_cnt $err_acc_rd $err_acc_wr $err_time_rd $err_time_wr
+    printf   "MMI Stat. (COR):             0x%04x accesses, thereof 0x%03x failing\n" $acc_cnt $err_cnt
+    printf   "  (Errors: AccessErrRd=%d,AccessErrWr=%d,TimeoutRd=%d,TimeoutWr=%d)\n" $err_acc_rd $err_acc_wr $err_time_rd $err_time_wr
     if [[ $status -eq 0xEEEEEEEE ]]; then
-      echo " ** MMI Read Timeout **"
+      echo   " ** MMI Read Timeout **"
     fi
-    
+
     tn_ll_mmi_read $C_BASE_ADDR_BM $C_SUB_ADDR_BM_MMI_INTERRUPT
     let interrupt=$read_data
     #tn_ll_mmi_read $C_BASE_ADDR_BM $C_SUB_ADDR_BM_MMI_INTERRUPT_EN
     #let interrupt_en=$read_data
-    printf "MMI Interrupt register is 0x%08x\n" $interrupt # (enable: 0x%08x) $interrupt_en
-  
+    printf   "MMI Interrupt register is    0x%08x\n" $interrupt # (enable: 0x%08x) $interrupt_en
+
     ###>>> Param=2
-    if [[ $1 -eq 2 ]]; then
+    #if [[ $1 -eq 2 ]]; then
       #tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_CLK_MON_L
       #let sys_if_freq=$read_data
       #if [[ $sys_if_freq -ne 0 ]]; then
@@ -247,236 +423,92 @@ else
       #    let clk_freq=$read_data
       #    case $clk in
       #      0)
-      #        printf "* SysIfClk:  %d (~1.5625 MHz)\n" $clk_freq
+      #        printf "* SysIfClk:                  %d (~1.5625 MHz)\n" $clk_freq
       #        ;;
       #      1)
-      #        printf "* Pinheader: %d\n" $clk_freq
+      #        printf "* Pinheader:                 %d\n" $clk_freq
       #        ;;
       #      2)
-      #        printf "* PMod:      %d\n" $clk_freq
+      #        printf "* PMod:                      %d\n" $clk_freq
       #        ;;
       #      3)
-      #        printf "* FC_CAM:    %d (~100 MHz)\n" $clk_freq
+      #        printf "* FC_CAM:                    %d (~100 MHz)\n" $clk_freq
       #        ;;
       #      4)
-      #        printf "* SYS_RTC:   %d (~125 MHz)\n" $clk_freq
+      #        printf "* SYS_RTC:                   %d (~125 MHz)\n" $clk_freq
       #        ;;
       #      5)
-      #        printf "* TX_CLK90:  %d (125 MHz, +/- 6250)\n" $clk_freq
+      #        printf "* TX_CLK90:                  %d (125 MHz, +/- 6250)\n" $clk_freq
       #        ;;
       #      6)
-      #        printf "* SGMII:     %d (125 MHz, +/- 6250)\n" $clk_freq
+      #        printf "* SGMII:                     %d (125 MHz, +/- 6250)\n" $clk_freq
       #        ;;
       #      7)
-      #        printf "* TX_CLK:    %d (125 MHz, +/- 6250)\n" $clk_freq
+      #        printf "* TX_CLK:                    %d (125 MHz, +/- 6250)\n" $clk_freq
       #        ;;
       #      8)
-      #        printf "* ACCDP:     %d (~200 MHz)\n" $clk_freq
+      #        printf "* ACCDP:                     %d (~200 MHz)\n" $clk_freq
       #        ;;
       #      9)
-      #        printf "* 200MHzREF: %d (~200 MHz)\n" $clk_freq
+      #        printf "* 200MHzREF:                 %d (~200 MHz)\n" $clk_freq
       #        ;;
       #     10)
-      #        printf "* GPHY0:     %d (2.5/25/125 MHz, +/- 125/1250/6250)\n" $clk_freq
+      #        printf "* GPHY0:                     %d (2.5/25/125 MHz, +/- 125/1250/6250)\n" $clk_freq
       #        ;;
       #     11)
-      #        printf "* GPHY1:     %d (2.5/25/125 MHz, +/- 125/1250/6250)\n" $clk_freq
+      #        printf "* GPHY1:                     %d (2.5/25/125 MHz, +/- 125/1250/6250)\n" $clk_freq
       #        ;;
       #     12)
-      #        printf "* GPHY2:     %d (2.5/25/125 MHz, +/- 125/1250/6250)\n" $clk_freq
+      #        printf "* GPHY2:                     %d (2.5/25/125 MHz, +/- 125/1250/6250)\n" $clk_freq
       #        ;;
       #     13)
-      #        printf "* GPHY3:     %d (2.5/25/125 MHz, +/- 125/1250/6250)\n" $clk_freq
+      #        printf "* GPHY3:                     %d (2.5/25/125 MHz, +/- 125/1250/6250)\n" $clk_freq
       #        ;;
       #     14)
-      #        printf "* GPHY4:     %d (2.5/25/125 MHz, +/- 125/1250/6250)\n" $clk_freq
+      #        printf "* GPHY4:                     %d (2.5/25/125 MHz, +/- 125/1250/6250)\n" $clk_freq
       #        ;;
       #     15)
-      #        printf "* GPHY5:     %d (2.5/25/125 MHz, +/- 125/1250/6250)\n" $clk_freq
+      #        printf "* GPHY5:                     %d (2.5/25/125 MHz, +/- 125/1250/6250)\n" $clk_freq
       #        ;;
       #     16)
-      #        printf "* GPHY6:     %d (2.5/25/125 MHz, +/- 125/1250/6250)\n" $clk_freq
+      #        printf "* GPHY6:                     %d (2.5/25/125 MHz, +/- 125/1250/6250)\n" $clk_freq
       #        ;;
       #     17)
-      #        printf "* GPHY7:     %d (2.5/25/125 MHz, +/- 125/1250/6250)\n" $clk_freq
+      #        printf "* GPHY7:                     %d (2.5/25/125 MHz, +/- 125/1250/6250)\n" $clk_freq
       #        ;;
       #     18)
-      #        printf "* GPHY8:     %d (2.5/25/125 MHz, +/- 125/1250/6250)\n" $clk_freq
+      #        printf "* GPHY8:                     %d (2.5/25/125 MHz, +/- 125/1250/6250)\n" $clk_freq
       #        ;;
       #     19)
-      #        printf "* GPHY9:     %d (2.5/25/125 MHz, +/- 125/1250/6250)\n" $clk_freq
+      #        printf "* GPHY9:                     %d (2.5/25/125 MHz, +/- 125/1250/6250)\n" $clk_freq
       #        ;;
       #     20)
-      #        printf "* AlaskaA:   %d (2.5/25/125 MHz, +/- 125/1250/6250)\n" $clk_freq
+      #        printf "* AlaskaA:                   %d (2.5/25/125 MHz, +/- 125/1250/6250)\n" $clk_freq
       #        ;;
       #     21)
-      #        printf "* AlaskaB:   %d (2.5/25/125 MHz, +/- 125/1250/6250)\n" $clk_freq
+      #        printf "* AlaskaB:                   %d (2.5/25/125 MHz, +/- 125/1250/6250)\n" $clk_freq
       #        ;;
       #     22)
-      #        printf "* PLL GTP0:  %d (e.g., 125 MHz, +/- 12500)\n" $clk_freq
+      #        printf "* PLL GTP0:                  %d (e.g., 125 MHz, +/- 12500)\n" $clk_freq
       #        ;;
       #     23)
-      #        printf "* PLL SFP1:  %d (e.g., 125 MHz, +/- 12500)\n" $clk_freq
+      #        printf "* PLL SFP1:                  %d (e.g., 125 MHz, +/- 12500)\n" $clk_freq
       #        ;;
       #     24)
-      #        printf "* AXI_DP:    %d (~200 MHz)\n" $clk_freq
+      #        printf "* AXI_DP:                    %d (~200 MHz)\n" $clk_freq
       #        ;;
       #      *)
-      #        printf "* TBD(%d):   %d\n" $clk $clk_freq
+      #        printf "* TBD(%d):                   %d\n" $clk $clk_freq
       #        ;;
       #    esac
       #  done
       #fi
-    
-      echo -e "\n### Reading system status from peripherals module"
-    
-      tn_ll_mmi_read $C_BASE_ADDR_PERIPH $C_SUB_ADDR_PERIPH_BUTTONS
-      let peripherals_button_bitmap=$read_data
-      let    button_front=$((($peripherals_button_bitmap & 0x0000FFFF)))
-      let     button_user=$((($peripherals_button_bitmap & 0x00010000) >> 16))
-      if [[ $button_front -eq 0 ]]; then
-        echo   "Front Button Bitmap: 0";
-      else
-        printf "Front Button Bitmap: 0x%04x\n" $button_front
-      fi
-      echo   "User Button: $button_user"
-    
-      tn_ll_mmi_read $C_BASE_ADDR_PERIPH $C_SUB_ADDR_PERIPH_GPIOS
-      let peripherals_gpio_bitmap=$read_data
-      let      pinheader1_gpio_in=$((($peripherals_gpio_bitmap & 0x000003FF)))
-      let           pmod0_gpio_in=$((($peripherals_gpio_bitmap & 0x00003C00) >> 10))
-      let     pinheader1_gpio_tri=$((($peripherals_gpio_bitmap & 0x03FF0000) >> 16))
-      let          pmod0_gpio_tri=$((($peripherals_gpio_bitmap & 0x3C000000) >> 26))
-      if [[ $pinheader1_gpio_in -eq 0 && $pinheader1_gpio_tri -eq 0 ]]; then
-        echo   "Pinheader1 GPIO Bitmap: 0";
-      else
-        printf "Pinheader1 GPIO Bitmap: 0x%03x (Read Data Valid: 0x%03x)\n" $pinheader1_gpio_in $pinheader1_gpio_tri
-      fi
-      if [[ $pmod0_gpio_in -eq 0 && $pmod0_gpio_tri -eq 0 ]]; then
-        echo   "PMOD0 GPIO Bitmap: 0";
-      else
-        printf "PMOD0 GPIO Bitmap: 0x%x (Read Data Valid: 0x%x)\n" $pmod0_gpio_in $pmod0_gpio_tri
-      fi
-    
-      echo -e "\n### Reading interrupt status from MDIO module"
-    
-      tn_ll_mmi_read $C_BASE_ADDR_MDIO $C_SUB_ADDR_MDIO_INTERRUPT
-      let peripherals_interrupt_bitmap=$read_data
-      let                 gphy_md_ints=$((($peripherals_interrupt_bitmap & 0x000003FF)))
-      let              alaska_ptp_ints=$((($peripherals_interrupt_bitmap & 0x00000C00) >> 10))
-      let    alaska_ptp_event_triggers=$((($peripherals_interrupt_bitmap & 0x00030000) >> 16))
-      if [[ $gphy_md_ints -eq 0 ]]; then
-        echo   "GPHY MDIO Interrupt Bitmap: 0";
-      else
-        printf "GPHY MDIO Interrupt Bitmap: 0x%03x\n" $gphy_md_ints
-      fi
-      if [[ $alaska_ptp_ints -eq 0 ]]; then
-        echo   "Alaska PTP Interrupt Bitmap: 0";
-      else
-        printf "Alaska PTP Interrupt Bitmap: 0x%x\n" $alaska_ptp_ints
-      fi
-      if [[ $alaska_ptp_event_triggers -eq 0 ]]; then
-        echo   "Alaska PTP Event Trigger Bitmap: 0";
-      else
-        printf "Alaska PTP Event Trigger Bitmap: 0x%x\n" $alaska_ptp_event_triggers
-      fi
-    
-      echo -e "\n### Displaying active interrupts on HC modules"
-    
-      for prt in `seq 0 11`; do
-        let hcbase=C_BASE_ADDR_HC_$prt
-        tn_ll_mmi_read $hcbase $C_SUB_ADDR_HC_INTERRUPT_EN
-        let interrupt_en=$read_data
-        tn_ll_mmi_read $hcbase $C_SUB_ADDR_HC_INTERRUPT
-        if [[ $read_data -gt 0 && $read_data -ne 0xEEEEEEEE ]]; then
-          printf "* Port $prt: %d (enable: 0x%08x)\n" $read_data $interrupt_en
-        fi
-      done
-      for prt in `seq 0 1`; do
-        let hcbase=C_BASE_ADDR_HC_PCIE_$prt
-        tn_ll_mmi_read $hcbase $C_SUB_ADDR_HC_INTERRUPT_EN
-        let interrupt_en=$read_data
-        tn_ll_mmi_read $hcbase $C_SUB_ADDR_HC_INTERRUPT
-        if [[ $read_data -gt 0 && $read_data -ne 0xEEEEEEEE ]]; then
-          printf "* PCIe Port $prt: %d (enable: 0x%08x)\n" $read_data $interrupt_en
-        fi
-      done
-    fi
+    #fi
   fi
-	
+
   ###>>> Param=0 or 2 or 3
-	
-  ####
-  tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_FPGA_ALARM
-  let    fpga_alarm_bitmap=$read_data
-  let            alarm=$((($fpga_alarm_bitmap &  1) >> 0))
-  let        over_temp=$((($fpga_alarm_bitmap &  2) >> 1))
-  let        user_temp=$((($fpga_alarm_bitmap &  4) >> 2))
-  let     vccaux_alarm=$((($fpga_alarm_bitmap &  8) >> 3))
-  let     vccint_alarm=$((($fpga_alarm_bitmap & 16) >> 4))
-  let      vbram_alarm=$((($fpga_alarm_bitmap & 32) >> 5))
-  if [[ $alarm -eq 0 ]]; then
-    echo   "FPGA Alarm: 0";
-  else
-    echo   "FPGA Alarm: $alarm (Overtemperature:$over_temp, User Temperature:$user_temp, AUX Voltage:$vccaux_alarm, Logic Voltage:$vccint_alarm, BRAM Voltage:$vbram_alarm)";
-  fi
 
-  ####
-  tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_CONFIG_CHECK
-  let      config_check_bitmap=$read_data
-  let           crc_error=$((($config_check_bitmap & 1) >> 0))
-  let           ecc_error=$((($config_check_bitmap & 2) >> 1))
-  let    single_ecc_error=$((($config_check_bitmap & 4) >> 2))
-  echo   "FPGA State: CRC Error=$crc_error, ECC Error=$ecc_error (Single=$single_ecc_error)"
-  
-  tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_FIFO_OVERFLOW0
-  let    overflow_bitmap0=$read_data
-  tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_FIFO_OVERFLOW1
-  let    overflow_bitmap1=$read_data
-  tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_FIFO_OVERFLOW2
-  let    overflow_bitmap2=$read_data
-  tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_FIFO_OVERFLOW3
-  let    overflow_bitmap3=$read_data
-  if [[ $overflow_bitmap0 -eq 0 && $overflow_bitmap1 -eq 0 && $overflow_bitmap2 -eq 0 && $overflow_bitmap3 -eq 0 ]]; then
-    echo "FIFO Overflow Bitmap: 0"
-  else
-    printf "FIFO Overflow Bitmap: 0x%08x%08x%08x%08x\n" $overflow_bitmap3 $overflow_bitmap2 $overflow_bitmap1 $overflow_bitmap0
-  fi
-  
-  tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_FIFO_UNDERRUN0
-  let    underrun_bitmap0=$read_data
-  tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_FIFO_UNDERRUN1
-  let    underrun_bitmap1=$read_data
-  tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_FIFO_UNDERRUN2
-  let    underrun_bitmap2=$read_data
-  tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_FIFO_UNDERRUN3
-  let    underrun_bitmap3=$read_data
-  if [[ $underrun_bitmap0 -eq 0 && $underrun_bitmap1 -eq 0 && $underrun_bitmap2 -eq 0 && $underrun_bitmap3 -eq 0 ]]; then
-    echo "FIFO Underrun Bitmap: 0"
-  else
-    printf "FIFO Underrun Bitmap: 0x%08x%08x%08x%08x\n" $underrun_bitmap3 $underrun_bitmap2 $underrun_bitmap1 $underrun_bitmap0
-  fi
-  
-  tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_PCIE_ERROR0
-  let    pcie_error_bitmap0=$read_data
-  tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_PCIE_ERROR1
-  let    pcie_error_bitmap1=$read_data
-  if [[ $pcie_error_bitmap1 -eq 0 && $pcie_error_bitmap0 -eq 0 ]]; then
-    echo "PCIe Error Bitmap: 0"
-  else
-    printf "PCIe Error Bitmap: 0x%08x%08x\n" $pcie_error_bitmap1 $pcie_error_bitmap0
-  fi
-  
-  tn_ll_mmi_read $C_BASE_ADDR_TM $C_SUB_ADDR_TM_PTR_CNT
-  echo   "Packet Buffers in use: $read_data"
-  if [[ $read_data -gt 3000 ]]; then
-    echo " - ### Packet Buffer Underrun - System crashed ###"
-  fi;
-  if [[ $read_data -gt 2700 && $read_data -lt 3001 ]]; then
-    echo " - Packet buffer full - possibly tail dropping newly received packets"
-  fi;
-
-  echo -e "\n### Displaying NoC Monitor Results"
+  echo -e  "\n### Displaying NoC Monitor Results (with timeouts, if they are not instantiated)"
 
   for prt in `seq 0 11; seq 14 15`; do
     let hcbase=C_BASE_ADDR_NOC_MON_HC_$prt
@@ -484,8 +516,10 @@ else
     let first_err=$read_data
     tn_ll_mmi_read $hcbase $C_SUB_ADDR_NOC_MON_STATUS
     if [[ $read_data -gt 0 && $read_data -ne 0xEEEEEEEE ]]; then
-      printf "* Error Bitmap HC $prt: 0x%08x (first: 0x%08x)\n" $read_data $first_err
-    fi
+      printf "* Error HC $prt/bit:            0x%08x (first: 0x%08x)\n" $read_data $first_err
+    else
+	  break
+	fi
   done
   for dp in `seq 0 1`; do
     let hcbase=C_BASE_ADDR_NOC_MON_RX_IN_$prt
@@ -493,7 +527,9 @@ else
     let first_err=$read_data
     tn_ll_mmi_read $hcbase $C_SUB_ADDR_NOC_MON_STATUS
     if [[ $read_data -gt 0 && $read_data -ne 0xEEEEEEEE ]]; then
-      printf "* Error Bitmap RX_IN $dp: 0x%08x (first: 0x%08x)\n" $read_data $first_err
+      printf "* Error RX_IN $dp/bit:          0x%08x (first: 0x%08x)\n" $read_data $first_err
+    else
+	  break
     fi
   done
   for dp in `seq 0 1`; do
@@ -502,7 +538,9 @@ else
     let first_err=$read_data
     tn_ll_mmi_read $hcbase $C_SUB_ADDR_NOC_MON_STATUS
     if [[ $read_data -gt 0 && $read_data -ne 0xEEEEEEEE ]]; then
-      printf "* Error Bitmap RX_OUT $dp: 0x%08x (first: 0x%08x)\n" $read_data $first_err
+      printf "* Error RX_OUT $dp/bit:         0x%08x (first: 0x%08x)\n" $read_data $first_err
+    else
+	  break
     fi
   done
   for prt in `seq 0 11; seq 14 15`; do
@@ -512,7 +550,9 @@ else
     let first_err=$read_data
     tn_ll_mmi_read $hcbase $C_SUB_ADDR_NOC_MON_STATUS
     if [[ $read_data -gt 0 && $read_data -ne 0xEEEEEEEE ]]; then
-      printf "* Error Bitmap HT $prt: 0x%08x (first: 0x%08x)\n" $read_data $first_err
+      printf "* Error HT $prt/bit:            0x%08x (first: 0x%08x)\n" $read_data $first_err
+    else
+	  break
     fi
   done
 

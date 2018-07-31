@@ -582,11 +582,12 @@ else
     tn_ll_mmi_read $C_BASE_ADDR_ETH_SW_0 $C_SUB_ADDR_ETH_SW_NUM_SOF          
     echo " - Number of SoF segments:                    $read_data"
     tn_ll_mmi_read $C_BASE_ADDR_ETH_SW_0 $C_SUB_ADDR_ETH_SW_NUM_LEARNED      
-    echo " - Number of learned addresses:               $read_data"
-    tn_ll_mmi_read $C_BASE_ADDR_ETH_SW_0 $C_SUB_ADDR_ETH_SW_NUM_AGED_OUT     
-    echo " - Number of aged out addresses:              $read_data"
+    echo " - Number of directly learned addresses:      $read_data"
     tn_ll_mmi_read $C_BASE_ADDR_ETH_SW_0 $C_SUB_ADDR_ETH_SW_NUM_FLOOD_UNKNOWN
     echo " - Number of floods due to unknown addresses: $read_data"
+	# directly learned as opposed to sync-learned from other datapath's Eth Switch
+    tn_ll_mmi_read $C_BASE_ADDR_ETH_SW_0 $C_SUB_ADDR_ETH_SW_NUM_AGED_OUT     
+    echo " - Number of aged out addresses:              $read_data"
     tn_ll_mmi_read $C_BASE_ADDR_ETH_SW_0 $C_SUB_ADDR_ETH_SW_NUM_FLOOD_FULL   
     echo " - Number of floods due to saturated CAM:     $read_data"
     tn_ll_mmi_read $C_BASE_ADDR_ETH_SW_0 $C_SUB_ADDR_ETH_SW_NUM_PORT_ERROR   
@@ -598,11 +599,12 @@ else
     tn_ll_mmi_read $C_BASE_ADDR_ETH_SW_1 $C_SUB_ADDR_ETH_SW_NUM_SOF          
     echo " - Number of SoF segments:                    $read_data"
     tn_ll_mmi_read $C_BASE_ADDR_ETH_SW_1 $C_SUB_ADDR_ETH_SW_NUM_LEARNED      
-    echo " - Number of learned addresses:               $read_data"
-    tn_ll_mmi_read $C_BASE_ADDR_ETH_SW_1 $C_SUB_ADDR_ETH_SW_NUM_AGED_OUT     
-    echo " - Number of aged out addresses:              $read_data"
+    echo " - Number of directly learned addresses:      $read_data"
     tn_ll_mmi_read $C_BASE_ADDR_ETH_SW_1 $C_SUB_ADDR_ETH_SW_NUM_FLOOD_UNKNOWN
     echo " - Number of floods due to unknown addresses: $read_data"
+	# directly learned as opposed to sync-learned from other datapath's Eth Switch
+    tn_ll_mmi_read $C_BASE_ADDR_ETH_SW_1 $C_SUB_ADDR_ETH_SW_NUM_AGED_OUT     
+    echo " - Number of aged out addresses:              $read_data"
     tn_ll_mmi_read $C_BASE_ADDR_ETH_SW_1 $C_SUB_ADDR_ETH_SW_NUM_FLOOD_FULL   
     echo " - Number of floods due to saturated CAM:     $read_data"
     tn_ll_mmi_read $C_BASE_ADDR_ETH_SW_1 $C_SUB_ADDR_ETH_SW_NUM_PORT_ERROR   

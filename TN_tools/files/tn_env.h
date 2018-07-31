@@ -308,4 +308,11 @@
 #define  C_SUB_ADDR_NOC_MON_FIRST_ERR 0x04
 #define  C_BASE_TM_DEBUG_LOWER 0xFF00
 #define  C_BASE_TM_DEBUG_UPPER 0xFF2F
+#define  C_BASE_TM_DEBUG_CNT 0xFF30
+#define  C_SUB_ADDR_TM_DEBUG_CNT_BUF0 0x00
+#define  C_SUB_ADDR_TM_DEBUG_CNT_BUF1 0x04
+#define  C_SUB_ADDR_TM_DEBUG_CNT_BAD0 0x08
+#define  C_SUB_ADDR_TM_DEBUG_CNT_BAD1 0x0C
+#define  C_SUB_ADDR_TM_DEBUG_CNT_QUE0 0x10
+#define  C_SUB_ADDR_TM_DEBUG_CNT_QUE1 0x14
 #define	 printconst(constante) printf(#constante ":0x%lx\n",constante)

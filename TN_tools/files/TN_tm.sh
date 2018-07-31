@@ -35,5 +35,30 @@ else
   tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_BUFFER_FULL
   printf "Packet Buffer Full: %d\n" $(($read_data & 1))
 
+  tn_ll_mmi_read $C_BASE_ADDR_TM $C_SUB_ADDR_TM_DEBUG_CNT_BUF0
+  if [[ $read_data -ne 0xEEEEEEEE ]]; then
+    echo   "TM Drop Count (Buffer Full, DP0): $read_data"
+  fi;
+  tn_ll_mmi_read $C_BASE_ADDR_TM $C_SUB_ADDR_TM_DEBUG_CNT_BUF1
+  if [[ $read_data -ne 0xEEEEEEEE ]]; then
+    echo   "TM Drop Count (Buffer Full, DP1): $read_data"
+  fi;
+  tn_ll_mmi_read $C_BASE_ADDR_TM $C_SUB_ADDR_TM_DEBUG_CNT_BAD0
+  if [[ $read_data -ne 0xEEEEEEEE ]]; then
+    echo   "TM Drop Count (Bad Frame, DP0):   $read_data"
+  fi;
+  tn_ll_mmi_read $C_BASE_ADDR_TM $C_SUB_ADDR_TM_DEBUG_CNT_BAD1
+  if [[ $read_data -ne 0xEEEEEEEE ]]; then
+    echo   "TM Drop Count (Bad Frame, DP1):   $read_data"
+  fi;
+  tn_ll_mmi_read $C_BASE_ADDR_TM $C_SUB_ADDR_TM_DEBUG_CNT_QUE0
+  if [[ $read_data -ne 0xEEEEEEEE ]]; then
+    echo   "TM Drop Count (Queue Full, DP0):  $read_data"
+  fi;
+  tn_ll_mmi_read $C_BASE_ADDR_TM $C_SUB_ADDR_TM_DEBUG_CNT_QUE1
+  if [[ $read_data -ne 0xEEEEEEEE ]]; then
+    echo   "TM Drop Count (Queue Full, DP1):  $read_data"
+  fi;
+  
   echo "Done"
 fi
