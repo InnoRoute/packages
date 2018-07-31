@@ -23,5 +23,5 @@ i2cset -y 0 4 2 0
 sleep 2
 TN_mmi_status.sh 0
 TN_fpga_loopback.sh 0
-TN_mute.sh 1
+#TN_mute.sh 1
 fi
