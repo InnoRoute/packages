@@ -208,6 +208,10 @@ static void printpacket(struct msghdr *msg, int res,
 				printf("HW raw %ld.%09ld",
 				       (long)stamp->tv_sec,
 				       (long)stamp->tv_nsec);
+				stamp++;
+				printf("HW raw2 %ld.%09ld",
+				       (long)stamp->tv_sec,
+				       (long)stamp->tv_nsec);
 				break;
 			}
 			default:
