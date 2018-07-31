@@ -1,13 +1,17 @@
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/export.h>
+#include <linux/delay.h>
 #include <linux/init.h>
 #include "TN_MMI.h"
 #include "TN_MDIO.h"
 #include "tn_env.h"
+#include <linux/kthread.h>
 uint16_t INTERRRUPT_MASK=0x13ff;
-uint8_t pollcount=0;
+uint8_t pollcount=0,pollcount2=0;
 void (*TIME_int_handler)(void);
+void (*INR_NW_carrier_update_handler)(uint8_t id, uint16_t status);
+static DECLARE_WAIT_QUEUE_HEAD (INR_MMI_phy_state_watch_wq);
 void *gBaseVirt1_MMI = NULL;
 //*****************************************************************************************************************
 /**
@@ -37,12 +41,15 @@ void INR_PCI_MMI_write(uint32_t value, uint64_t addr) {
 void INR_MMI_init(uint64_t *bar1) {
     gBaseVirt1_MMI=bar1;//get baseaddr from
     if(ENABLE)if(gBaseVirt1_MMI){
-    
+    if(!INR_NW_carrier_update_handler){printk("error INR_NW_carrier_update\n");
+	INR_NW_carrier_update_handler=symbol_get(INR_NW_carrier_update);
+	if(!INR_NW_carrier_update_handler) printk("error INR_NW_carrier_update not registred\n");
+	}
     INR_PCI_BAR1_write(INTERRRUPT_MASK,INR_MMI_interrupt_mask);//settin interrupt mask
     INR_MMI_PHY_interrupt(INTERRRUPT_MASK);//read all phy registers
     INR_PCI_BAR1_read(INR_MDIO_interrupt);
     INR_PCI_BAR1_read(INR_MMI_interrupt_status);
-    
+    wake_up_interruptible (&INR_MMI_phy_state_watch_wq);
     INR_PCI_BAR1_write(0xffffffff,INR_HC_INTERRUPT_EN(0));
     INR_PCI_BAR1_write(0xffffffff,INR_HC_INTERRUPT_EN(1));
     INR_PCI_BAR1_write(0xffffffff,INR_HC_INTERRUPT_EN(2));
@@ -57,11 +64,27 @@ void INR_MMI_init(uint64_t *bar1) {
     INR_PCI_BAR1_write(0xffffffff,INR_HC_INTERRUPT_EN(11));
 #ifdef C_BASE_ADDR_RTC    
     INR_PCI_BAR1_write(0xffffffff,(C_BASE_ADDR_RTC<<8)+C_SUB_ADDR_RTC_INTERRUPT_EN);
-#endif    
+#endif  
+/*
+    INR_MDIO_write(0,INR_MDIO_GPHY_REG_IMASK,7);
+    INR_MDIO_write(1,INR_MDIO_GPHY_REG_IMASK,7);
+    INR_MDIO_write(2,INR_MDIO_GPHY_REG_IMASK,7);
+    INR_MDIO_write(3,INR_MDIO_GPHY_REG_IMASK,7);
+    INR_MDIO_write(4,INR_MDIO_GPHY_REG_IMASK,7);
+    INR_MDIO_write(5,INR_MDIO_GPHY_REG_IMASK,7);
+    INR_MDIO_write(6,INR_MDIO_GPHY_REG_IMASK,7);
+    INR_MDIO_write(7,INR_MDIO_GPHY_REG_IMASK,7);
+    INR_MDIO_write(8,INR_MDIO_GPHY_REG_IMASK,7);
+    INR_MDIO_write(9,INR_MDIO_GPHY_REG_IMASK,7);  
+*/
     }
     printk("INR_MMI_init base:0x%lx\n",gBaseVirt1_MMI);
     //if(gBaseVirt1_MMI)INR_MDIO_init(gBaseVirt1_MMI);//init mdio
     TIME_int_handler= symbol_get(INR_TIME_TX_transmit_interrupt);
+    INR_NW_carrier_update_handler=symbol_get(INR_NW_carrier_update);
+    wake_up_interruptible (&INR_MMI_phy_state_watch_wq);
+    wake_up_interruptible (&INR_MMI_phy_state_watch_wq);
+
 
 }
 //*****************************************************************************************************************
@@ -84,6 +107,10 @@ void INR_MMI_interrupt_handler() {
 
     //printk("Flowcache EMA has entry 1 cleared\n");
 if(ENABLE){
+    if(!INR_NW_carrier_update_handler){printk("error INR_NW_carrier_update\n");
+	INR_NW_carrier_update_handler=symbol_get(INR_NW_carrier_update);
+	if(!INR_NW_carrier_update_handler) printk("error INR_NW_carrier_update not registred\n");
+	}
     INR_MMI_PHY_interrupt(MDIO_int&INTERRRUPT_MASK);
     INR_PCI_BAR1_read(INR_MDIO_interrupt);
     pollcount=0;
@@ -91,7 +118,7 @@ if(ENABLE){
     INR_MMI_PHY_interrupt(INTERRRUPT_MASK);//if not reset poll allu
     pollcount++;
     if(pollcount>=INR_MAX_POLL){
-    	INTERRRUPT_MASK=0;
+    	//INTERRRUPT_MASK=0;
     	printk("INR int error, max pollcount reached for MDIO interrupt, forcing interrupt mask to 0\n");
     	break;}
     }
@@ -105,11 +132,12 @@ if(ENABLE){
 	if(TIME_int_handler)TIME_int_handler();//call TX_timestamp interrupt
 	else printk("error TIME_int_handler not registred\n");
 	}
+    
     pollcount=0;
     while(INR_PCI_BAR1_read(INR_MMI_interrupt_status)){//read to reset
     pollcount++;
     if(pollcount>=INR_MAX_POLL){
-    	INTERRRUPT_MASK=0;
+    	//INTERRRUPT_MASK=0;
     	printk("INR int error, max pollcount reached for MMI interrupt, forcing interrupt mask to 0\n");
     	break;}
     }
@@ -247,6 +275,7 @@ if(ENABLE){
 */
 void INR_MMI_exit() {
 	symbol_put(INR_TIME_TX_transmit_interrupt);
+	symbol_put(INR_NW_carrier_update);
     	printk("%s\n", __func__);
 }
 //*****************************************************************************************************************
@@ -255,13 +284,21 @@ void INR_MMI_exit() {
 *@param id ID of PHY
 */
 void INR_MMI_PHY_interrupt(uint16_t id) {
-	printk("MMI_PHY_INTERRUPT: 0x%lx\n",id);
+	//printk("MMI_PHY_INTERRUPT: 0x%lx\n",id);
     uint8_t phyid=0,i=0,j=0;
     uint16_t read_val_gphy,read_val_alaska;
     	for (i=0;i<12;i++)if(id&(1<<i))if(i<10){
     		phyid=i+16;
+    		pollcount2=0;
     		read_val_gphy=INR_MDIO_read(phyid,INR_MDIO_GPHY_REG_IMASK)&INR_MDIO_read(phyid,INR_MDIO_GPHY_REG_ISTAT);
-    		for(j=0; j<16; j++)switch(read_val_gphy&(1<<j)){
+    		
+    		while(INR_MDIO_read(phyid,INR_MDIO_GPHY_REG_IMASK)&INR_MDIO_read(phyid,INR_MDIO_GPHY_REG_ISTAT)){
+    			udelay(10);
+	    		pollcount2++;
+			if(pollcount2>=INR_MAX_POLL)break;
+		}
+    	        
+       		for(j=0; j<16; j++)switch(read_val_gphy&(1<<j)){
 			case (1<<15):
 			    printk("Port %i: wake on lan status\n",i);
 			    break;
@@ -306,20 +343,25 @@ void INR_MMI_PHY_interrupt(uint16_t id) {
 			    break;
 			case (1<<1):
 			    printk("Port %i: link speed change interrupt status\n",i);
-			    INR_GPHY_adapt_speed(i+16);
+			    //INR_GPHY_adapt_speed(i+16);
 			    break;
 			case (1<<0):
 			    printk("Port %i: link state change interrupt status\n",i);
-			    if(i==0){
-			    INR_PCI_BAR1_write(0x0,0xc00040);
-			    INR_PCI_BAR1_write(0x0,0xc00060);
-			    printk("del collT entry 0\n");
-			       }
+			    //udelay(1000);
+			    //wake_up_interruptible (&INR_MMI_phy_state_watch_wq);
+			    if(INR_NW_carrier_update_handler)INR_NW_carrier_update_handler(i,(1<<2)&INR_MDIO_read(i+16,0x1));
+			    //INR_collective_max_speed();
+			    //if(i==0){
+			    //INR_PCI_BAR1_write(0x0,0xc00040);
+			    //INR_PCI_BAR1_write(0x0,0xc00060);
+			    //printk("del collT entry 0\n");
+			       //}
 			    break;//link state change
 			default:
 			    break;
 			}
-    	
+		
+		
     	
     	
     	
@@ -429,6 +471,40 @@ void INR_MMI_GPHY_soft_reset() {
 
 
 }
+//*****************************************************************************************************************
+/**
+*handle MMI-GPHY soft reset
+*/
+int INR_MMI_phy_state_watch(void *nix){
+DECLARE_WAITQUEUE (wait2, current);
+    allow_signal (SIGKILL);
+    add_wait_queue (&INR_MMI_phy_state_watch_wq, &wait2);
+while (1) {
+        set_current_state (TASK_INTERRUPTIBLE);
+        schedule ();
+        if (signal_pending (current))
+            break;
+	//mdelay(5000);
+	uint8_t i=0;
+	for(i=0;i<=9;i++)if(INR_NW_carrier_update_handler)INR_NW_carrier_update_handler(i,(1<<2)&INR_MDIO_read(i+16,0x1));
+	//INR_collective_max_speed();//adjust speed of phys
+}
+    set_current_state (TASK_RUNNING);
+    remove_wait_queue (&INR_MMI_phy_state_watch_wq, &wait2);
+    return 0;
 
+
+
+
+}
+void INR_MMI_phy_state_watch_start(){
+
+kthread_run (&INR_MMI_phy_state_watch, NULL, "INR_MMI_phy_state_watch");
+wake_up_interruptible (&INR_MMI_phy_state_watch_wq);
+}
+void INR_MMI_phy_state_watch_wakeup(){
+
+wake_up_interruptible (&INR_MMI_phy_state_watch_wq);
+}
 
 

@@ -10,6 +10,8 @@ uint8_t INR_MDIO_GPHY_getspeed(uint8_t id);
 void INR_GPHY_adapt_speed(uint8_t id);
 uint8_t INR_MDIO_ALASKA_getspeed(uint8_t id);
 void INR_ALASKA_adapt_speed(uint8_t id);
+void INR_collective_max_speed(void);
+uint8_t INR_MDIO_GPHY_getpartnerspeed(uint8_t id);
 
 #ifndef C_BASE_ADDR_BM
 	#define C_BASE_ADDR_BM 0
@@ -55,6 +57,7 @@ void INR_ALASKA_adapt_speed(uint8_t id);
 #define INR_MDIO_timeout 10
 #define INR_MDIO_GPHY_REG_MIISTAT 0x18
 #define INR_MDIO_ALASKA_REG_MIISTAT 17
+#define INR_MDIO_GPHY_REG_LPA 0x5
 
 #ifdef C_BASE_ADDR_HC_0
 	#define INR_HC_BASE(id) (C_BASE_ADDR_HC_ ## id )

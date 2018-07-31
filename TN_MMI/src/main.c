@@ -66,6 +66,7 @@ static int
 INR_proc_PHYspeed_show (struct seq_file *m, void *v)
 {
     seq_printf (m, "%i\n", 0);
+    INR_MMI_phy_state_watch_wakeup();
     return 0;
 }
 
@@ -122,6 +123,7 @@ static int __init
 skel_init (void)
 {
     INR_MMI_init_procfs();
+    INR_MMI_phy_state_watch_start();
     return 0;
 }
 

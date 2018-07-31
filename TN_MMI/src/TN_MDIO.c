@@ -2,6 +2,7 @@
 #include <linux/module.h>
 #include <linux/export.h>
 #include <linux/init.h>
+#include <linux/delay.h>
 #include "TN_MMI.h"
 #include "TN_MDIO.h"
 
@@ -27,6 +28,7 @@ void INR_MDIO_write_b(uint8_t write, uint8_t PHY_addr, uint8_t REG_addr, uint16_
     uint32_t value=0,i=0;
     value=((1&write)<<26)|((PHY_addr&0x1f)<<21)|((REG_addr&0x1f)<<16)|(data);
     INR_PCI_MMI_write(value,INR_MDIO_write_addr);
+    udelay(50);
     while(INR_MDIO_read_b(NULL)) { //wait until ready
         i++;
         if(i>INR_MDIO_timeout)break;
@@ -58,6 +60,7 @@ uint8_t INR_MDIO_read_b(uint16_t *data) {
     uint32_t value=0;
     //uint16_t *rd_data=data;
     value=INR_PCI_MMI_read(INR_MDIO_read_addr);
+    udelay(50);
     if (value==0xeeeeeeee){printk("MMI read timeout\n");return 0;}
     busy=1&(value>>31);
     if(data)*data=value&0xffff;//check if nullpointer
@@ -110,6 +113,20 @@ void INR_MDIO_ALASKA_init(uint8_t id) {
 uint8_t INR_MDIO_GPHY_getspeed(uint8_t id){
 return INR_MDIO_read(id,INR_MDIO_GPHY_REG_MIISTAT)&0x7;
 }
+
+//*****************************************************************************************************************
+/**
+*get speed of gphys linkpartner
+*@param id id of gphy (0..10)
+*/
+uint8_t INR_MDIO_GPHY_getpartnerspeed(uint8_t id){
+uint8_t maxspeed=2;//if phy is off don't care
+if(INR_MDIO_read(id,INR_MDIO_GPHY_REG_LPA)&0x40)maxspeed=0; //support 10full
+if(INR_MDIO_read(id,INR_MDIO_GPHY_REG_LPA)&0x100)maxspeed=1; //support 100full
+if(INR_MDIO_read(id,0xa)&0x800)maxspeed=2; //support 1000full
+
+return maxspeed;
+}
 //*****************************************************************************************************************
 /**
 *get speed of alaska phy
@@ -147,6 +164,26 @@ switch(physpeed){
 	
 	default:break;
 }}
+}
+//*****************************************************************************************************************
+/**
+*searches maximum possible speed for system
+*@brief The FPGA currently suports just one speed rate at all. This function polls all PHYs and searches for the maximum possible speed. Afterwards all faster PHYs are forced down.
+*/
+void INR_collective_max_speed(){
+uint8_t i=0;
+uint8_t maxspeed=2;
+INR_MDIO_write(i,0x4,0x0C01|0x0C41|0x0D01);INR_MDIO_write(i,0x9,0x0200);INR_MDIO_write(i,0x0,0x1200);
+for(i=16;i<26;i++)if(INR_MDIO_GPHY_getpartnerspeed(i)<maxspeed)maxspeed=INR_MDIO_GPHY_getpartnerspeed(i);
+printk("set maximum linkspeed for all phys to %i\n",maxspeed);
+for(i=16;i<26;i++)
+	{switch(maxspeed){ 
+		case 0: INR_MDIO_write(i,0x4,0x0C41);INR_MDIO_write(i,0x9,0x0);INR_PCI_MMI_write(0x00000000,((C_BASE_ADDR_NET_LOWER)<<8)|C_SUB_ADDR_NET_SPEED);break;
+		case 1: INR_MDIO_write(i,0x4,0x0D01);INR_MDIO_write(i,0x9,0x0);INR_PCI_MMI_write(0x55555555,((C_BASE_ADDR_NET_LOWER)<<8)|C_SUB_ADDR_NET_SPEED);break;
+		case 2: INR_MDIO_write(i,0x4,0x0C01);INR_MDIO_write(i,0x9,0x0200);INR_PCI_MMI_write(0xAAAAAAAA,((C_BASE_ADDR_NET_LOWER)<<8)|C_SUB_ADDR_NET_SPEED);break;
+		}
+	INR_MDIO_write(i,0x0,0x1200);//trigger reautoneg
+}
 }
 //*****************************************************************************************************************
 /**
