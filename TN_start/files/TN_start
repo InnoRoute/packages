@@ -15,6 +15,19 @@ stty -F /dev/ttyS1 115200 #set FPGA terminal baudrate
 opkg update &
 /usr/share/InnoRoute/TN_phy_force_linkspeed.sh 1
 /usr/share/InnoRoute/scripts/start_ovs.sh
+#/usr/share/InnoRoute/TN_phy_init.sh 1
+TN_phy_access.sh 0 0 0x19 7 #init PHY interrupt masks
+TN_phy_access.sh 1 0 0x19 7
+TN_phy_access.sh 2 0 0x19 7
+TN_phy_access.sh 3 0 0x19 7
+TN_phy_access.sh 4 0 0x19 7
+TN_phy_access.sh 5 0 0x19 7
+TN_phy_access.sh 6 0 0x19 7
+TN_phy_access.sh 7 0 0x19 7
+TN_phy_access.sh 8 0 0x19 7
+TN_phy_access.sh 9 0 0x19 7
+cat /proc/TN_MMI/TN_PHYspeed #trigger phy state update
+TN_mac_addr.sh 0x00534E554C00 #set hardware switch mac address
 echo "done"
 }
 
