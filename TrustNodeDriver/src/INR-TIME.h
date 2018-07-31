@@ -15,9 +15,10 @@ static int INR_TIME_ptp_settime(struct ptp_clock_info *ptp, const struct timespe
 static int INR_TIME_ptp_enable(struct ptp_clock_info *ptp,struct ptp_clock_request *rq, int on);
 void INR_TIME_TX_transmit_interrupt(void);
 void INR_TIME_set_bar1_base(uint64_t *base);
-u64 INR_TIME_correct_HW_timestamp(uint32_t hw_value);
+u64 INR_TIME_correct_HW_timestamp(uint32_t hw_value,uint8_t ctlclock);
 void INR_TIME_set_enable(uint8_t enable);
 void INR_TIME_set_debug(uint8_t enable);
+void INR_TIME_set_USE_ctrl_bridge_clock_offset(uint8_t enable);
 
 #define INR_TIME_vortex_length 65536
 #define INR_TIME_base 1

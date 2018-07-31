@@ -25,6 +25,7 @@
 #include "INR-ctl.h"
 #include "INR-TIME.h"
 EXPORT_SYMBOL(INR_TIME_TX_transmit_interrupt);
+EXPORT_SYMBOL(INR_NW_carrier_update);
 volatile uint8_t probed=0;
 static void remove (struct pci_dev *dev);
 

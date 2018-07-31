@@ -55,6 +55,7 @@ uint64_t INR_PCI_tx_descriptor_unmap_current = 0;				/**<next free tx descriptor
 
 uint64_t INR_PCI_rx_descriptor_base[INR_PCI_rx_descriptor_ring_count] = { 0 };	/**<Base addresses of RX rings*/
 uint64_t INR_PCI_rx_descriptor_current[INR_PCI_rx_descriptor_ring_count] = { 0 };/**<next free tx descriptor*/
+uint64_t hw_timestamp[INR_PCI_rx_descriptor_ring_count] = { 0 };//**<stores actual packet timestamp for ring*/
 
 uint32_t page_prealloc_current = 0;
 struct page *INR_PCI_rx_preallocated_page[INR_PCI_page_prealloc_count] = { NULL };
@@ -384,7 +385,7 @@ uint16_t
 INR_PCI_process_rx_descriptor_ring (uint8_t index)
 {
     uint16_t count = 0; /**<count number of packets received to report to NAPI*/
-    uint64_t hw_timestamp;
+
     uint32_t ringhead = INR_PCI_BAR0_read (INR_PCI_rx_descriptor_head_reg + (64 * index));
     if (RX_DBG_mod)INR_LOG_debug (loglevel_warn"Ring head0x%llx, expected ring head: 0x%llx",ringhead, (INR_PCI_rx_descriptor_current[index] * INR_PCI_rx_descriptor_length));
     INR_CHECK_fpga_read_val (ringhead, "process_rx_ring:INR_PCI_rx_descriptor_head_reg", 0); //print error message if readed values is 0xffffffff and PCIe interface out of sync
@@ -408,134 +409,175 @@ INR_PCI_process_rx_descriptor_ring (uint8_t index)
             INR_PCI_enable_error_LED
             dropmode[index] = 1;
         }
-//##############################FIRST FRAGMENT handling
-        if (firstpkg[index]) {	//first fragment of packet
-            firstpkg[index] = 0;
-            IfNotRuss if (RX_descriptor->length < ETH_HLEN) {	//handle to short framents
-                INR_LOG_debug (loglevel_err"error received to short first fragment\n");
-                INR_PCI_enable_error_LED
-                dropmode[index] = 1;
-                return 0;
+
+#if INR_HW_TIMESTAMP_extra_fragment == 1
+        if(RX_descriptor->Status&(1<<2)) {
+            if (RX_DBG_mod)INR_LOG_debug (loglevel_info"RX received timestamping descriptor\n");
+            if(INR_PCI_HW_timestamp) {
+                memcpy (&hw_timestamp[index],data_rx[INR_PCI_rx_descriptor_current[index]]
+                        [index]->data, sizeof(hw_timestamp[index]));// copy hardware timestamp
+
             }
-            if (zerocopy_rx) {	//if zerocopy alloc small SKB and copy just first part
-                rx_skb[index] = netdev_alloc_skb (get_nwdev (index), ETH_HLEN + 2);
-                if (!rx_skb[index]) {
-                    INR_LOG_debug (loglevel_err"Cant alloc RX SKB\n");
+
+
+        }
+
+//##############################FIRST FRAGMENT handling
+        if((RX_descriptor->Status&(1<<2))==0)
+#endif
+            if (firstpkg[index]) {	//first fragment of packet and no timestamping fragment
+                firstpkg[index] = 0;
+                IfNotRuss if (RX_descriptor->length < ETH_HLEN) {	//handle to short framents
+
+                    INR_LOG_debug (loglevel_err"error received to short first fragment\n");
                     INR_PCI_enable_error_LED
                     dropmode[index] = 1;
-                    return 0;
+                    goto release_descriptor;
                 }
-                rx_skb[index]->dev = get_nwdev (index);
-                skb_reserve (rx_skb[index], 2);
-                skb_put (rx_skb[index], ETH_HLEN);
-                if(INR_PCI_HW_timestamp) {
-                    memcpy (&hw_timestamp,data_rx[INR_PCI_rx_descriptor_current[index]]
-                            [index]->data, sizeof(hw_timestamp));// copy hardware timestamp
 
+                if (zerocopy_rx) {	//if zerocopy alloc small SKB and copy just first part
+
+                    rx_skb[index] = netdev_alloc_skb (get_nwdev (index), ETH_HLEN + 2);
+                    if (!rx_skb[index]) {
+                        INR_LOG_debug (loglevel_err"Cant alloc RX SKB\n");
+                        INR_PCI_enable_error_LED
+                        dropmode[index] = 1;
+                        goto release_descriptor;
+                    }
+
+                    rx_skb[index]->dev = get_nwdev (index);
+                    skb_reserve (rx_skb[index], 2);
+                    skb_put (rx_skb[index], ETH_HLEN);
+                    if(INR_PCI_HW_timestamp) {
+
+#if (INR_HW_TIMESTAMP_first_fragment == 1)
+                        memcpy (&hw_timestamp[index],data_rx[INR_PCI_rx_descriptor_current[index]]
+                                [index]->data, sizeof(hw_timestamp[index]));// copy hardware timestamp
+#endif
+                        memcpy (rx_skb[index]->data, data_rx[INR_PCI_rx_descriptor_current[index]]
+                                [index]->data+sizeof(hw_timestamp[index]*INR_HW_TIMESTAMP_first_fragment), ETH_HLEN);
+
+                    } else {
+                        memcpy (rx_skb[index]->data, data_rx[INR_PCI_rx_descriptor_current[index]]
+                                [index]->data, ETH_HLEN);
+                    }
+                }
+                else { 			//if no zerocopy alloc big skb and coppy whole fragment into
+                    rx_skb[index] = netdev_alloc_skb (get_nwdev (index), 1800 + 2);
+                    if (!rx_skb[index]) {
+                        INR_LOG_debug (loglevel_err"Cant alloc RX SKB\n");
+                        INR_PCI_enable_error_LED
+                        dropmode[index] = 1;
+                        goto release_descriptor;
+                    }
+
+                    rx_skb[index]->dev = get_nwdev (index);
+                    skb_reserve (rx_skb[index], 2);
+                    skb_put (rx_skb[index], RX_descriptor->length-(sizeof(hw_timestamp[index])*INR_PCI_HW_timestamp*INR_HW_TIMESTAMP_first_fragment));	//should everytime be true, but is not :/
                     memcpy (rx_skb[index]->data, data_rx[INR_PCI_rx_descriptor_current[index]]
-                            [index]->data+sizeof(hw_timestamp), ETH_HLEN);
+                            [index]->data+(sizeof(hw_timestamp[index])*INR_PCI_HW_timestamp*INR_HW_TIMESTAMP_first_fragment), RX_descriptor->length-(sizeof(hw_timestamp[index])*INR_PCI_HW_timestamp*INR_HW_TIMESTAMP_first_fragment));	//copy whole fragment into SKB
+
+#if (INR_HW_TIMESTAMP_first_fragment == 1)
+                    if(INR_PCI_HW_timestamp) {
+                        memcpy (&hw_timestamp[index],data_rx[INR_PCI_rx_descriptor_current[index]]
+                                [index]->data, sizeof(hw_timestamp[index]));// copy hardware timestamp
+
+                    }
+#endif
+
+                }
+                //###########Timestamping
+
+                if (INR_PCI_HW_timestamp) {
+
+                    struct skb_shared_hwtstamps *skbtimestamp = skb_hwtstamps(rx_skb[index]);
+                    memset(skbtimestamp, 0, sizeof(struct skb_shared_hwtstamps));
+                    if (RX_DBG_mod) INR_LOG_debug("HW timestamp:0x%lx\n",hw_timestamp[index]);
+
+                    skbtimestamp->hwtstamp=ns_to_ktime((u64)INR_TIME_correct_HW_timestamp(hw_timestamp[index],1)); //0: insert timestamp here...
+                    skbtimestamp->hwtstamp2=ns_to_ktime((u64)INR_TIME_correct_HW_timestamp(hw_timestamp[index],0)); //provide second timestamp
+                    //skb_tstamp_rx(rx_skb[index],&skbtimestamp);
+                    __net_timestamp(rx_skb[index]);
 
                 } else {
-                    memcpy (rx_skb[index]->data, data_rx[INR_PCI_rx_descriptor_current[index]]
-                            [index]->data, ETH_HLEN);
-                }
-            }
-            else {			//if no zerocopy alloc big skb and coppy whole fragment into
-                rx_skb[index] = netdev_alloc_skb (get_nwdev (index), 1800 + 2);
-                if (!rx_skb[index]) {
-                    INR_LOG_debug (loglevel_err"Cant alloc RX SKB\n");
-                    INR_PCI_enable_error_LED
-                    dropmode[index] = 1;
-                    return 0;
-                }
-                rx_skb[index]->dev = get_nwdev (index);
-                skb_reserve (rx_skb[index], 2);
-                skb_put (rx_skb[index], RX_descriptor->length-(sizeof(hw_timestamp)*INR_PCI_HW_timestamp));	//should everytime be true, but is not :/
-                memcpy (rx_skb[index]->data, data_rx[INR_PCI_rx_descriptor_current[index]]
-                        [index]->data+(sizeof(hw_timestamp)*INR_PCI_HW_timestamp), RX_descriptor->length-(sizeof(hw_timestamp)*INR_PCI_HW_timestamp));	//copy whole fragment into SKB
-                if(INR_PCI_HW_timestamp) {
-                    memcpy (&hw_timestamp,data_rx[INR_PCI_rx_descriptor_current[index]]
-                            [index]->data, sizeof(hw_timestamp));// copy hardware timestamp
-
+                    //skb_rx_timestamp(rx_skb[index]);
                 }
 
-            }
-            //###########Timestamping
-            if (INR_PCI_HW_timestamp) {
-                struct skb_shared_hwtstamps *skbtimestamp = skb_hwtstamps(rx_skb[index]);
-                memset(skbtimestamp, 0, sizeof(struct skb_shared_hwtstamps));
-                if (RX_DBG_mod) INR_LOG_debug("HW timestamp:0x%lx, corrected value:0x%llx ns:0x%lli\n",hw_timestamp,INR_TIME_correct_HW_timestamp(hw_timestamp),ns_to_ktime(INR_TIME_correct_HW_timestamp(hw_timestamp)));
-                skbtimestamp->hwtstamp=ns_to_ktime((u64)INR_TIME_correct_HW_timestamp(hw_timestamp)); //0: insert timestamp here...
-                //skb_tstamp_rx(rx_skb[index],&skbtimestamp);
-                __net_timestamp(rx_skb[index]);
-
-            } else {
-                //skb_rx_timestamp(rx_skb[index]);
-            }
-            //########################
-            rx_skb[index]->ip_summed = CHECKSUM_UNNECESSARY;	//set checksumflag in skb
-            rx_skb[index]->protocol = eth_type_trans (rx_skb[index], rx_skb[index]->dev);	//set ethertype in skb
-            if (RX_descriptor->length-(sizeof(hw_timestamp)*INR_PCI_HW_timestamp) > ETH_HLEN)
-                if (zerocopy_rx)	//if zerocopy append unhandled part of packet to the skb
-                    skb_add_rx_frag (rx_skb[index], skb_shinfo (rx_skb[index])->nr_frags, data_rx[INR_PCI_rx_descriptor_current[index]]
-                                     [index]->page, data_rx[INR_PCI_rx_descriptor_current[index]]
-                                     [index]->offset + ETH_HLEN+(sizeof(hw_timestamp)*INR_PCI_HW_timestamp), RX_descriptor->length - ETH_HLEN-(sizeof(hw_timestamp)*INR_PCI_HW_timestamp), ALIGN (RX_descriptor->length - ETH_HLEN-(sizeof(hw_timestamp)*INR_PCI_HW_timestamp), L1_CACHE_BYTES));
+                //########################
+                rx_skb[index]->ip_summed = CHECKSUM_UNNECESSARY;	//set checksumflag in skb
+                rx_skb[index]->protocol = eth_type_trans (rx_skb[index], rx_skb[index]->dev);	//set ethertype in skb
+                if (RX_descriptor->length-(sizeof(hw_timestamp[index])*INR_PCI_HW_timestamp) > ETH_HLEN)
+                    if (zerocopy_rx)	//if zerocopy append unhandled part of packet to the skb
+                        skb_add_rx_frag (rx_skb[index], skb_shinfo (rx_skb[index])->nr_frags, data_rx[INR_PCI_rx_descriptor_current[index]]
+                                         [index]->page, data_rx[INR_PCI_rx_descriptor_current[index]]
+                                         [index]->offset + ETH_HLEN+(sizeof(hw_timestamp[index])*INR_PCI_HW_timestamp*INR_HW_TIMESTAMP_first_fragment), RX_descriptor->length - ETH_HLEN-(sizeof(hw_timestamp[index])*INR_PCI_HW_timestamp*INR_HW_TIMESTAMP_first_fragment), ALIGN (RX_descriptor->length - ETH_HLEN-(sizeof(hw_timestamp[index])*INR_PCI_HW_timestamp*INR_HW_TIMESTAMP_first_fragment), L1_CACHE_BYTES));
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4,4,200)
-            atomic_inc (&data_rx[INR_PCI_rx_descriptor_current[index]][index]->page->_refcount);	//INCREMTN PAGECOUNT.. creazy voodoo
+                atomic_inc (&data_rx[INR_PCI_rx_descriptor_current[index]][index]->page->_refcount);	//INCREMTN PAGECOUNT.. creazy voodoo
 #else
-            atomic_inc (&data_rx[INR_PCI_rx_descriptor_current[index]][index]->page->_count);	//INCREMTN PAGECOUNT.. creazy voodoo
+                atomic_inc (&data_rx[INR_PCI_rx_descriptor_current[index]][index]->page->_count);	//INCREMTN PAGECOUNT.. creazy voodoo
 #endif
 
-        }
+            }
 //##############################OTHER FRAGMENT handling
-        else {			//some other fragment of packet
-            if (zerocopy_rx) {
-                IfNotRuss if (!rx_skb[index]) {
-                    INR_LOG_debug (loglevel_err"rx skb nullpointer!\n");
-                    INR_PCI_enable_error_LED
-                }
-                IfNotRuss if (!data_rx[INR_PCI_rx_descriptor_current[index]][index]->page) {
-                    INR_LOG_debug (loglevel_err"rx page nullpointer!\n");
-                    INR_PCI_enable_error_LED
-                }
-                IfNotRuss if (!RX_descriptor->length) {
-                    INR_LOG_debug (loglevel_err"rx length nullpointer!\n");
-                    INR_PCI_enable_error_LED
-                }
+            else {			//some other fragment of packet
+                if (zerocopy_rx) {
+                    IfNotRuss if (!rx_skb[index]) {
+                        INR_LOG_debug (loglevel_err"rx skb nullpointer!\n");
+                        INR_PCI_enable_error_LED
+                    }
+                    IfNotRuss if (!data_rx[INR_PCI_rx_descriptor_current[index]][index]->page) {
+                        INR_LOG_debug (loglevel_err"rx page nullpointer!\n");
+                        INR_PCI_enable_error_LED
+                    }
+                    IfNotRuss if (!RX_descriptor->length) {
+                        INR_LOG_debug (loglevel_err"rx length nullpointer!\n");
+                        INR_PCI_enable_error_LED
+                    }
 
-                //if (data_rx[INR_PCI_rx_descriptor_current[index]][index]->fragmentindex == 0) {	//fragment are start of new page
-                if(1) { //needed for deffeent buffersizes if timestamping is enabled
-                    skb_add_rx_frag (rx_skb[index], skb_shinfo (rx_skb[index])->nr_frags, data_rx[INR_PCI_rx_descriptor_current[index]][index]->page,
-                                     data_rx[INR_PCI_rx_descriptor_current[index]][index]->offset, RX_descriptor->length, ALIGN (RX_descriptor->length,
-                                             L1_CACHE_BYTES));
+                    //if (data_rx[INR_PCI_rx_descriptor_current[index]][index]->fragmentindex == 0) {	//fragment are start of new page
+                    if(1) { //needed for deffeent buffersizes if timestamping is enabled
+                        skb_add_rx_frag (rx_skb[index], skb_shinfo (rx_skb[index])->nr_frags, data_rx[INR_PCI_rx_descriptor_current[index]][index]->page,
+                                         data_rx[INR_PCI_rx_descriptor_current[index]][index]->offset, RX_descriptor->length, ALIGN (RX_descriptor->length,
+                                                 L1_CACHE_BYTES));
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4,4,200)
-                    atomic_inc (&data_rx[INR_PCI_rx_descriptor_current[index]][index]->page->_refcount);	//INCREMT PAGECOUNT.. creazy voodoo
+                        atomic_inc (&data_rx[INR_PCI_rx_descriptor_current[index]][index]->page->_refcount);	//INCREMT PAGECOUNT.. creazy voodoo
 #else
-                    atomic_inc (&data_rx[INR_PCI_rx_descriptor_current[index]][index]->page->_count);	//INCREMT PAGECOUNT.. creazy voodoo
+                        atomic_inc (&data_rx[INR_PCI_rx_descriptor_current[index]][index]->page->_count);	//INCREMT PAGECOUNT.. creazy voodoo
 #endif
+                    }
+                    else {			//dont add new page, only extend last frag (pages are sorted by rx-ring )
+                        skb_shinfo (rx_skb[index])->frags[skb_shinfo (rx_skb[index])->nr_frags - 1].size += RX_descriptor->length;
+                        rx_skb[index]->len += RX_descriptor->length;
+                        rx_skb[index]->data_len += RX_descriptor->length;
+                    }
                 }
-                else {			//dont add new page, only extend last frag (pages are sorted by rx-ring )
-                    skb_shinfo (rx_skb[index])->frags[skb_shinfo (rx_skb[index])->nr_frags - 1].size += RX_descriptor->length;
-                    rx_skb[index]->len += RX_descriptor->length;
-                    rx_skb[index]->data_len += RX_descriptor->length;
+                else {			//copy whole descriptor-data in skb
+                    IfNotRuss if (!rx_skb[index]) {
+                        INR_LOG_debug (loglevel_err"rx skb nullpointer!\n");
+                        INR_PCI_enable_error_LED
+                        goto release_descriptor;
+                    }
+                    if (rx_skb[index]->len < 1700)
+                        memcpy (skb_put (rx_skb[index], RX_descriptor->length),	//should everytime true but isn not.. :/
+                                data_rx[INR_PCI_rx_descriptor_current[index]]
+                                [index]->data, RX_descriptor->length);
                 }
+
+
             }
-            else {			//copy whole descriptor-data in skb
-
-                if (rx_skb[index]->len < 1700)
-                    memcpy (skb_put (rx_skb[index], RX_descriptor->length),	//should everytime true but isn not.. :/
-                            data_rx[INR_PCI_rx_descriptor_current[index]]
-                            [index]->data, RX_descriptor->length);
-            }
-
-
-        }
         if (RX_DBG_mod) {		//debug output
             uint8_t *tmpdata = data_rx[INR_PCI_rx_descriptor_current[index]][index]->data;
             uint16_t tmp;
-            INR_LOG_debug (loglevel_warn"RX skb skb-len:%i offset:%i len:%i page:%llx ring:%i\n", rx_skb[index]->len,
-                           data_rx[INR_PCI_rx_descriptor_current[index]][index]->offset, RX_descriptor->length,
-                           data_rx[INR_PCI_rx_descriptor_current[index]][index]->data, index);
+            if(rx_skb[index]) {
+                INR_LOG_debug (loglevel_warn"RX skb skb-len:%i offset:%i len:%i page:%llx ring:%i\n", rx_skb[index]->len,
+                               data_rx[INR_PCI_rx_descriptor_current[index]][index]->offset, RX_descriptor->length,
+                               data_rx[INR_PCI_rx_descriptor_current[index]][index]->data, index);
+            }
+            else {
+                INR_LOG_debug (loglevel_warn"RX skb offset:%i len:%i page:%llx ring:%i\n",
+                               data_rx[INR_PCI_rx_descriptor_current[index]][index]->offset, RX_descriptor->length,
+                               data_rx[INR_PCI_rx_descriptor_current[index]][index]->data, index);
+            }
             printk ("RXdump:");
             for (tmp = 0; (tmp < RX_descriptor->length); tmp++) {//dump packet data
                 if (tmp % 32 == 0)
@@ -544,6 +586,10 @@ INR_PCI_process_rx_descriptor_ring (uint8_t index)
             }
             printk ("\n\n");
         }
+#if INR_HW_TIMESTAMP_extra_fragment == 1
+        if(RX_descriptor->Status&(1<<2))if (zerocopy_rx)kfree(data_rx[INR_PCI_rx_descriptor_current[index]]
+                        [index]->data); //if zerocop free data buffer
+#endif
         if (data_rx[INR_PCI_rx_descriptor_current[index]][index]->fragmentindex == (rx_descriptor_pool_length - 1)) {
             dma_unmap_page (&globdev->dev, data_rx[INR_PCI_rx_descriptor_current[index]][index]->dma_root, pagesize, DMA_FROM_DEVICE);	//if last fragment of page is used unmap page
             if (!zerocopy_rx)		//if not zerocopy free the memeory page because date is copied already
@@ -574,7 +620,7 @@ INR_PCI_process_rx_descriptor_ring (uint8_t index)
                     }
             dropmode[index] = 0;	//reset dropmode
         }
-
+release_descriptor:
         if (data_rx[INR_PCI_rx_descriptor_current[index]][index])
             kfree (data_rx[INR_PCI_rx_descriptor_current[index]][index]);	//free descriptor
         INR_PCI_alloc_new_rx_skb (INR_PCI_rx_descriptor_current[index], index);	//alloc new skb
@@ -959,7 +1005,7 @@ INR_PCI_pointerdistance (uint16_t tail, uint16_t head, uint16_t max)
 *@param ll local loop (send to cpu)
 */
 int
-INR_TX_push (struct net_device *nwdev,struct sk_buff *skb, uint8_t * data, uint16_t datalength, uint8_t eof, uint8_t port, uint8_t ll, uint8_t paged, uint16_t fragcount,uint8_t time_queue)
+INR_TX_push (struct net_device *nwdev,struct sk_buff *skb, uint8_t * data, uint16_t datalength, uint8_t eof, uint8_t port, uint8_t ll, uint8_t paged, uint16_t fragcount,uint8_t time_queue,uint8_t extra_ts_fragment)
 {
     uint32_t tmp66 = tx_head_backup;
     uint8_t error = 0;
@@ -1054,7 +1100,7 @@ INR_TX_push (struct net_device *nwdev,struct sk_buff *skb, uint8_t * data, uint1
     TX_descriptor->buffer = cpu_to_le64 (dma_addr);	//store address of packet in descriptor-ring
     TX_descriptor->length = datalength;
     TX_descriptor->CSO = 0xff & 0x00;
-    TX_descriptor->CMD = 0xff & ((1 & eof) | ((1 & ll) << 7));	//send eof and to-cpu-bit
+    TX_descriptor->CMD = 0xff & ((1 & (eof|extra_ts_fragment)) | ((1 & ll) << 7)|((extra_ts_fragment&1)<<4));	//send eof and to-cpu-bit
     TX_descriptor->STA = 0xf & 0x0;
     TX_descriptor->Rsvd = 0xf & port;	//triger output-port
     TX_descriptor->CSS = 0xff & 0x00;
@@ -1075,7 +1121,7 @@ INR_TX_push (struct net_device *nwdev,struct sk_buff *skb, uint8_t * data, uint1
     else {
         INR_PCI_tx_descriptor_current++;
     }				//increment INR_PCI_tx_descriptor_current
-    if (eof) {
+    if (eof&&(!extra_ts_fragment)) {//extra_ts_fragment belongs to packet
         INR_PCI_BAR0_write ((INR_PCI_tx_descriptor_length * (INR_PCI_tx_descriptor_current)), INR_PCI_tx_descriptor_tail_reg);	//if last fragment, update tailpointer
         descriptor_current_lastwritten = INR_PCI_tx_descriptor_current;
     }//store address-offset of this last written descriptor in bar0
@@ -1166,8 +1212,12 @@ INR_init_drv (struct pci_dev *dev)
     pagesize = PAGE_SIZE;		//getpagesize();//get pagesze
     INR_LOG_debug (loglevel_info"Pagesize:%lli\n", pagesize);
     INR_LOG_debug (loglevel_info"Zerocopy: TX:%i RX:%i\n", zerocopy_tx, zerocopy_rx);
+    INR_LOG_debug (loglevel_info"HW_TIMESTAMP_extra_fragment: %i\n", INR_HW_TIMESTAMP_extra_fragment);
+    INR_LOG_debug (loglevel_info"HW_TIMESTAMP_first_fragment: %i\n", INR_HW_TIMESTAMP_first_fragment);
     INR_LOG_debug (loglevel_info"DEBUGMOD: TX:%i RX:%i\n", TX_DBG_mod, RX_DBG_mod);
     INR_LOG_debug (loglevel_info"AutorepeatonTXdrop: %i\n", INR_NW_repeatonbusy);
+    INR_LOG_debug (loglevel_info"HW_revision: ");
+    printk("%i\n",HW_revision);
     rx_descriptor_pool_length = (pagesize / data_size_rx);	//count of descriptor in one page , pool is empty at start
     uint64_t i = 0;
     for (i = 0; i < INR_PCI_rx_descriptor_ring_count; i++)

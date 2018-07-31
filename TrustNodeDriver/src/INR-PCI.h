@@ -14,7 +14,7 @@ static irqreturn_t XPCIe_IRQHandler (int irq, void *dev_id);
 static irqreturn_t XPCIe_IRQHandler (int irq, void *dev_id, struct pt_regs *regs);
 #endif
 
-int INR_TX_push (struct net_device *nwdev,struct sk_buff *skb, uint8_t * data, uint16_t datalength, uint8_t eof, uint8_t port, uint8_t ll, uint8_t paged, uint16_t fragcount,uint8_t time_queue);
+int INR_TX_push (struct net_device *nwdev,struct sk_buff *skb, uint8_t * data, uint16_t datalength, uint8_t eof, uint8_t port, uint8_t ll, uint8_t paged, uint16_t fragcount,uint8_t time_queue,uint8_t extra_ts_fragment);
 void INR_PCI_alloc_new_rx_skb (uint16_t current_descriptor, uint16_t ringindex);
 struct INR_PCI_rx_descriptor_ring_entry *INR_PCI_get_new_rx_descriptor_ring_entry (uint8_t index);
 int INR_PCI_rx_pageallocator (void *nix);
@@ -34,6 +34,7 @@ void INR_PCI_BAR1_write_ext(uint32_t value,uint32_t addr);
 uint32_t INR_PCI_BAR1_read_ext(uint32_t addr);
 
 #define IfNotRuss if(TNrussian==0)
+#define HW_revision (C_SUB_ADDR_COMMON_TN_MAJOR_REV*10+C_SUB_ADDR_COMMON_TN_MINOR_REV)
 
 #define INR_PCI_TX_maxfragments 16  /*<maximum number of segments the hardware supports */
 #define INR_PCI_FPGA_max_tx_length  1600	/*<number of bytes the FPGA accept in one TX packet */
@@ -101,6 +102,15 @@ uint32_t INR_PCI_BAR1_read_ext(uint32_t addr);
 #define HW_feature_frame_injection (1<<1)
 #define HW_feature_RTC (1<<2)
 #define HW_feature_TXconf (1<<3)
+
+
+//#if (C_SUB_ADDR_COMMON_TN_MAJOR_REV >= 3)||((C_SUB_ADDR_COMMON_TN_MAJOR_REV == 2)&&(C_SUB_ADDR_COMMON_TN_MAJOR_REV >= 5))
+#define INR_HW_TIMESTAMP_extra_fragment 1 // timestamp is handled in extra fragment
+#define INR_HW_TIMESTAMP_first_fragment 0 // timestamp is handled in first fragment
+//#else
+//#define INR_HW_TIMESTAMP_extra_fragment 0 // timestamp is handled in extra fragment
+//#define INR_HW_TIMESTAMP_first_fragment 1 // timestamp is handled in first fragment
+//#endif
 
 //****************************************************************************************************************
 /**

@@ -49,6 +49,7 @@ static int INR_NW_get_ts_info(struct net_device *dev, struct ethtool_ts_info *in
 void set_TSN_queue (uint8_t flag);
 void set_TSN_ts (uint32_t flag);
 void set_TSN_sock_opt (uint8_t flag);
+void INR_NW_carrier_update (uint8_t index,uint16_t status);
 
 //*****************************************************************************************************************
 /**
