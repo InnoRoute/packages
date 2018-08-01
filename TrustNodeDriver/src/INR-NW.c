@@ -263,7 +263,7 @@ INR_NW_tx (struct sk_buff *skb, struct net_device *nwdev)
                     uint64_t *timestamp = kmalloc (8, GFP_DMA | GFP_ATOMIC);
                     //ktime_t time=ktime_get(); //real
                     *timestamp=((uint64_t)TX_confirmastion_id<<32)|(0xffffffff&TXtimestamp);
-                    error = INR_TX_push (nwdev,skb, timestamp, 8, 0, toport, get_send2cpu(), 0, 1,time_queue,1);
+                    error = INR_TX_push (nwdev,skb, (uint8_t*)timestamp, 8, 0, toport, get_send2cpu(), 0, 1,time_queue,1);
                     if (error) {
                         goto errorhandling;
                     }
@@ -289,7 +289,7 @@ INR_NW_tx (struct sk_buff *skb, struct net_device *nwdev)
                     uint64_t *timestamp = kmalloc (8, GFP_DMA | GFP_ATOMIC);
                     //ktime_t time=ktime_get();
                     *timestamp=((uint64_t)TX_confirmastion_id<<32)|(0xffffffff&TXtimestamp);
-                    error = INR_TX_push (nwdev,skb, timestamp, 8, 0, toport, get_send2cpu(), 0, 1,time_queue,1);
+                    error = INR_TX_push (nwdev,skb, (uint8_t*)timestamp, 8, 0, toport, get_send2cpu(), 0, 1,time_queue,1);
                     if (error) {
                         goto errorhandling;
                     }
@@ -319,7 +319,7 @@ INR_NW_tx (struct sk_buff *skb, struct net_device *nwdev)
                     uint64_t *timestamp = kmalloc (8, GFP_DMA | GFP_ATOMIC);
                     //ktime_t time=ktime_get();
                     *timestamp=((uint64_t)TX_confirmastion_id<<32)|(0xffffffff&TXtimestamp);
-                    error = INR_TX_push (nwdev,skb, timestamp, 8, 0, toport, get_send2cpu(), 0, 1,time_queue,1);
+                    error = INR_TX_push (nwdev,skb, (uint8_t*)timestamp, 8, 0, toport, get_send2cpu(), 0, 1,time_queue,1);
                     if (error) {
                         goto errorhandling;
                     }
@@ -361,7 +361,7 @@ INR_NW_tx (struct sk_buff *skb, struct net_device *nwdev)
                         uint64_t *timestamp = kmalloc (8, GFP_DMA | GFP_ATOMIC);
                         //ktime_t time=ktime_get();
                         *timestamp=((uint64_t)TX_confirmastion_id<<32)|(0xffffffff&TXtimestamp);
-                        error = INR_TX_push (nwdev,skb, timestamp, 8, 0, toport, get_send2cpu(), 0, 1,time_queue,1);
+                        error = INR_TX_push (nwdev,skb, (uint8_t*)timestamp, 8, 0, toport, get_send2cpu(), 0, 1,time_queue,1);
                         if (error) {
                             goto errorhandling;
                         }

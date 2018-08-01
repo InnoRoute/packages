@@ -68,8 +68,8 @@ void INR_TIME_set_debug(uint8_t enable) {
 *reads hardwareclock value from hardware and reports to cycle counter
 *
 */
-static cycle_t INR_TIME_cyclecounter_read(const struct cyclecounter *cc)
-{
+//static cycle_t INR_TIME_cyclecounter_read(const struct cyclecounter *cc)
+//{
     /*    uint64_t ns,ns_h,ns_l;
     #ifdef C_BASE_ADDR_RTC
         INR_PCI_BAR1_read_ext((C_BASE_ADDR_RTC<<8)+C_SUB_ADDR_RTC_BRIDGE_LOW);//latch clock value
@@ -78,6 +78,7 @@ static cycle_t INR_TIME_cyclecounter_read(const struct cyclecounter *cc)
         ns=(ns_h|(ns_h<<32))*INR_TIME_base;
     #endif
     */
+    /*
     int64_t offset=0;
     uint64_t BRIDGE_clock_value=0,CTRLD_clock_value=0;
     uint32_t BRIDGE_clock_value_L=0,CTRLD_clock_value_L=0,BRIDGE_clock_value_H=0,CTRLD_clock_value_H=0;
@@ -92,7 +93,7 @@ static cycle_t INR_TIME_cyclecounter_read(const struct cyclecounter *cc)
     BRIDGE_clock_value=BRIDGE_clock_value_L|((uint64_t)BRIDGE_clock_value_H<<32);
 
     return BRIDGE_clock_value;
-}
+}*/
 //*****************************************************************************************************************
 /**
 *adds an TX entry to the wait for timestamp queue

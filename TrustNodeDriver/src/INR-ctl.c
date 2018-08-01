@@ -36,8 +36,13 @@ static struct proc_dir_entry *reg1, *reg2,*reg3,*reg4, *INR_proc_dir, *INR_proc_
 *  proc write function
 *
 */
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,14,50)
+ssize_t
+set_TSN_USE_ctrl_bridge_clock_offset_write (struct file *file, const char *buffer, size_t count, loff_t *data)
+#else
 int
 set_TSN_USE_ctrl_bridge_clock_offset_write (struct file *file, const char *buffer, size_t count, void *data)
+#endif
 {
     procfs_buffer_size = count;
     if (procfs_buffer_size > PROCFS_MAX_SIZE) {
@@ -80,8 +85,13 @@ set_TSN_USE_ctrl_bridge_clock_offset_proc_open (struct inode *inode, struct file
 *  proc write function
 *
 */
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,14,50)
+ssize_t
+set_TSN_debug_write (struct file *file, const char *buffer, size_t count, loff_t *data)
+#else
 int
 set_TSN_debug_write (struct file *file, const char *buffer, size_t count, void *data)
+#endif
 {
     procfs_buffer_size = count;
     if (procfs_buffer_size > PROCFS_MAX_SIZE) {
@@ -125,8 +135,13 @@ set_TSN_debug_proc_open (struct inode *inode, struct file *file)
 *  proc write function
 *
 */
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,14,50)
+ssize_t
+set_TSN_queue_write (struct file *file, const char *buffer, size_t count, loff_t *data)
+#else
 int
 set_TSN_queue_write (struct file *file, const char *buffer, size_t count, void *data)
+#endif
 {
     procfs_buffer_size = count;
     if (procfs_buffer_size > PROCFS_MAX_SIZE) {
@@ -169,8 +184,13 @@ set_TSN_queue_proc_open (struct inode *inode, struct file *file)
 *  proc write function
 *
 */
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,14,50)
+ssize_t
+set_TSN_ts_write (struct file *file, const char *buffer, size_t count, loff_t *data)
+#else
 int
 set_TSN_ts_write (struct file *file, const char *buffer, size_t count, void *data)
+#endif
 {
     procfs_buffer_size = count;
     if (procfs_buffer_size > PROCFS_MAX_SIZE) {
@@ -213,8 +233,13 @@ set_TSN_ts_proc_open (struct inode *inode, struct file *file)
 *  proc write function
 *
 */
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,14,50)
+ssize_t
+set_TSN_sock_opt_write (struct file *file, const char *buffer, size_t count, loff_t *data)
+#else
 int
 set_TSN_sock_opt_write (struct file *file, const char *buffer, size_t count, void *data)
+#endif
 {
     procfs_buffer_size = count;
     if (procfs_buffer_size > PROCFS_MAX_SIZE) {
@@ -258,8 +283,13 @@ set_TSN_sock_opt_proc_open (struct inode *inode, struct file *file)
 *  proc write function
 *
 */
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,14,50)
+ssize_t
+TNrussian_write (struct file *file, const char *buffer, size_t count, loff_t *data)
+#else
 int
 TNrussian_write (struct file *file, const char *buffer, size_t count, void *data)
+#endif
 {
     procfs_buffer_size = count;
     if (procfs_buffer_size > PROCFS_MAX_SIZE) {
@@ -302,8 +332,13 @@ TNrussian_proc_open (struct inode *inode, struct file *file)
 *  proc write function
 *
 */
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,14,50)
+ssize_t
+TNsend2cpu_write (struct file *file, const char *buffer, size_t count, loff_t *data)
+#else
 int
 TNsend2cpu_write (struct file *file, const char *buffer, size_t count, void *data)
+#endif
 {
     procfs_buffer_size = count;
     if (procfs_buffer_size > PROCFS_MAX_SIZE) {
@@ -347,8 +382,13 @@ TNsend2cpu_proc_open (struct inode *inode, struct file *file)
 *  proc write function
 *
 */
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,14,50)
+ssize_t
+TXdbg_write (struct file *file, const char *buffer, size_t count, loff_t *data)
+#else
 int
 TXdbg_write (struct file *file, const char *buffer, size_t count, void *data)
+#endif
 {
     procfs_buffer_size = count;
     if (procfs_buffer_size > PROCFS_MAX_SIZE) {
@@ -392,8 +432,13 @@ TXdbg_proc_open (struct inode *inode, struct file *file)
 *  proc write function
 *
 */
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,14,50)
+ssize_t
+RXdbg_write (struct file *file, const char *buffer, size_t count, loff_t *data)
+#else
 int
 RXdbg_write (struct file *file, const char *buffer, size_t count, void *data)
+#endif
 {
     procfs_buffer_size = count;
     if (procfs_buffer_size > PROCFS_MAX_SIZE) {

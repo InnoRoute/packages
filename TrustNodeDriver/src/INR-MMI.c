@@ -4,7 +4,7 @@
 #include "INR-MMI.h"
 #include <TN_MMI.h>
 void (*MMI_handler)(void);
-void (*MMI_init)(uint64_t bar1);
+void (*MMI_init)(uint64_t *bar1);
 //*****************************************************************************************************************
 /**
 *init mmid address

@@ -27,6 +27,9 @@
 #include <linux/semaphore.h>
 #include <asm/cacheflush.h>
 #include "INR-MMI.h"
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,14,50)
+	#include <linux/sched/signal.h>
+#endif
 
 uint8_t INR_PCI_HW_timestamp=0;
 volatile uint32_t tx_head_backup = 0;	/**< Storage for tx_headpointer, to spot cluttering of the FPGA*/
@@ -711,7 +714,12 @@ int
 INR_int_enable (struct pci_dev *dev)
 {
     INR_LOG_debug (loglevel_info"ISR Setup..starting\n");
+    #if LINUX_VERSION_CODE >= KERNEL_VERSION(4,14,50)
+    int intcount = pci_alloc_irq_vectors(dev, 1, 32,0);
+    #else
     int intcount = pci_enable_msi_range (dev, 1, 32);
+    #endif
+    
     INR_LOG_debug (loglevel_info"theoretical int count:%i\n",pci_msi_vec_count(dev));
 //    int intcount = pci_alloc_irq_vectors(dev,1,255,PCI_IRQ_ALL_TYPES);
     INR_LOG_debug (loglevel_info"ISR range requested..\n");
