@@ -1,7 +1,7 @@
 #include "tn_env.h"
 //#include <linux/inttypes.h>
 void INR_MMI_interrupt_handler(void);
-void INR_MMI_init(uint64_t *bar1);
+void INR_MMI_init(uint64_t bar1);
 void INR_MMI_exit(void);
 void INR_MMI_PHY_interrupt(uint16_t id);
 void INR_MMI_ALASKA_PHY_PTP_interrupt(uint8_t id);

@@ -17,7 +17,7 @@ void (*TIME_int_handler)(void);
 
 void (*INR_NW_carrier_update_handler)(uint8_t id, uint16_t status);
 static DECLARE_WAIT_QUEUE_HEAD (INR_MMI_phy_state_watch_wq);
-void *gBaseVirt1_MMI = NULL;
+uint64_t gBaseVirt1_MMI = NULL;
 //*****************************************************************************************************************
 /**
 *read from mmi addr
@@ -43,7 +43,7 @@ void INR_PCI_MMI_write(uint32_t value, uint64_t addr) {
 *init mmid address
 *
 */
-void INR_MMI_init(uint64_t *bar1) {
+void INR_MMI_init(uint64_t bar1) {
     gBaseVirt1_MMI=bar1;//get baseaddr from
     if(ENABLE)if(gBaseVirt1_MMI){
     if(!INR_NW_carrier_update_handler){printk("error INR_NW_carrier_update\n");
