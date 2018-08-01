@@ -261,7 +261,7 @@ get_HASH (struct arguments *arguments)
   arguments->HASH.EMA.PORT_DST = (0xf & (arguments->PORT_DST >> 0)) ^
     (0xf & (arguments->PORT_DST >> 4)) ^ (0xf & (arguments->PORT_DST >> 8)) ^ (0xf & (arguments->PORT_DST >> 12));
 
-  uint64_t *ema;
+  struct INR_FC_EMA_HashTable_entry_data *ema;
   ema = &arguments->HASH.EMA;
   verblog printf ("EMH hash value:0x%llx\n", arguments->HASH.EMH);
   verblog printf ("EMA hash value:0x%llx\n", *ema);
