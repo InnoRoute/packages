@@ -41,8 +41,13 @@ EXPORT_SYMBOL(INR_MMI_init);
 *  proc write function
 *
 */
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,14,50)
+ssize_t
+INR_proc_PHYspeed_write (struct file *file, const char *buffer, size_t count, loff_t *data)
+#else
 int
 INR_proc_PHYspeed_write (struct file *file, const char *buffer, size_t count, void *data)
+#endif
 {
     procfs_buffer_size = count;
     if (procfs_buffer_size > PROCFS_MAX_SIZE) {

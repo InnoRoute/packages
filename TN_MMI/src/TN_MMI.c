@@ -1,5 +1,6 @@
 #include <linux/kernel.h>
 #include <linux/module.h>
+#include <linux/version.h>
 #include <linux/export.h>
 #include <linux/delay.h>
 #include <linux/init.h>
@@ -7,9 +8,13 @@
 #include "TN_MDIO.h"
 #include "tn_env.h"
 #include <linux/kthread.h>
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,14,50)
+	#include <linux/sched/signal.h>
+#endif
 uint16_t INTERRRUPT_MASK=0x13ff;
 uint8_t pollcount=0,pollcount2=0;
 void (*TIME_int_handler)(void);
+
 void (*INR_NW_carrier_update_handler)(uint8_t id, uint16_t status);
 static DECLARE_WAIT_QUEUE_HEAD (INR_MMI_phy_state_watch_wq);
 void *gBaseVirt1_MMI = NULL;

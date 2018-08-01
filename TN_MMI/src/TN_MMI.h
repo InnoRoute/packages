@@ -14,7 +14,7 @@ uint32_t INR_PCI_MMI_read(uint64_t addr);
 #define INR_MMI_interrupt_status ((C_BASE_ADDR_BM<<8)|C_SUB_ADDR_BM_MMI_INTERRUPT)
 #define INR_MMI_interrupt_mask ((C_BASE_ADDR_MDIO<<8)|C_SUB_ADDR_MDIO_INTERRUPT_EN)
 extern void INR_TIME_TX_transmit_interrupt(void);
-extern void INR_NW_carrier_update(void);
+extern void INR_NW_carrier_update(uint8_t id, uint16_t status);
 int INR_MMI_phy_state_watch(void *nix);
 void INR_MMI_phy_state_watch_start(void);
 void INR_MMI_phy_state_watch_wakeup(void);
