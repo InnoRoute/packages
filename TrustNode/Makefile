@@ -15,7 +15,7 @@ MAINTAINER:=InnoRoute GmbH ulbricht@innoroute.de
 
 DEFAULT_PACKAGES += partx-utils
 
-KERNEL_PATCHVER:=4.4
+KERNEL_PATCHVER:=4.14
 
 KERNELNAME:=bzImage
 
