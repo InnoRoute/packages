@@ -715,7 +715,7 @@ INR_int_enable (struct pci_dev *dev)
 {
     INR_LOG_debug (loglevel_info"ISR Setup..starting\n");
     #if LINUX_VERSION_CODE >= KERNEL_VERSION(4,14,50)
-    int intcount = pci_alloc_irq_vectors(dev, 1, 32,0);
+    int intcount = pci_alloc_irq_vectors(dev, 1, 32,PCI_IRQ_MSIX | PCI_IRQ_MSI);
     #else
     int intcount = pci_enable_msi_range (dev, 1, 32);
     #endif
