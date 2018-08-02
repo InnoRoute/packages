@@ -1,0 +1,176 @@
+Index: linux-4.14.59/include/linux/skbuff.h
+===================================================================
+--- linux-4.14.59.orig/include/linux/skbuff.h
++++ linux-4.14.59/include/linux/skbuff.h
+@@ -399,6 +399,7 @@ static inline bool skb_frag_must_loop(st
+  */
+ struct skb_shared_hwtstamps {
+ 	ktime_t	hwtstamp;
++	ktime_t	hwtstamp2;
+ };
+ 
+ /* Definitions for tx_flags in struct skb_shared_info */
+@@ -835,6 +836,9 @@ struct sk_buff {
+ 				*data;
+ 	unsigned int		truesize;
+ 	refcount_t		users;
++	__u32			TN_extended;
++	__u32			TN_TX_queue;
++	__u32			TN_TX_timestamp;
+ };
+ 
+ #ifdef __KERNEL__
+Index: linux-4.14.59/include/net/sock.h
+===================================================================
+--- linux-4.14.59.orig/include/net/sock.h
++++ linux-4.14.59/include/net/sock.h
+@@ -229,6 +229,9 @@ struct sock_common {
+ 		u32		skc_tw_snd_nxt; /* struct tcp_timewait_sock */
+ 	};
+ 	/* public: */
++	uint32_t INR_EXT;
++	uint32_t INR_TX_queue;
++	uint32_t INR_TX_timestamp;
+ };
+ 
+ /**
+@@ -480,6 +483,9 @@ struct sock {
+ 	void                    (*sk_destruct)(struct sock *sk);
+ 	struct sock_reuseport __rcu	*sk_reuseport_cb;
+ 	struct rcu_head		sk_rcu;
++	uint32_t		INR_EXT;
++	uint32_t		INR_TX_queue;
++	uint32_t		INR_TX_timestamp;
+ };
+ 
+ enum sk_pacing {
+Index: linux-4.14.59/include/uapi/linux/errqueue.h
+===================================================================
+--- linux-4.14.59.orig/include/uapi/linux/errqueue.h
++++ linux-4.14.59/include/uapi/linux/errqueue.h
+@@ -34,7 +34,7 @@ struct sock_extended_err {
+  *	recvmsg(). See Documentation/networking/timestamping.txt for details.
+  */
+ struct scm_timestamping {
+-	struct timespec ts[3];
++	struct timespec ts[4]; //changed frim 3 to 4 to provide one more timestamp
+ };
+ 
+ /* The type of scm_timestamping, passed in sock_extended_err ee_info.
+Index: linux-4.14.59/include/uapi/linux/if_packet.h
+===================================================================
+--- linux-4.14.59.orig/include/uapi/linux/if_packet.h
++++ linux-4.14.59/include/uapi/linux/if_packet.h
+@@ -18,6 +18,7 @@ struct sockaddr_ll {
+ 	unsigned char	sll_pkttype;
+ 	unsigned char	sll_halen;
+ 	unsigned char	sll_addr[8];
++	
+ };
+ 
+ /* Packet types */
+@@ -60,6 +61,9 @@ struct sockaddr_ll {
+ #define PACKET_ROLLOVER_STATS		21
+ #define PACKET_FANOUT_DATA		22
+ #define PACKET_RECV_TYPE		23
++#define PACKET_INR_EXT			666  //devil is in the detail
++#define PACKET_INR_TX_queue		667
++#define PACKET_INR_TX_timestamp		668
+ 
+ #define PACKET_FANOUT_HASH		0
+ #define PACKET_FANOUT_LB		1
+Index: linux-4.14.59/net/core/skbuff.c
+===================================================================
+--- linux-4.14.59.orig/net/core/skbuff.c
++++ linux-4.14.59/net/core/skbuff.c
+@@ -225,6 +225,9 @@ struct sk_buff *__alloc_skb(unsigned int
+ 	refcount_set(&skb->users, 1);
+ 	skb->head = data;
+ 	skb->data = data;
++	skb->TN_extended=0;
++	skb->TN_TX_queue=0;
++	skb->TN_TX_timestamp=0;
+ 	skb_reset_tail_pointer(skb);
+ 	skb->end = skb->tail + size;
+ 	skb->mac_header = (typeof(skb->mac_header))~0U;
+Index: linux-4.14.59/net/packet/af_packet.c
+===================================================================
+--- linux-4.14.59.orig/net/packet/af_packet.c
++++ linux-4.14.59/net/packet/af_packet.c
+@@ -2825,7 +2825,9 @@ static struct sk_buff *packet_alloc_skb(
+ 	skb_put(skb, linear);
+ 	skb->data_len = len - linear;
+ 	skb->len += len - linear;
+-
++	skb->TN_extended=sk->INR_EXT;
++	skb->TN_TX_queue=sk->INR_TX_queue;
++	skb->TN_TX_timestamp=sk->INR_TX_timestamp;
+ 	return skb;
+ }
+ 
+@@ -3874,6 +3876,37 @@ packet_setsockopt(struct socket *sock, i
+ 			return -EFAULT;
+ 
+ 		po->xmit = val ? packet_direct_xmit : dev_queue_xmit;
++		
++		return 0;
++	}
++	case PACKET_INR_EXT:
++	{	int val;
++
++		if (optlen != sizeof(val))
++			return -EINVAL;
++		if (copy_from_user(&val, optval, sizeof(val)))
++			return -EFAULT;
++		sk->INR_EXT=val;
++		return 0;
++	}
++	case PACKET_INR_TX_queue:
++	{	int val;
++
++		if (optlen != sizeof(val))
++			return -EINVAL;
++		if (copy_from_user(&val, optval, sizeof(val)))
++			return -EFAULT;
++		sk->INR_TX_queue=val;
++		return 0;
++	}
++	case PACKET_INR_TX_timestamp:
++	{	int val;
++
++		if (optlen != sizeof(val))
++			return -EINVAL;
++		if (copy_from_user(&val, optval, sizeof(val)))
++			return -EFAULT;
++		sk->INR_TX_timestamp=val;
+ 		return 0;
+ 	}
+         case PACKET_RECV_TYPE:
+@@ -4000,6 +4033,15 @@ static int packet_getsockopt(struct sock
+ 	case PACKET_QDISC_BYPASS:
+ 		val = packet_use_direct_xmit(po);
+ 		break;
++	case PACKET_INR_EXT:
++		val = sk->INR_EXT;
++		break;
++	case PACKET_INR_TX_queue:
++		val = sk->INR_TX_queue;
++		break;
++	case PACKET_INR_TX_timestamp:
++		val = sk->INR_TX_timestamp;
++		break;
+ 	default:
+ 		return -ENOPROTOOPT;
+ 	}
+Index: linux-4.14.59/net/socket.c
+===================================================================
+--- linux-4.14.59.orig/net/socket.c
++++ linux-4.14.59/net/socket.c
+@@ -763,6 +763,7 @@ void __sock_recv_timestamp(struct msghdr
+ 	    !skb_is_swtx_tstamp(skb, false_tstamp) &&
+ 	    ktime_to_timespec_cond(shhwtstamps->hwtstamp, tss.ts + 2)) {
+ 		empty = 0;
++		ktime_to_timespec_cond(shhwtstamps->hwtstamp2, tss.ts + 3);//provide one more timestamp
+ 		if ((sk->sk_tsflags & SOF_TIMESTAMPING_OPT_PKTINFO) &&
+ 		    !skb_is_err_queue(skb))
+ 			put_ts_pktinfo(msg, skb);
