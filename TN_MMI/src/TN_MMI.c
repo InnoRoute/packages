@@ -18,6 +18,7 @@ void (*TIME_int_handler)(void);
 void (*INR_NW_carrier_update_handler)(uint8_t id, uint16_t status);
 static DECLARE_WAIT_QUEUE_HEAD (INR_MMI_phy_state_watch_wq);
 uint64_t gBaseVirt1_MMI = NULL;
+uint8_t portcount=0;
 //*****************************************************************************************************************
 /**
 *read from mmi addr
@@ -50,6 +51,7 @@ void INR_MMI_init(uint64_t bar1) {
 	INR_NW_carrier_update_handler=symbol_get(INR_NW_carrier_update);
 	if(!INR_NW_carrier_update_handler) printk("error INR_NW_carrier_update not registred\n");
 	}
+		portcount=0xff&INR_PCI_BAR1_read(C_BASE_ADDR_COMMON_LOWER*256+C_SUB_ADDR_COMMON_PARAM_PRT_CNT);
     INR_PCI_BAR1_write(INTERRRUPT_MASK,INR_MMI_interrupt_mask);//settin interrupt mask
     INR_MMI_PHY_interrupt(INTERRRUPT_MASK);//read all phy registers
     INR_PCI_BAR1_read(INR_MDIO_interrupt);
@@ -160,18 +162,18 @@ if(ENABLE){
     printk("HC interrupt 10:0x%x\n",INR_PCI_BAR1_read(INR_HC_INTERRUPT(10)));
     printk("HC interrupt 11:0x%x\n",INR_PCI_BAR1_read(INR_HC_INTERRUPT(11)));
     */
-    INR_PCI_BAR1_read(INR_PCI_BAR1_read(INR_HC_INTERRUPT(0)));
-    INR_PCI_BAR1_read(INR_PCI_BAR1_read(INR_HC_INTERRUPT(1)));
-    INR_PCI_BAR1_read(INR_PCI_BAR1_read(INR_HC_INTERRUPT(2)));
-    INR_PCI_BAR1_read(INR_PCI_BAR1_read(INR_HC_INTERRUPT(3)));
-    INR_PCI_BAR1_read(INR_PCI_BAR1_read(INR_HC_INTERRUPT(4)));
-    INR_PCI_BAR1_read(INR_PCI_BAR1_read(INR_HC_INTERRUPT(5)));
-    INR_PCI_BAR1_read(INR_PCI_BAR1_read(INR_HC_INTERRUPT(6)));
-    INR_PCI_BAR1_read(INR_PCI_BAR1_read(INR_HC_INTERRUPT(7)));
-    INR_PCI_BAR1_read(INR_PCI_BAR1_read(INR_HC_INTERRUPT(8)));
-    INR_PCI_BAR1_read(INR_PCI_BAR1_read(INR_HC_INTERRUPT(9)));
-    INR_PCI_BAR1_read(INR_PCI_BAR1_read(INR_HC_INTERRUPT(10)));
-    INR_PCI_BAR1_read(INR_PCI_BAR1_read(INR_HC_INTERRUPT(11)));
+    if (portcount>0)INR_PCI_BAR1_read(INR_PCI_BAR1_read(INR_HC_INTERRUPT(0)));
+    if (portcount>1)INR_PCI_BAR1_read(INR_PCI_BAR1_read(INR_HC_INTERRUPT(1)));
+    if (portcount>2)INR_PCI_BAR1_read(INR_PCI_BAR1_read(INR_HC_INTERRUPT(2)));
+    if (portcount>3)INR_PCI_BAR1_read(INR_PCI_BAR1_read(INR_HC_INTERRUPT(3)));
+    if (portcount>4)INR_PCI_BAR1_read(INR_PCI_BAR1_read(INR_HC_INTERRUPT(4)));
+    if (portcount>5)INR_PCI_BAR1_read(INR_PCI_BAR1_read(INR_HC_INTERRUPT(5)));
+    if (portcount>6)INR_PCI_BAR1_read(INR_PCI_BAR1_read(INR_HC_INTERRUPT(6)));
+    if (portcount>7)INR_PCI_BAR1_read(INR_PCI_BAR1_read(INR_HC_INTERRUPT(7)));
+    if (portcount>8)INR_PCI_BAR1_read(INR_PCI_BAR1_read(INR_HC_INTERRUPT(8)));
+    if (portcount>9)INR_PCI_BAR1_read(INR_PCI_BAR1_read(INR_HC_INTERRUPT(9)));
+    if (portcount>10)INR_PCI_BAR1_read(INR_PCI_BAR1_read(INR_HC_INTERRUPT(10)));
+    if (portcount>11)INR_PCI_BAR1_read(INR_PCI_BAR1_read(INR_HC_INTERRUPT(11)));
     /*
     pollcount=0;
     while(INR_PCI_BAR1_read(INR_PCI_BAR1_read(INR_HC_INTERRUPT(0)))){//read to reset
