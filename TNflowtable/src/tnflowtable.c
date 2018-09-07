@@ -25,6 +25,7 @@
 #include <argp.h>
 #include <arpa/inet.h>
 #include <fcntl.h>
+#include <time.h>
 
 #define MAP_SIZE 16384000UL
 //#define MAP_MASK (MAP_SIZE - 1)
@@ -40,6 +41,7 @@ struct flock lock;
 static struct argp_option options[] = {	//user interface
   {0, 0, 0, 0, "General options:", 0},
   {"verbose", 'v', 0, 0, "Produce verbose output"},
+  {"bulk", 'Q', "", 0, "make n entries, justfor testing!"},
   {"numberout", 'n', 0, 0, "Output number of tableentry"},
   {"ID", 'i', "", 0, "ID of entry"},
   {"COUNT", 'c', "", 0, "number of entrys to do something"},
@@ -169,6 +171,9 @@ parse_opt (int key, char *arg, struct argp_state *state)
     break;
   case 'p':
     arguments->PRIORITY = strtoul (arg, 0, 0);
+    break;
+   case 'Q':
+    arguments->bulk = strtoul (arg, 0, 0);
     break;
   case 'O':
     arguments->OutPort = strtoul (arg, 0, 0);
@@ -383,6 +388,9 @@ main (int argc, char **argv)
   FCinit_EMH (map_base, map_base_shadow);
   FCinit_MasterTable (map_base_master);	//pass the memorypointer to the flowcache libs
   INR_ACCDP_init (map_base, map_base_shadow);
+  struct timespec ts1,ts2;
+  
+  timespec_get(&ts1, TIME_UTC);
   if (INR_FC_check) {
     switch (arguments.args[0][0]) {	//parse commandline arguments
     case 'A':
@@ -575,8 +583,12 @@ main (int argc, char **argv)
       break;
     }
   }
+  
   else
     printf ("Flow cache not available in this bitstream!\n");
+    
+    timespec_get(&ts2, TIME_UTC);
+  if(arguments.bulk)printf("%lli\n",(ts2.tv_nsec-ts1.tv_nsec)+((ts2.tv_sec-ts1.tv_sec)*1000000000));  
   munmap (map_base, MAP_SIZE);	//unmap files and mmi from memory
   munmap (map_base_shadow, MAP_SIZE);
   munmap (map_base_master, MASTERTABLE_length * sizeof (struct arguments));

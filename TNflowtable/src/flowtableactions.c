@@ -29,6 +29,7 @@ clear_arguments (struct arguments *arguments)
   arguments->verbose = 0;
   arguments->NAL_ID = 0;
   arguments->MAC_SRC = 0;
+  arguments->bulk=0;
   arguments->MAC_DST = 0;
   arguments->numberout = 0;
   arguments->dohave_numberout = 0;

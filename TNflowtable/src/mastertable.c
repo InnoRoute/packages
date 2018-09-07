@@ -348,17 +348,28 @@ void
 FC_MasterT_add (struct arguments *arguments)
 {
   verblog printf ("__FUNCTION__ = %s\n", __FUNCTION__);
+  uint16_t i;
+  for(i=0;i<arguments->bulk+1;i++){
+  if(arguments->bulk){
+  arguments->MAC_SRC++;
+  arguments->MAC_DST++;
+  arguments->VLAN_ID++;
+  arguments->IPv4_SRC++;
+  arguments->IPv4_DST++;//make some random values to don't have the same hash'
+  
+  }
   if (INR_MasterT_get_next_free_entry (arguments->ID)) {
     struct arguments *entry = (struct arguments *) INR_MasterT_get_addr (INR_MasterT_get_next_free_entry (arguments->ID));
     arguments->used = 1;
     FC_MT_autotable (arguments);
     memcpy (entry, arguments, sizeof (struct arguments));
-    if (arguments->TableID.EMA_RT)
+    
+    if((arguments->bulk&&(i==arguments->bulk))||arguments->bulk==0)if (arguments->TableID.EMA_RT)
       FC_MT_apply_priority ();
   }
   else {
     printf ("error: MasterTabele full");
-  }
+  }}
   return 0;
 }
 

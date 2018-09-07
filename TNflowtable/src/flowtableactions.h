@@ -38,7 +38,8 @@ struct arguments
 {
   char *args[1];		/* filename */
   uint8_t used;		/**<entry used */
-  int verbose;			/* The -v flag */
+  int verbose;	
+  uint16_t bulk;		/* The -v flag */
   uint8_t numberout;		/* print number of table after outosearch */
   uint8_t dohave_numberout;	/* print number of table after outosearch */
   uint64_t MAC_SRC;		/**<source MAC*/
