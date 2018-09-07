@@ -98,6 +98,7 @@ struct arguments
   uint32_t CONFIG_CHANGE_TIME;
   uint32_t CYCLE_START_TIME;
   uint32_t GATE_ENABLE;
+  uint16_t bulk;
   uint32_t CONFIG_CHANGE;
   uint32_t CONFIG_CHANGE_PENDING;
   uint32_t CONFIG_CHANGE_ACK;

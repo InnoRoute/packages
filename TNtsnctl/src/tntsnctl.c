@@ -21,6 +21,7 @@
 #include <argp.h>
 #include <arpa/inet.h>
 #include <fcntl.h>
+#include <time.h>
 
 #define MAP_SIZE 16384000UL
 //#define MAP_MASK (MAP_SIZE - 1)
@@ -38,6 +39,7 @@ static struct argp_option options[] = {	//user interface
 	{0,0,0,0,"Using proprietary TSN implementation of Hilscher Gesellschaft fuer Systemautomation mbH, licensed for research projects and for use on the TrustNode only.\n",0},
   {0, 0, 0, 0, "General options:", 0},
   {"verbose", 'v', 0, 0, "Produce verbose output"},
+  {"bulk", 'Q', "", 0, "bulk write, experimental!!!"},
   {"machine", 'M', 0, 0, "Output in machine readable notation."},
   {"ID", 'i', "", 0, "ID of entry"},
   {"COUNT", 'c', "", 0, "number of entrys to do something"},
@@ -96,6 +98,9 @@ parse_opt (int key, char *arg, struct argp_state *state)
     arguments->ID = strtoull (arg, 0, 0);
     arguments->dohave_ID = 1;
     break;
+   case 'Q':
+    arguments->bulk = strtoull (arg, 0, 0);
+   break;
   case 'c':
     arguments->COUNT = strtoull (arg, 0, 0);
     arguments->dohave_COUNT = 1;
@@ -271,7 +276,8 @@ main (int argc, char **argv)
   if (!map_base_shadow) {
     printf ("error mapping memory\n");
   }
-
+uint16_t i=0;
+  struct timespec ts1,ts2;
   switch (arguments.args[0][0]) {	//parse commandline arguments
     /*case 'A': //old doku
        switch (arguments.args[0][14]) {
@@ -290,6 +296,32 @@ main (int argc, char **argv)
        }
        break;
      */
+  case 'A':  
+  
+  timespec_get(&ts1, TIME_UTC);
+  arguments.ADMIN_GCL_LEN = arguments.bulk;
+    arguments.dohave_ADMIN_GCL_LEN = 1;
+   config_change (&arguments);
+   arguments.dohave_GATE_STATE_VECTOR = 1;
+   arguments.dohave_INTERVAL = 1;
+   arguments.dohave_ID = 1;
+   arguments.PORT = 0;
+    arguments.dohave_PORT = 1;
+  for(i=0;i<arguments.bulk;i++){
+  	arguments.GATE_STATE_VECTOR = i&0xff;
+    	
+  	arguments.INTERVAL = i;
+    
+    arguments.ID = i;
+    
+    
+  GateControl_list_change (&arguments);
+  GateControl_TIME_list_change (&arguments);
+  }
+  TSN_apply (&arguments);
+  timespec_get(&ts2, TIME_UTC);
+  if(arguments.bulk)printf("%lli\n",(ts2.tv_nsec-ts1.tv_nsec)+((ts2.tv_sec-ts1.tv_sec)*1000000000));  
+  break;
   case 'a':
     TSN_apply (&arguments);
     break;

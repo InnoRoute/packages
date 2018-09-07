@@ -37,6 +37,7 @@ clear_arguments (struct arguments *arguments)
   arguments->ADMIN_CYCLE_TIME = 0;
   arguments->ADMIN_CYCLE_TIME_EXT = 0;
   arguments->CONFIG_CHANGE_TIME = 0;
+  arguments->bulk=0;
   arguments->CYCLE_START_TIME = 0;
   arguments->GATE_ENABLE = 0;
   arguments->CONFIG_CHANGE = 0;
@@ -553,6 +554,22 @@ TSN_set_config (uint64_t reg, uint8_t port, uint32_t value)
 
 //********************************************************************************************************************
 /**
+*
+@param reg register of config in port config space
+@param port portnumber
+@param value value to write
+*/
+uint32_t
+INR_PCI_BAR1_read (uint64_t reg)
+{
+  
+    uint32_t *val = BASE + reg;
+		return *val;
+  }
+
+
+//********************************************************************************************************************
+/**
 *applies the configuration which was specified before
 */
 void
@@ -562,6 +579,7 @@ TSN_apply (struct arguments *arguments)
   uint8_t firstconfig = 1;
   uint64_t TAS_OPER_BASE_TIME, TAS_OPER_CYCLE_TIME, config_change_time, cycle_start_time, N, TAS_ADMIN_BASE_TIME, TAS_ADMIN_CYCLE_TIME, curr_TIME;
   struct timespec currenttime;
+  uint32_t BRIDGE_clock_value_L=0,CTRLD_clock_value_L=0,BRIDGE_clock_value_H=0,CTRLD_clock_value_H=0;
 
   for (port = arguments->PORT; port < PORT_count; port++) {
     verblog printf ("Configuring TSn for port %i\n", port);
@@ -583,9 +601,20 @@ TSN_apply (struct arguments *arguments)
     TAS_OPER_CYCLE_TIME = tick2ns (TSN_get_config (C_TM_SCHED_TAS_OPER_CYCLE_TIME, port, 0));
     clock_gettime (CLOCK_REALTIME, &currenttime);
     curr_TIME = currenttime.tv_nsec;
-#ifdef C_TM_SCHED_TAS_CUR_TIME
-    curr_TIME = tick2ns (TSN_get_config (C_TM_SCHED_TAS_CUR_TIME, 0, 0));	//hardware hack until PHP is available
+
+	
+    
+#ifdef C_BASE_ADDR_RTC
+
+    BRIDGE_clock_value_L=INR_PCI_BAR1_read((C_BASE_ADDR_RTC<<8)+C_SUB_ADDR_RTC_BRIDGE_LOW);
+    BRIDGE_clock_value_H=INR_PCI_BAR1_read((C_BASE_ADDR_RTC<<8)+C_SUB_ADDR_RTC_BRIDGE_HIGH);
+    CTRLD_clock_value_L=INR_PCI_BAR1_read((C_BASE_ADDR_RTC<<8)+C_SUB_ADDR_RTC_CTRLD_LOW);
+    CTRLD_clock_value_H=INR_PCI_BAR1_read((C_BASE_ADDR_RTC<<8)+C_SUB_ADDR_RTC_CTRLD_HIGH);
+
 #endif
+    curr_TIME=CTRLD_clock_value_L|((uint64_t)CTRLD_clock_value_H<<32);
+
+
     //Implementation according to IEEE802.1Gbv 2015 
     verblog printf ("calculate cycle_start_time...\n");
     if (TAS_OPER_BASE_TIME >= curr_TIME) {
@@ -612,7 +641,7 @@ TSN_apply (struct arguments *arguments)
     clock_gettime (CLOCK_REALTIME, &currenttime);
     curr_TIME = currenttime.tv_nsec;
 #ifdef C_TM_SCHED_TAS_CUR_TIME
-    curr_TIME = tick2ns (TSN_get_config (C_TM_SCHED_TAS_CUR_TIME, 0, 0));	//hardware hack until PHP is available
+    curr_TIME = tick2ns (TSN_get_config (C_TM_SCHED_TAS_CUR_TIME, 0, 0));	//hardware hack until PTP is available
 #endif
     N = 0;
     verblog printf ("calculate config_change_time...\n");
