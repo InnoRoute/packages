@@ -158,8 +158,10 @@ void INR_TIME_TX_transmit_interrupt() {
                             if(INR_TIME_vortex[entry_current].used) {
                                 struct skb_shared_hwtstamps *skbtimestamp = skb_hwtstamps(INR_TIME_vortex[entry_current].skb);
                                 memset(skbtimestamp, 0, sizeof(struct skb_shared_hwtstamps));
-                                timestamp=INR_TIME_correct_HW_timestamp(timestamp,1);
-                                timestamp2=INR_TIME_correct_HW_timestamp(timestamp,0);
+                                struct INR_TIME_timestamps ts;
+                                INR_TIME_correct_HW_timestamp(timestamp,&ts);
+                                timestamp=ts.controlled;
+                                timestamp2=ts.bridge;
                                 skbtimestamp->hwtstamp=ns_to_ktime(timestamp); //0: insert timestamp here...
                                 skbtimestamp->hwtstamp2=ns_to_ktime(timestamp2);
                                 if (TIME_DBG_mod)INR_LOG_debug(loglevel_warn"Write timestamp to skb ns:%lli, ktime:%lli\n",timestamp,skbtimestamp->hwtstamp);
@@ -311,7 +313,7 @@ static int INR_TIME_ptp_enable(struct ptp_clock_info *ptp,struct ptp_clock_reque
     return 0;
 }
 
-u64 INR_TIME_correct_HW_timestamp(uint32_t hw_value,uint8_t ctlclock) {
+void INR_TIME_correct_HW_timestamp(uint32_t hw_value,struct INR_TIME_timestamps *ts) {
     uint64_t offset=0;
     uint8_t neg=0;
     uint64_t newvalue;
@@ -329,18 +331,20 @@ u64 INR_TIME_correct_HW_timestamp(uint32_t hw_value,uint8_t ctlclock) {
     CTRLD_clock_value=CTRLD_clock_value_L|((uint64_t)CTRLD_clock_value_H<<32);
 
     if(CTRLD_clock_value<BRIDGE_clock_value)neg=1;
-    if(ctlclock)if (neg) offset=(BRIDGE_clock_value-CTRLD_clock_value);
+    if (neg) offset=(BRIDGE_clock_value-CTRLD_clock_value);
         else offset=(CTRLD_clock_value-BRIDGE_clock_value);
 
 
-    if (TIME_DBG_mod)INR_LOG_debug("TIME adjust value..CTRLD_clock:%lli BRIDGE_clock:%lli negative:%i offset:%lli pkt_value:%lli\n",CTRLD_clock_value,BRIDGE_clock_value,neg,offset,hw_value);
+    
     if((BRIDGE_clock_value&0xffffffff)<(u64)hw_value)BRIDGE_clock_value-=0x100000000; //there was an overflow, i asume just one and not several times 4 sec
-    if((CTRLD_clock_value&0xffffffff)<(u64)hw_value)CTRLD_clock_value-=0x100000000; //there was an overflow, i asume just one and not several times 4 sec
+    //if((CTRLD_clock_value&0xffffffff)<(u64)hw_value)CTRLD_clock_value-=0x100000000; //there was an overflow, i asume just one and not several times 4 sec
     newvalue=((BRIDGE_clock_value&0xffffffff00000000)|(u64)hw_value);
+    ts->bridge=newvalue;
     if (neg) newvalue-=offset;
     else newvalue+=offset;
     //if(bridgeclock)
-    return newvalue;
+    ts->controlled=newvalue;
+    if (TIME_DBG_mod)INR_LOG_debug("TIME adjust value..CTRLD_clock:%lli BRIDGE_clock:%lli negative:%i offset:%lli pkt_value:%lli ts_bridge:%lli ts_ctrld:%lli\n",CTRLD_clock_value,BRIDGE_clock_value,neg,offset,hw_value,ts->bridge,ts->controlled);
     //else
     //  return (((CTRLD_clock_value&0xffffffff00000000)|(u64)hw_value));
     //return timecounter_cyc2time(&tc,(u64)hw_value+abs(offset));

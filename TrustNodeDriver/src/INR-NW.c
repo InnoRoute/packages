@@ -50,6 +50,13 @@ INR_NW_carrier_update (uint8_t index,uint16_t status)
         netif_carrier_off(get_nwdev(index));
     }
 }
+
+int INR_NW_set_mac(struct net_device *nwdev, void *addr){
+uint64_t *addresse=addr;
+INR_LOG_debug("Change MAC to %x",*addresse);
+memcpy (nwdev->dev_addr, addr, ETH_ALEN);
+
+}
 /**
 *return pointer to net-dev
 *@param index index of NW-device
@@ -176,14 +183,9 @@ int
 INR_NW_open (struct net_device *nwdev)
 {
     INR_LOG_debug (loglevel_info "NWDev open\n");
-    memcpy (nwdev->dev_addr, "\0SNUL1", ETH_ALEN);
-    memcpy (nwdev->broadcast, "\0\0\0\0\0\0", ETH_ALEN);
+    
     struct INR_NW_priv *priv = netdev_priv (nwdev);
-    nwdev->dev_addr[ETH_ALEN - 1] = priv->port;
-    uint8_t i = 0;
-    for (i = 0; i < ETH_ALEN; i++) {
-        nwdev->broadcast[i] = (uint8_t) 0xff;
-    }
+    
     INR_LOG_debug (loglevel_info"HW-addr:%x Broadcast-addr:%x\n", nwdev->dev_addr, nwdev->broadcast);
     netif_start_queue (nwdev);
     INR_PCI_FPGA_PORT_status(priv->port,1);
@@ -529,6 +531,8 @@ INR_NW_init (struct net_device *nwdev)
 {
     struct INR_NW_priv *priv = netdev_priv (nwdev);
     memset (priv, 0, sizeof (struct INR_NW_priv));
+    memcpy (nwdev->dev_addr, "\0SNUL1", ETH_ALEN);
+    memcpy (nwdev->broadcast, "\0\0\0\0\0\0", ETH_ALEN);
     spin_lock_init (&priv->lock);
     priv->dev = nwdev;
     priv->port = nwdev_counter++;
@@ -538,6 +542,11 @@ INR_NW_init (struct net_device *nwdev)
     nwdev->ethtool_ops = &INR_NW_ethtool_ops;
     nwdev->real_num_tx_queues=INR_NW_queue_count;
     nwdev->real_num_rx_queues=0;
+    nwdev->dev_addr[ETH_ALEN - 1] = priv->port;
+    uint8_t i = 0;
+    for (i = 0; i < ETH_ALEN; i++) {
+        nwdev->broadcast[i] = (uint8_t) 0xff;
+    }
     //SET_ETHTOOL_OPS(nwdev, &INR_NW_ethtool_ops);
     ether_setup (nwdev);
     INR_LOG_debug (loglevel_info"Init NWDev %i done\n", priv->port);

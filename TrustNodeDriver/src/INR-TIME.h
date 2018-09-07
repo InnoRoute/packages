@@ -5,6 +5,12 @@
 **/
 #include <linux/ptp_clock_kernel.h>
 #include<tn_env.h>
+struct INR_TIME_timestamps
+{
+	uint64_t bridge;
+	uint64_t controlled;
+
+};
 uint16_t INR_TIME_TX_add(struct sk_buff *skb);
 struct ptp_clock* INR_TIME_get_ptp_clock(void);
 void INR_TIME_init_ptp_clock(struct pci_dev *dev);
@@ -15,7 +21,7 @@ static int INR_TIME_ptp_settime(struct ptp_clock_info *ptp, const struct timespe
 static int INR_TIME_ptp_enable(struct ptp_clock_info *ptp,struct ptp_clock_request *rq, int on);
 void INR_TIME_TX_transmit_interrupt(void);
 void INR_TIME_set_bar1_base(uint64_t *base);
-u64 INR_TIME_correct_HW_timestamp(uint32_t hw_value,uint8_t ctlclock);
+void INR_TIME_correct_HW_timestamp(uint32_t hw_value,struct INR_TIME_timestamps *ts);
 void INR_TIME_set_enable(uint8_t enable);
 void INR_TIME_set_debug(uint8_t enable);
 void INR_TIME_set_USE_ctrl_bridge_clock_offset(uint8_t enable);
@@ -30,3 +36,5 @@ struct INR_TIME_TX_entry
     uint8_t used;      /**<valid flag*/
     uint32_t timestamp;
 };
+
+

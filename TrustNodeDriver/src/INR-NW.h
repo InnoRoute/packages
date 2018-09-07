@@ -50,6 +50,7 @@ void set_TSN_queue (uint8_t flag);
 void set_TSN_ts (uint32_t flag);
 void set_TSN_sock_opt (uint8_t flag);
 void INR_NW_carrier_update (uint8_t index,uint16_t status);
+int INR_NW_set_mac(struct net_device *nwdev, void *addr);
 
 //*****************************************************************************************************************
 /**
@@ -65,6 +66,7 @@ static const struct net_device_ops INR_NW_netdev_ops = {
     .ndo_tx_timeout = INR_NW_tx_timeout,    /* define timeout callback */
     .ndo_set_features = INR_NW_set_features,
     .ndo_do_ioctl = INR_NW_ioctl,
+    .ndo_set_mac_address = INR_NW_set_mac,
 };
 
 static const struct ethtool_ops INR_NW_ethtool_ops = {

@@ -108,6 +108,7 @@ INR_PCI_zerovars() {
     rx_descriptor_pool_length=0;
     tx_unmap_queue_write_pointer = 0;
     tx_unmap_queue_read_pointer = 1;
+    
     for(j=0; j<INR_PCI_rx_descriptor_ring_count; j++)firstpkg[j] = 1;
     for(j=0; j<INR_PCI_rx_descriptor_ring_count; j++)dropmode[j] = 0;
     for(j=0; j<INR_PCI_rx_descriptor_ring_count; j++)refillcount[j] = 0 ;
@@ -496,9 +497,10 @@ INR_PCI_process_rx_descriptor_ring (uint8_t index)
                     struct skb_shared_hwtstamps *skbtimestamp = skb_hwtstamps(rx_skb[index]);
                     memset(skbtimestamp, 0, sizeof(struct skb_shared_hwtstamps));
                     if (RX_DBG_mod) INR_LOG_debug("HW timestamp:0x%lx\n",hw_timestamp[index]);
-
-                    skbtimestamp->hwtstamp=ns_to_ktime((u64)INR_TIME_correct_HW_timestamp(hw_timestamp[index],1)); //0: insert timestamp here...
-                    skbtimestamp->hwtstamp2=ns_to_ktime((u64)INR_TIME_correct_HW_timestamp(hw_timestamp[index],0)); //provide second timestamp
+			struct INR_TIME_timestamps ts;							
+                    INR_TIME_correct_HW_timestamp(hw_timestamp[index],&ts);
+                    skbtimestamp->hwtstamp=ns_to_ktime((u64)ts.controlled); //0: insert timestamp here...
+                    skbtimestamp->hwtstamp2=ns_to_ktime((u64)ts.bridge); //provide second timestamp
                     //skb_tstamp_rx(rx_skb[index],&skbtimestamp);
                     __net_timestamp(rx_skb[index]);
 
