@@ -267,6 +267,7 @@ static int INR_TIME_ptp_adjtime(struct ptp_clock_info *ptp, s64 delta) {
     spin_lock_irqsave(&hardwareLock, flags);
     INR_PCI_BAR1_write_ext(CTRLD_offset&0xffffffff,(C_BASE_ADDR_RTC<<8)+C_SUB_ADDR_RTC_CTRLD_OFFSET_LOW);
     INR_PCI_BAR1_write_ext((CTRLD_offset>>32)&0xffffffff,(C_BASE_ADDR_RTC<<8)+C_SUB_ADDR_RTC_CTRLD_OFFSET_HIGH);
+    INR_PCI_BAR1_write_ext(1,(C_BASE_ADDR_RTC<<8)+  C_SUB_ADDR_RTC_CLKSEL);
     spin_unlock_irqrestore(&hardwareLock, flags);
     if (TIME_DBG_mod)
         INR_LOG_debug("PTP adjtime called new offset:%lli delta:%lli\n",CTRLD_offset, delta);

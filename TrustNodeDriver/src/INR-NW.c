@@ -54,7 +54,7 @@ INR_NW_carrier_update (uint8_t index,uint16_t status)
 int INR_NW_set_mac(struct net_device *nwdev, void *addr){
 uint64_t *addresse=addr;
 INR_LOG_debug("Change MAC to %x",*addresse);
-memcpy (nwdev->dev_addr, addr, ETH_ALEN);
+memcpy (nwdev->dev_addr, addr, MAX_ADDR_LEN);
 
 }
 /**
