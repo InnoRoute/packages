@@ -567,7 +567,20 @@ INR_PCI_BAR1_read (uint64_t reg)
 		return *val;
   }
 
-
+//********************************************************************************************************************
+/**
+*
+@param reg register of config in port config space
+@param port portnumber
+@param value value to write
+*/
+void
+INR_PCI_BAR1_write (uint32_t value,uint64_t reg)
+{
+  
+    uint32_t *val = BASE + reg;
+	 *val=value;
+  }
 //********************************************************************************************************************
 /**
 *applies the configuration which was specified before
@@ -580,7 +593,7 @@ TSN_apply (struct arguments *arguments)
   uint64_t TAS_OPER_BASE_TIME, TAS_OPER_CYCLE_TIME, config_change_time, cycle_start_time, N, TAS_ADMIN_BASE_TIME, TAS_ADMIN_CYCLE_TIME, curr_TIME;
   struct timespec currenttime;
   uint32_t BRIDGE_clock_value_L=0,CTRLD_clock_value_L=0,BRIDGE_clock_value_H=0,CTRLD_clock_value_H=0;
-
+INR_PCI_BAR1_write(1,(C_BASE_ADDR_RTC<<8)+C_SUB_ADDR_RTC_CLKSEL);
   for (port = arguments->PORT; port < PORT_count; port++) {
     verblog printf ("Configuring TSn for port %i\n", port);
     if (1 & TSN_get_config (C_TM_SCHED_TAS_GATE_ENABLE, port, 1)) {
