@@ -2,13 +2,10 @@
 
 START=99
 
-
-
 start() {
-/etc/init.d/TN_imageloader enable
-
+	/etc/init.d/TN_imageloader enable
 }
 
 stop() {
-echo "stop"
+	echo "stop"
 }

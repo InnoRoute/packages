@@ -1,6 +1,6 @@
 include	$(TOPDIR)/rules.mk
 PKG_NAME :=TN_imageloader
-PKG_RELEASE := 1.1
+PKG_RELEASE := 1.2
 PKG_BUILD_DIR:=	$(BUILD_DIR)/$(PKG_NAME)
 include	$(INCLUDE_DIR)/package.mk
 
@@ -24,16 +24,16 @@ define Package/TN_imageloader/install
 	$(INSTALL_BIN) ./files/TNchangemod $(1)/usr/sbin/
 	$(INSTALL_CONF) ./files/TNmod.conf $(1)/usr/share/InnoRoute/
 endef
-define Package/TN_imageloader/postinst
+#define Package/TN_imageloader/postinst
 #!/bin/sh
 # check if we are on real system
-if [ -z "$${IPKG_INSTROOT}" ]; then
-	echo "Enabling rc.d symlink for TN_imageloader"
-	/etc/init.d/TN_imageloader enable
-	/etc/init.d/TN_iloadhelp enable
-fi
-exit 0
-endef
+#if [ -z "$${IPKG_INSTROOT}" ]; then
+#	echo "Enabling rc.d symlink for TN_imageloader"
+#	/etc/init.d/TN_imageloader enable
+#	/etc/init.d/TN_iloadhelp enable
+#fi
+#exit 0
+#endef
 
 define Package/TN_imageloader/prerm
 #!/bin/sh
