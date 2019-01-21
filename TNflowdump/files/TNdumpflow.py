@@ -6,6 +6,7 @@ import subprocess
 import datetime
 import os
 import subprocess
+import time
 
 if len(sys.argv) != 2:
     print "bridge name needed"
@@ -18,7 +19,10 @@ flow_list_old = list()
 
 def read_flows():
     del flow_list[:]
-    lines = subprocess.check_output(['sudo', 'ovs-ofctl', 'dump-flows', br_name])
+    try:
+    	lines = subprocess.check_output(['ovs-ofctl', 'dump-flows', br_name])
+    except:
+    	lines=""
     for line in lines.splitlines():
         if not re.findall(r" (actions=)", line):
             continue
@@ -37,6 +41,12 @@ def read_flows():
             else:
                 x="proto"
                 y=tmp
+            if re.findall("tcp",tmp):
+                x="tcp"
+                y=""
+            if re.findall("udp",tmp):
+                x="udp"
+                y=""
             if not x in ['idle_age','duration','n_packets','n_bytes']:
                 match_map[x]=y
 
@@ -96,6 +106,7 @@ def print_flow(tmp):
 def TNflowcache(tmp,act):
 	command=""
 	for p in tmp['match']:
+		#print p
 		if p == "dl_src" :
 			command=command+" -S"+tmp['match'][p]
 		if p == "dl_dst" :
@@ -103,8 +114,9 @@ def TNflowcache(tmp,act):
 		if p == "dl_type" :
 			command=command+" -E"+tmp['match'][p]
 		if p == "dl_vlan" :
-			command=command+" -V"+tmp['match'][p]
-		if p == "vlan_pcp" :
+			if int(tmp['match'][p]) > 0: #do not add if vlan=0
+				command=command+" -V"+tmp['match'][p]
+		if p == "dl_vlan_pcp" :
 			command=command+" -U"+tmp['match'][p]
 		if p == "nw_src" :
 			command=command+" -C"+tmp['match'][p]
@@ -120,17 +132,31 @@ def TNflowcache(tmp,act):
 			command=command+" -A"+tmp['match'][p]
 		if p == "priority" :
 			command=command+" -p"+tmp['match'][p]
+		if p == "tcp" :
+			command=command+" -P6"
+			command=command+" -E0x800"
+		if p == "udp" :
+			command=command+" -P17"
+			command=command+" -E0x800"	
+		
+			
 #		if p == "proto" :
 #			command=command+" -P"+tmp['match'][p]
 #deactivated, have to fix nameconversatzion of OVS, need numbers no strings
-
+	cmd_ok=0
 	for p in tmp['action']:
+		if p == "set_queue" :
+			command=command+" -q"+tmp['action'][p]
+			cmd_ok=1	
 		if p == "output" :
-			command=command+" -X1 -p5 -O"+str(int(tmp['action'][p])-1) #ovs counts from 1 we from 0
-			command="TNflowtable "+act+" "+command
-#			command='echo "' +command +'"'  #testing mode
-			log= run(command)#set entry in fpga flowtable
-			return log
+			cmd_ok=1
+			command=command+" -O"+str(int(tmp['action'][p])-1) #ovs counts from 1 we from 0
+	if cmd_ok == 1:	
+		command="TNflowtable "+act+" "+command
+#		command='echo "' +command +'"'  #testing mode
+		log= run(command)#set entry in fpga flowtable
+		print command
+		return log
 	return "unknown action"
 		
 	
@@ -165,6 +191,7 @@ while 1:
     flow_list_old = list(flow_list)
     read_flows()
     check_flows()
+    time.sleep(0.5)
     #print "=================================================="
     #raw_input()
 
