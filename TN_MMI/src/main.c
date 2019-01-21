@@ -9,7 +9,6 @@
 *M.Ulbricht 2017
 **/
 
-
 #include <linux/kernel.h>
 #include <linux/export.h>
 #include <linux/version.h>
@@ -28,14 +27,64 @@
 #include "tn_env.h"
 #include "TN_MMI.h"
 #include "TN_MDIO.h"
+
 #define PROCFS_MAX_SIZE		1024
+
 static char procfs_buffer[PROCFS_MAX_SIZE];
 static size_t procfs_buffer_size = 0;
-static struct proc_dir_entry *reg1, *INR_proc_dir;
+static struct proc_dir_entry *reg1,*reg2, *INR_proc_dir;
+
 EXPORT_SYMBOL(INR_MMI_interrupt_handler);
 EXPORT_SYMBOL(INR_MMI_init);
+//*****************************************************************************************************************
+/**
+*  proc write function
+*
+*/
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,14,50)
+ssize_t
+INR_proc_COMint_write (struct file *file, const char *buffer, size_t count, loff_t *data)
+#else
+int
+INR_proc_COMint_write (struct file *file, const char *buffer, size_t count, void *data)
+#endif
+{
+    procfs_buffer_size = count;
+    if (procfs_buffer_size > PROCFS_MAX_SIZE) {
+        procfs_buffer_size = PROCFS_MAX_SIZE;
+    }
+    if (copy_from_user (procfs_buffer, buffer, procfs_buffer_size)) {
+        return -EFAULT;
+    }
+    uint32_t tmp = 0;
+    sscanf (procfs_buffer, "%d", &tmp);
+    //printk("Phy %i speed: 0x%x\n",tmp,INR_MDIO_GPHY_getspeed(tmp+16));
+    return procfs_buffer_size;
+}
 
+//*****************************************************************************************************************
+/**
+*  proc print function
+*
+*/
+static int
+INR_proc_COMint_show (struct seq_file *m, void *v)
+{
+    seq_printf (m, "%lli\n", INR_MMI_common_interrupt_get());
+    INR_MMI_common_interrupt_reset();
+    return 0;
+}
 
+//*****************************************************************************************************************
+/**
+*  proc open function
+*
+*/
+static int
+INR_proc_COMint_open (struct inode *inode, struct file *file)
+{
+    return single_open (file, INR_proc_COMint_show, NULL);
+}
 //*****************************************************************************************************************
 /**
 *  proc write function
@@ -90,6 +139,9 @@ INR_proc_PHYspeed_open (struct inode *inode, struct file *file)
 *
 */
 void INR_MMI_remove_procfs(void){
+
+    remove_proc_entry ("TN_COMint", INR_proc_dir);
+    printk (KERN_INFO "/proc/TrustNode/%s removed\n", "TN_COMint");
     remove_proc_entry ("TN_PHYspeed", INR_proc_dir);
     printk (KERN_INFO "/proc/TrustNode/%s removed\n", "TN_PHYspeed");
     remove_proc_entry ("TN_MMI", NULL);
@@ -110,6 +162,14 @@ void INR_MMI_init_procfs(void){
         .llseek = seq_lseek,
         .release = single_release,
     };
+ static const struct file_operations COMint = {
+        .owner = THIS_MODULE,
+        .open = INR_proc_COMint_open,
+        .write = INR_proc_COMint_write,
+        .read = seq_read,
+        .llseek = seq_lseek,
+        .release = single_release,
+    };
 INR_proc_dir = proc_mkdir("TN_MMI",NULL);
     if(!INR_proc_dir)
     {
@@ -122,6 +182,14 @@ reg1 = proc_create ("TN_PHYspeed", 0644, INR_proc_dir, &PHYspeed);
         printk (KERN_ALERT "Error: Could not initialize /proc/%s\n", "TN_PHYspeed");
         return -ENOMEM;
     }
+reg2 = proc_create ("TN_COMint", 0644, INR_proc_dir, &COMint);
+    if (reg1 == NULL) {
+        remove_proc_entry ("TN_COMint", INR_proc_dir);
+        printk (KERN_ALERT "Error: Could not initialize /proc/%s\n", "TN_COMint");
+        return -ENOMEM;
+    }
+    
+    
 }
 //*****************************************************************************************************************
 static int __init

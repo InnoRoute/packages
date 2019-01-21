@@ -1,4 +1,5 @@
 #include "tn_env.h"
+
 void INR_MDIO_init(uint64_t *bar1base);
 void INR_MDIO_write(uint8_t PHY_addr, uint8_t REG_addr, uint16_t data);
 void INR_MDIO_write_b(uint8_t write, uint8_t PHY_addr, uint8_t REG_addr, uint16_t data);
