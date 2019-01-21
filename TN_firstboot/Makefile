@@ -1,6 +1,6 @@
 include	$(TOPDIR)/rules.mk
 PKG_NAME :=TN_firstboot
-PKG_RELEASE := 1
+PKG_RELEASE := 1.2
 PKG_BUILD_DIR:=	$(BUILD_DIR)/$(PKG_NAME)
 include	$(INCLUDE_DIR)/package.mk
 
@@ -20,6 +20,7 @@ define Package/TN_firstboot/install
 	$(INSTALL_BIN) ./files/TN_firstboot $(1)/etc/init.d/
 	chmod +x $(1)/etc/init.d/TN_firstboot
 	$(INSTALL_DIR) $(1)/usr/share/InnoRoute
+	$(INSTALL_CONF) ./files/key-build.pub $(1)/usr/share/InnoRoute/
 	$(INSTALL_BIN) ./files/firstboot.sh $(1)/usr/share/InnoRoute/
 endef
 define Package/TN_firstboot/postinst

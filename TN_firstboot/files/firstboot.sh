@@ -1,6 +1,18 @@
 #!/bin/bash
+
 echo "Setting up Trustnode"
-ls /root/.ssh/id_rsa && echo "ssh key already generated, skipping this... " || ssh-keygen -t rsa -b 4096 -f /root/.ssh/id_rsa -N '' &
+
+# SSH key per device
+if test -e /root/.ssh/id_rsa; then
+	echo "ssh key already generated, skipping this... "
+else
+	ssh-keygen -t rsa -b 4096 -f /root/.ssh/id_rsa -N '' &
+fi
+
+# Add key for InnoRoute package repository
+opkg-key add /usr/share/InnoRoute/key-build.pub
+
+# Open vSwitch configuration - requires working FPGA configuration providing network interfaces
 /usr/share/InnoRoute/scripts/start_ovs.sh
 ovs-vsctl del-br TNbr
 ovs-vsctl add-br TNbr
@@ -21,20 +33,68 @@ ovs-vsctl add-port TNbr TN12 -- set Interface TN12 ofport_request=13
 ovs-vsctl add-port TNbr TN13 -- set Interface TN13 ofport_request=14
 ovs-vsctl add-port TNbr TN14 -- set Interface TN14 ofport_request=15
 ovs-vsctl add-port TNbr TN15 -- set Interface TN15 ofport_request=16
-INRpllload /usr/share/InnoRoute/TN-PLL-V1.2_synce_7.stp E
-sensors-detect --auto
+ovs-vsctl set bridge TNbr other-config:hwaddr=00:53:4E:55:4C:00
+
+# Configure PLL
+INRpllload /usr/share/InnoRoute/tn-pll-v1.2_synce_7.stp E
+
+# lmsensors initialization
+#sensors-detect --auto #TODO To be fixed
+
+# Configure FPGA configuration bridge
 INR_ftdi_eeprom -p 0x6010 -v 0x0403 -M
+
+# Add TN_* scripts to path
 chown -R TNuser /home/TNuser/
-for file in $(ls /usr/share/InnoRoute/TN_*.sh)
-do
-ln -s $file /usr/sbin/
+for file in $(ls /usr/share/InnoRoute/TN_*.sh); do
+	ln -s $file /usr/sbin/
 done
-/usr/share/InnoRoute/TN_phy_init.sh
-/usr/share/InnoRoute/TN_beep.sh
+chmod +x /usr/share/InnoRoute/FlowCache_persistent.sh
+
+
+# Start NETCONF daemon and install YANG files
+for file in $(ls /etc/sysrepo/yang/*.yang); do
+	sysrepoctl --install --yang=$file
+done
+
+# Start PHYs
+/usr/share/InnoRoute/TN_phy_init.sh 1
+
+# Triple Beep
+/usr/share/InnoRoute/TN_beep.sh 1
 sleep 1
-/usr/share/InnoRoute/TN_beep.sh
+/usr/share/InnoRoute/TN_beep.sh 1
 sleep 1
-/usr/share/InnoRoute/TN_beep.sh
+/usr/share/InnoRoute/TN_beep.sh 1
+
+# Copy current bitstream to /boot (Windows partition)
+mount /dev/sda1 /boot/ 2>/dev/null
+sleep 2
+cp /usr/share/InnoRoute/bs_unstable.bit /boot/trustnode_top.bit || true
+
+# Copy documentation from /boot (Windows partition) to web server
+mkdir -p /www/luci-static/innoroute/doku
+cp /boot/*.pdf /www/luci-static/innoroute/doku/
+
+# Wait for state change
 wait
+
+# Regenerate SSH key
+rm /etc/keystored/keys/*
+ssh-keygen -m pem -t rsa -q -N "" -f /etc/keystored/keys/ssh_host_rsa_key.pem
+
+
+# Enable SYSREPO TAS
+sysrepoctl --feature-enable=scheduled-traffic --module=ieee802-dot1q-sched
+# Start usual start scripts, again
+/etc/init.d/TN_start enable
+
+/etc/init.d/TN_imageloader enable
+/etc/init.d/TN_iloadhelp enable
+/etc/init.d/TN_firstboot disable
+
 echo "Setup on firstboot done"
 echo "Have fun with your TrustNode"
+
+#/etc/init.d/TN_imageloader start
+wait
