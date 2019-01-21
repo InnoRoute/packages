@@ -5,6 +5,7 @@ PKG_MAINTAINER:=Marian Ulbricht <ulbricht@innoroute.de>
 
 LUCI_TITLE:=Display Statistics from TrustNode FPGA core
 LUCI_DEPENDS:=
+DEPENDS:=+tnstatistics
 
 # earlier version of luci put "luci.mk" somewhere else...
 LUCI_MK_OLDPATH:=$(shell test -e ../luci.mk && echo "old")

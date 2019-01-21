@@ -1,0 +1,228 @@
+<%+header%>
+<!--
+    TrustNode FPGA statistics plugin ulbricht@innoroute.de 2018
+-->
+<style>
+
+</style>
+<h2><a name="content">RX/<font color="red">TX</font> counters datapath 1</a></h2>
+<h3>Transition diagram</h3>
+<svg id="svg2" width="1000" height="600">
+
+<g transform="scale(1.5)" id="svg2_trans">
+  <defs>
+       <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#047438" />
+    </marker>
+    <marker id="arrow_tx" markerWidth="10" markerHeight="10" refX="-6" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#ff0000" />
+    </marker>
+  </defs>
+
+</g>
+</svg>
+<br>
+<h3>Transition matrix</h3>
+<div id="inout_rx_matrix_location"></div> 
+<script>
+var portcount=32;
+function create_inout_rx_matrix(){
+
+    var i;
+    var j;
+    var x = document.createElement("table");
+    x.setAttribute("id", "inout_rx_matrix");
+    x.setAttribute("border", "1");
+    x.setAttribute("style","width:100%;border-collapse: separate;border: 1px solid black;font-size:3hmin;border-spacing: 0px;max-width:100%;white-space:nowrap");
+    document.getElementById("inout_rx_matrix_location").appendChild(x);
+    for (i = 0; i < portcount+1; i++){
+    	if(i){
+    	var y = document.createElement("TR");
+    	y.setAttribute("id", "inout_rx_matrix_TR"+String(i-1));
+    	y.setAttribute("style","font-size:3hmin;border: 1px solid black");
+    	document.getElementById("inout_rx_matrix").appendChild(y);
+    	}
+    else{
+    var y = document.createElement("TR");
+    	y.setAttribute("id", "inout_rx_matrix_TR_border"+String(i));
+    	y.setAttribute("style","font-size:3hmin;border: 1px solid black");
+    	document.getElementById("inout_rx_matrix").appendChild(y);
+    
+    }
+    	for (j = 0; j < portcount+1; j++){
+    		if((i>0)&&(j>0)){
+	    		var z = document.createElement("TD");
+	    		z.setAttribute("id", "inout_rx_matrix_TD"+String(j-1));
+	    		z.setAttribute("border", "5");
+	    		var t = document.createElement("DIV"); //<div id="inout_rx_matrix'+String(i)+","+String(j)+'"></div>
+	    		t.setAttribute("id", "inout_rx_matrix_cell"+String(i-1)+","+String(j-1));
+	    		t.setAttribute("border", "5");
+	    		z.appendChild(t);
+	    		document.getElementById("inout_rx_matrix_TR"+String(i-1)).appendChild(z);
+    		}else{
+	    		var z = document.createElement("TD");
+	    		z.setAttribute("id", "inout_rx_matrix_TD_border"+String(j));
+	    		z.setAttribute("border", "5");
+	    		var t = document.createElement("DIV"); //<div id="inout_rx_matrix'+String(i)+","+String(j)+'"></div>
+	    		t.setAttribute("id", "inout_rx_matrix_cell_border"+String(i)+","+String(j));
+	    		t.setAttribute("border", "5");
+	    		if(j)t.innerHTML="P"+String(j-1);
+	    		if(i)t.innerHTML="P"+String(i-1);
+	    		z.appendChild(t);
+	    		if(i==0)document.getElementById("inout_rx_matrix_TR_border"+String(i)).appendChild(z);else document.getElementById("inout_rx_matrix_TR"+String(i-1)).appendChild(z);
+    		
+    		}
+    		
+    }  
+    }
+    var svg = document.getElementById('svg2_trans'); //Get svg element
+    for (i = 0; i < (portcount); i++){for (j = 0; j < (portcount); j++){
+	var newline = document.createElementNS("http://www.w3.org/2000/svg", 'line'); //Create a path in SVG's namespace
+	var newtext = document.createElementNS("http://www.w3.org/2000/svg", 'text'); //Create a path in SVG's namespace
+	newline.setAttribute("x1","80"); //Set stroke colour
+	newline.setAttribute("y1",String(i*12+7)); //Set stroke width
+	newline.setAttribute("x2","490");
+	newline.setAttribute("y2",String(j*12+7));
+	//newline.setAttribute("style","stroke: black;");
+	newline.setAttribute("marker-end","none");
+	newline.setAttribute("stroke","none");
+	newline.setAttribute("stroke-width","1");
+	newline.setAttribute("id","line-"+String(i)+"to"+String(j));
+	svg.appendChild(newline);
+	/*newtext.textContent= "0";
+	newtext.setAttribute("fill","#000000");
+	newtext.setAttribute("font-size","8");
+	newtext.setAttribute("font-family","Verdana");
+	newtext.setAttribute("x",String(250+i+j));
+	newtext.setAttribute("y",String(((j-i)+1+i)*(12)));
+	newtext.setAttribute("id","line-label-"+String(i)+"to"+String(j));
+	svg.appendChild(newtext);*/
+
+}}
+   for (i = 0; i < (portcount); i++){
+   var newElement = document.createElementNS("http://www.w3.org/2000/svg", 'text'); //Create a path in SVG's namespace
+	newElement.textContent= "Port"+String(i); //Set path's data
+	newElement.setAttribute("fill","#000000"); //Set stroke colour
+	newElement.setAttribute("font-size","10"); //Set stroke width
+	newElement.setAttribute("font-family","Verdana");
+	newElement.setAttribute("y",String(i*12+10));
+	newElement.setAttribute("x","78");
+	newElement.setAttribute("text-anchor","end");
+	newElement.setAttribute("id","port-label-"+String(i)+"-left");
+	svg.appendChild(newElement);
+	var newRect = document.createElementNS("http://www.w3.org/2000/svg", 'rect'); //Create a path in SVG's namespace
+	newRect.setAttribute("fill","#000000"); //Set stroke colour
+	newRect.setAttribute("height","5"); //Set stroke width
+	newRect.setAttribute("width","5");
+	newRect.setAttribute("y",String(i*12+4));
+	newRect.setAttribute("x","80");
+	newRect.setAttribute("id","rect-"+String(i)+"-left");
+	svg.appendChild(newRect);
+   }
+      for (i = 0; i < (portcount); i++){
+   var newElement = document.createElementNS("http://www.w3.org/2000/svg", 'text'); //Create a path in SVG's namespace
+	newElement.textContent= "Port"+String(i); //Set path's data
+	newElement.setAttribute("fill","#000000"); //Set stroke colour
+	newElement.setAttribute("font-size","10"); //Set stroke width
+	newElement.setAttribute("font-family","Verdana");
+	newElement.setAttribute("y",String(i*12+10));
+	newElement.setAttribute("x","500");
+	newElement.setAttribute("id","port-label-"+String(i)+"-right");
+	svg.appendChild(newElement);
+	var newRect = document.createElementNS("http://www.w3.org/2000/svg", 'rect'); //Create a path in SVG's namespace
+	newRect.setAttribute("fill","#000000"); //Set stroke colour
+	newRect.setAttribute("height","5"); //Set stroke width
+	newRect.setAttribute("width","5");
+	newRect.setAttribute("y",String(i*12+4));
+	newRect.setAttribute("x","490");
+	newRect.setAttribute("id","rect-"+String(i)+"-right");
+	svg.appendChild(newRect);
+   }
+
+
+}
+function update_port_matrix(json_data){
+var i;
+var stat = JSON.parse(json_data);
+for (i = 0; i < portcount; i++){
+	rx_val=Number(stat["dp1#rx#"+String(i)]);
+	tx_val=Number(stat["dp1#tx#"+String(i)]);
+	document.getElementById("port-label-"+String(i)+"-right").textContent="Port"+String(i)+"(TX:"+String(tx_val)+")";
+	document.getElementById("port-label-"+String(i)+"-left").textContent="Port"+String(i)+"(RX:"+String(rx_val)+")";
+}
+
+
+}
+function update_inout_rx_matrix(json_data){
+var i;
+var x;
+var y;
+var x_last=1;
+var y_last=1;
+var rx_val=0;
+var tx_val=0;
+var stat = JSON.parse(json_data);//
+
+for (i = 0; i < portcount*portcount; i++){
+	x_last=x;
+	y_last=y;
+	x=i%portcount;
+	y=Math.floor(i/portcount);
+	 //var S=document.getElementById("svg"); var SD=S.getSVGDocument(); var E=SD.getElementById('test1');
+	//E.textContent(String(i));
+	//document.getElementById("svg2").getElementById('test1').textContent = 'möp';
+	rx_val=Number(stat["dp1#rx#"+String(x)+"#"+String(y)]);
+	tx_val=Number(stat["dp1#tx#"+String(y)+"#"+String(x)]);
+	//document.getElementById("line-label-"+String(x)+"to"+String(y)).textContent=stat["dp0#"+String(x)+"#"+String(y)];
+	if ((rx_val>0)||(tx_val>0)){
+	document.getElementById("inout_rx_matrix_cell"+String(x)+","+String(y)).innerHTML="<font color='green'>"+String(rx_val)+"</font>/<font color='red'>"+String(tx_val)+"</font>"
+	document.getElementById("line-"+String(x)+"to"+String(y)).setAttribute("stroke","black");
+	if(tx_val)document.getElementById("line-"+String(x)+"to"+String(y)).setAttribute("marker-end","url(#arrow)");else document.getElementById("line-"+String(x)+"to"+String(y)).setAttribute("marker-end","none");
+	if(rx_val)document.getElementById("line-"+String(x)+"to"+String(y)).setAttribute("marker-start","url(#arrow_tx)");else document.getElementById("line-"+String(x)+"to"+String(y)).setAttribute("marker-start","none");
+	document.getElementById("rect-"+String(x)+"-left").style.fill="green";
+	document.getElementById("rect-"+String(y)+"-right").style.fill="green";
+	//document.getElementById("line-label-"+String(x)+"to"+String(y)).style.fill="black";
+	// = stat["dp0#"+String(x)+"#"+String(y)];
+	}else{
+	document.getElementById("inout_rx_matrix_cell"+String(x)+","+String(y)).innerHTML="-";
+	document.getElementById("line-"+String(x)+"to"+String(y)).setAttribute("stroke","none");
+	document.getElementById("line-"+String(x)+"to"+String(y)).setAttribute("marker-end","none");
+	document.getElementById("line-"+String(x)+"to"+String(y)).setAttribute("marker-start","none");
+	document.getElementById("rect-"+String(x)+"-left").style.fill="gray";
+	document.getElementById("rect-"+String(y)+"-right").style.fill="gray";
+	//document.getElementById("line-label-"+String(x)+"to"+String(y)).style.fill="none";
+	
+	}
+	//getstatistics("$C_BASE_ADDR_STATISTICS_RX_PKT_CNT_LOWER_0","0",String(i*4),"inout_rx_matrix_cell"+String(x)+","+String(y));
+	//document.getElementById("inout_rx_matrix_cell"+String(x)+","+String(y)).setAttribute("style","background-color:#047438");
+	//document.getElementById("inout_rx_matrix_cell"+String(x_last)+","+String(y_last)).setAttribute("style","background-color:white");
+	}
+//getstatistics();
+
+}
+
+function updatestatistics(){
+//getstatistics('source /usr/share/InnoRoute/tn_env.sh && TNbar1 $(($C_BASE_ADDR_STATISTICS_RX_BADRSN_LOWER_0*$C_BASE_ADDR_FACTOR+0)) | cut -d " " -f 6')
+//getstatistics("$C_BASE_ADDR_STATISTICS_RX_BADRSN_LOWER_0","0","0","result");
+//getstatistics("$C_BASE_ADDR_RTC","$C_SUB_ADDR_RTC_BRIDGE_LOW","0","rtc-value");
+getstatistics();
+setTimeout(updatestatistics, 1000);
+}
+
+function getstatistics() {
+	//var cmd="source /usr/share/InnoRoute/tn_env.sh && TNbar1 $(("+base+"*$C_BASE_ADDR_FACTOR+"+sub+"+"+offset+')) | cut -d " " -f 6';
+	//console.log(cmd);
+	(new XHR()).post("<%=luci.dispatcher.build_url("admin", "trustnode", "TNstatisticsupdate")%>", {"cmd":"io_counters"}, function(x) {
+        update_inout_rx_matrix(x.response);	
+        });
+        (new XHR()).post("<%=luci.dispatcher.build_url("admin", "trustnode", "TNstatisticsupdate")%>", {"cmd":"port_counters"}, function(y) {
+        update_port_matrix(y.response);	
+        });
+    return false;
+}
+//setInterval(updatestatistics, 1000);
+create_inout_rx_matrix();
+setTimeout(updatestatistics, 1000);
+</script>
+<%+footer%>
+

@@ -20,10 +20,26 @@ function uploader()
    local values = luci.http.formvalue()
    --get the value of the input field
    local ul = values[input_field]
+   local filetype=values["type"]
+   if filetype=="tar" then
+    file_name="upload.tar"
+   end
    --make sure something is being uploaded
    if ul ~= '' and ul ~= nil then
 	  --Start your uploader
 	  setFileHandler(file_loc, input_field, file_name)
+	  if filetype=="tar" then
+        local fp2 = io.popen(tostring("cd /boot/ && tar xf /boot/upload.tar ").." 2>&1")
+        fp2:close()
+        fp2 = io.popen(tostring("cp /boot/tn_bs_out/trustnode_top.bit /boot/").." 2>&1")
+        fp2:close()
+        fp2 = io.popen(tostring("cp /boot/tn_bs_out/tn_env.sh /usr/share/InnoRoute/").." 2>&1")
+        fp2:close()
+        fp2 = io.popen(tostring("rm /boot/upload.tar").." 2>&1")
+        fp2:close()
+        fp2 = io.popen(tostring("rm -r /boot/tn_bs_out/").." 2>&1")
+        fp2:close()
+      end
 	  local fp = io.popen(tostring("TNchangemod 8").." 2>&1")
 	  local result =  fp:read("*a")
 	  fp:close()

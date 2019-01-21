@@ -2,7 +2,7 @@ include $(TOPDIR)/rules.mk
 include $(INCLUDE_DIR)/version.mk
 
 PKG_NAME:=tn-luci-plugin
-PKG_RELEASE:=1.2
+PKG_RELEASE:=1.3
 PKG_BUILD_DEPENDS:=base-files
 PKG_FILE_DEPENDS:=
 PKG_LICENSE:=GPL-2.0

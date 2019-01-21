@@ -25,8 +25,8 @@ progress:after { content: '%'; }
   <p id="progress">XHR2's upload progress isn't supported</p>
   <div id="progressbar" style="visibility: hidden;"> 
   <p>Upload progress: <progress id="uploadprogress" max="100" value="0">0</progress></p></div>
-  <legend><p>Drag&Drop a *.bit file over the TrustNode!</p>
-       	<p>The file will be saved as /boot/trustnode_top.bit, <i>TNchangemod 8</i> will be launched, this can cause a reboot of the system.</p>
+  <legend><p>Drag&Drop a *.bit or *.tar file over the TrustNode!</p>
+       	<p>The file/tar-content will be saved as /boot/trustnode_top.bit and /usr/share/InnoRoute/tn_env.sh, <i>TNchangemod 8</i> will be launched, this can cause a reboot of the system.</p>
        	<p>The page will reloaded after reboot.</p> </legend>
 </article>
 <script>
@@ -43,7 +43,8 @@ var holder = document.getElementById('holder'),
       progress: document.getElementById('progress')
     },
     acceptedTypes = {
-      'bit': true
+      'bit': true,
+      'tar': true
     },
     progress = document.getElementById('uploadprogress'),
     fileupload = document.getElementById('upload');
@@ -77,6 +78,7 @@ function readfiles(files) {
     var formData = tests.formdata ? new FormData() : null;
     
     if (tests.formdata) formData.append('input-name', files[0]);
+    if (tests.formdata) formData.append('type', getExtensionFromFilename(files[0].name));
     if (tests.filereader === true && acceptedTypes[getExtensionFromFilename(files[0].name)] === true) {
     console.log(files[0]);
     progressbar.style.visibility = 'visible';
