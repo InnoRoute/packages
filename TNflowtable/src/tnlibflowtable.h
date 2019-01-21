@@ -1,4 +1,12 @@
+/**
+*@file tnlibflowtable.h
+*@brief functions to handle flowtable
+*M.Ulbricht 2016
+**/
 #include "tn_env.h"
+
+void nibbletwist(uint8_t *data, uint8_t length);
+
 
 
 void FCinit_EMH (uint64_t * baseaddr, uint64_t * baseaddr_shadow);
@@ -22,7 +30,7 @@ uint64_t INR_RuleTable_EMA_get_addr (uint64_t id);
 uint8_t INR_RuleTable_EMA_clear_entry (uint64_t id);
 
 uint64_t INR_ActT_shadow_get_addr (uint64_t id);
-uint64_t INR_ActT_get_next_free_entry (uint64_t id,uint8_t have_PQUEUE, uint8_t PQUEUE);
+uint64_t INR_ActT_get_next_free_entry (uint64_t id, uint8_t have_PQUEUE, uint8_t PQUEUE,uint8_t overwrite_action);
 uint64_t INR_ActT_get_addr (uint64_t id);
 uint8_t INR_ActT_clear_entry (uint64_t id);
 void FCmemcpy (void *dst, const void *src, size_t len);
@@ -54,6 +62,8 @@ uint32_t parseIPV4string (char *ipAddress);
 #endif
 #endif
 //base addresses:
+
+
 //hashtable with hardcoded fields
 #define  INR_FC_ActT_valid_mask	0x3ff
 #define  INR_FC_ActT_entry_length 4	//length of entry in byte
@@ -102,82 +112,285 @@ uint32_t parseIPV4string (char *ipAddress);
 #endif
 #define EMH_hash_revision C_FLOW_CACHE_EMH_VERSION	//revision of EMH has implementation
 #define  THW if(touch_HW)
-#define ActT_queue_entrys_queue_mask 0xF80 //0b111110000000  area where flowid are used for queing...this wil not used for automatic rule storage
+#define ActT_queue_entrys_queue_mask 0xF80	//0b111110000000  area where flowid are used for queing...this wil not used for automatic rule storage
 #define ActT_default_flow 0x0
 
 
 #if EMH_hash_revision == 1
-struct INR_FC_EMH_RULE_TYPE1
-{
-  uint64_t MAC_SRC:48;	/**<source MAC*/
-  uint64_t MAC_DST:48;	/**<destination MAC*/
-  uint16_t VLAN_ID:12;	/**<VLAN_ID*/
-  uint8_t unused:4;
-  uint16_t ETHERTYPE:16;  /**<ETHERTYPE*/
-  uint8_t filling[16];
-} __attribute__ ((__packed__));
+	struct INR_FC_EMH_RULE_TYPE1
+	{
+		uint64_t MAC_SRC:48;	/**<source MAC*/
+		uint64_t MAC_DST:48;	/**<destination MAC*/
+		uint16_t VLAN_ID:12;	/**<VLAN_ID*/
+		uint8_t unused:4;
+		uint16_t ETHERTYPE:16;  /**<ETHERTYPE*/
+		uint8_t  filling[16];
+	} __attribute__ ((__packed__));
 
-struct INR_FC_EMH_RULE_TYPE2
-{
-  uint32_t IPv4_SRC:32;	  /**<IPv4 source address*/
-  uint32_t IPv4_DST:32;	  /**<IPv4 destination address*/
-  uint8_t PROTOCOL:8;	/**<layer 3 protocol*/
-  uint16_t PORT_SRC:16;	  /**<TCP/UDP source port*/
-  uint16_t PORT_DST:16;	  /**<TCP/UDP destination port*/
-  uint8_t filling[19];
-  uint8_t unused;
-} __attribute__ ((__packed__));
+	struct INR_FC_EMH_RULE_TYPE2
+	{
+		uint32_t IPv4_SRC:32;	  /**<IPv4 source address*/
+		uint32_t IPv4_DST:32;	  /**<IPv4 destination address*/
+		uint8_t PROTOCOL:8;	/**<layer 3 protocol*/
+		uint16_t PORT_SRC:16;	  /**<TCP/UDP source port*/
+		uint16_t PORT_DST:16;	  /**<TCP/UDP destination port*/
+		uint8_t filling[19];
+		uint8_t unused:8;
+	} __attribute__ ((__packed__));
 
-struct INR_FC_EMH_RULE_TYPE3
-{
-} __attribute__ ((__packed__));
+	struct INR_FC_EMH_RULE_TYPE3
+	{
+	} __attribute__ ((__packed__));
 
-struct INR_FC_EMH_RULE_TYPE4
-{
-} __attribute__ ((__packed__));
+	struct INR_FC_EMH_RULE_TYPE4
+	{
+	} __attribute__ ((__packed__));
 #endif
 
 #if EMH_hash_revision == 3
-struct INR_FC_EMH_RULE_TYPE1
-{
-  uint8_t INPORT:5;	/**<input port*/
-  uint8_t unused:3;
-  uint8_t filling[31];
-} __attribute__ ((__packed__));
+	struct INR_FC_EMH_RULE_TYPE1
+	{
+		uint8_t INPORT:5;	/**<input port*/
+		uint8_t unused:3;
+		uint8_t filling[31];
+	} __attribute__ ((__packed__));
 
-struct INR_FC_EMH_RULE_TYPE2
-{
-  uint16_t VLAN_PRIO;	  /**<VLAN Priority*/
-  uint8_t filling[30];
-  
-} __attribute__ ((__packed__));
-
-struct INR_FC_EMH_RULE_TYPE3
-{
-	uint64_t MAC_DST:48;	/**<destination MAC*/
-	uint16_t VLAN_ID;	  /**<VLAN ID*/
-  uint8_t filling[24];
-	
-} __attribute__ ((__packed__));
-
-struct INR_FC_EMH_RULE_TYPE4
-{
-		uint64_t MAC_DST:48;	/**<destination MAC*/
-		uint16_t VLAN_ID;	  /**<VLAN ID*/
+	struct INR_FC_EMH_RULE_TYPE2
+	{
 		uint16_t VLAN_PRIO;	  /**<VLAN Priority*/
-  	uint8_t filling[22];
-} __attribute__ ((__packed__));
+		uint8_t filling[30];
+
+	} __attribute__ ((__packed__));
+
+	struct INR_FC_EMH_RULE_TYPE3
+	{
+		
+		uint16_t VLAN_ID:12;		  /**<VLAN ID*/
+		uint64_t MAC_DST:48;		/**<destination MAC*/
+		uint8_t padding:4;
+		uint8_t filling[24];
+
+	} __attribute__ ((__packed__));
+
+	struct INR_FC_EMH_RULE_TYPE4
+	{
+		
+		uint16_t VLAN_ID:12;			  /**<VLAN ID*/
+		uint64_t MAC_DST:48;			/**<destination MAC*/
+		uint8_t VLAN_PRIO:4;			  /**<VLAN Priority*/
+		uint8_t filling[24];
+	} __attribute__ ((__packed__));
+#endif
+#if EMH_hash_revision == 4
+	struct INR_FC_EMH_RULE_TYPE1
+	{
+		uint8_t INPORT:5;	/**<input port*/
+		uint8_t unused:3;
+		uint8_t filling[31];
+	} __attribute__ ((__packed__));
+
+	struct INR_FC_EMH_RULE_TYPE2
+	{
+		uint16_t VLAN_PRIO;	  /**<VLAN Priority*/
+		uint8_t filling[30];
+
+	} __attribute__ ((__packed__));
+
+	struct INR_FC_EMH_RULE_TYPE3
+	{
+		
+		uint16_t VLAN_ID:12;		  /**<VLAN ID*/
+		uint64_t MAC_DST:48;		/**<destination MAC*/
+		uint8_t padding:4;
+		uint8_t filling[24];
+
+	} __attribute__ ((__packed__));
+
+	struct INR_FC_EMH_RULE_TYPE4
+	{
+		
+		uint16_t VLAN_ID:12;			  /**<VLAN ID*/
+		uint64_t MAC_DST:48;			/**<destination MAC*/
+		uint16_t VLAN_PRIO:4;			  /**<VLAN Priority*/
+		uint8_t filling[22];
+	} __attribute__ ((__packed__));
 #endif
 
-union INR_FC_EMH_RULE_TYPES	//put all types in same meory
+
+#if EMH_hash_revision == 5
+
+	struct INR_FC_EMH_RULE_TYPE1
+	{
+		uint8_t INPORT:5;	/**<input port*/
+		uint8_t unused:3;
+		uint8_t filling[31];
+	} __attribute__ ((__packed__));
+
+	struct INR_FC_EMH_RULE_TYPE2
+	{
+		uint16_t VLAN_PRIO;	  /**<VLAN Priority*/
+		uint8_t filling[30];
+
+	} __attribute__ ((__packed__));
+
+	struct INR_FC_EMH_RULE_TYPE3
+	{
+		
+		uint16_t VLAN_ID:12;		  /**<VLAN ID*/
+		uint64_t MAC_DST:48;		/**<destination MAC*/
+		uint8_t padding:4;
+		uint8_t filling[24];
+
+	} __attribute__ ((__packed__));
+
+	struct INR_FC_EMH_RULE_TYPE4
+	{
+		uint8_t INPORT:5;	/**<input port*/
+		uint16_t ETHERTYPE:16;
+		uint8_t unused:3;
+		uint8_t filling[29];
+	} __attribute__ ((__packed__));
+#endif
+#if EMH_hash_revision == 6
+
+	struct INR_FC_EMH_RULE_TYPE1
+	{
+		uint16_t PORT_DST:16;	/**<input port*/
+		uint8_t filling[30];
+	} __attribute__ ((__packed__));
+
+	struct INR_FC_EMH_RULE_TYPE2
+	{
+		uint16_t VLAN_PRIO;	  /**<VLAN Priority*/
+		uint8_t filling[30];
+
+	} __attribute__ ((__packed__));
+
+	struct INR_FC_EMH_RULE_TYPE3
+	{
+		uint16_t VLAN_ID:12;		  /**<VLAN ID*/
+		uint64_t MAC_DST:48;		/**<destination MAC*/
+		uint8_t padding:4;
+		uint8_t filling[24];
+
+	} __attribute__ ((__packed__));
+
+	struct INR_FC_EMH_RULE_TYPE4
+	{
+		uint8_t INPORT:5;	/**<input port*/
+		uint16_t ETHERTYPE:16;
+		uint8_t unused:3;
+		uint8_t filling[29];
+	} __attribute__ ((__packed__));
+#endif
+#if EMH_hash_revision == 7
+
+	struct INR_FC_EMH_RULE_TYPE4
+	{
+		uint16_t PORT_DST:16;	/**<input port*/
+		uint8_t filling[30];
+	} __attribute__ ((__packed__));
+
+	struct INR_FC_EMH_RULE_TYPE2
+	{
+		uint16_t VLAN_PRIO;	  /**<VLAN Priority*/
+		uint8_t filling[30];
+
+	} __attribute__ ((__packed__));
+
+	struct INR_FC_EMH_RULE_TYPE3
+	{
+		uint16_t VLAN_ID:12;		  /**<VLAN ID*/
+		uint64_t MAC_DST:48;		/**<destination MAC*/
+		uint8_t padding:4;
+		uint8_t filling[24];
+
+	} __attribute__ ((__packed__));
+
+	struct INR_FC_EMH_RULE_TYPE1
+	{
+		uint8_t INPORT:5;	/**<input port*/
+		uint16_t ETHERTYPE:16;
+		uint8_t unused:3;
+		uint8_t filling[29];
+	} __attribute__ ((__packed__));
+#endif
+#if EMH_hash_revision == 8
+
+	struct INR_FC_EMH_RULE_TYPE1
+	{
+		
+		uint8_t INPORT:5;	/**<input port*/
+		uint8_t unused:3;
+		uint8_t filling[31];
+	} __attribute__ ((__packed__));
+
+	struct INR_FC_EMH_RULE_TYPE2
+	{
+		uint16_t ETHERTYPE:16;
+		uint8_t filling[30];
+
+	} __attribute__ ((__packed__));
+
+	struct INR_FC_EMH_RULE_TYPE3
+	{
+		uint16_t VLAN_ID:12;		  /**<VLAN ID*/
+		uint64_t MAC_DST:48;		/**<destination MAC*/
+		uint8_t padding:4;
+		uint8_t filling[24];
+
+	} __attribute__ ((__packed__));
+
+	struct INR_FC_EMH_RULE_TYPE4
+	{
+		uint16_t PORT_DST:16;	/**<input port*/
+		uint8_t filling[30];
+	} __attribute__ ((__packed__));
+#endif
+
+#if EMH_hash_revision == 9
+
+	struct INR_FC_EMH_RULE_TYPE1
+	{
+		
+		uint8_t INPORT:5;	/**<input port*/
+		uint8_t unused:3;
+		uint8_t filling[31];
+	} __attribute__ ((__packed__));
+
+	struct INR_FC_EMH_RULE_TYPE2
+	{
+		uint16_t ETHERTYPE:16;
+		uint8_t filling[30];
+
+	} __attribute__ ((__packed__));
+
+	struct INR_FC_EMH_RULE_TYPE3
+	{
+		uint16_t VLAN_ID:12;		  /**<VLAN ID*/
+		uint64_t MAC_DST:48;		/**<destination MAC*/
+		uint8_t padding:4;
+		uint8_t filling[24];
+
+	} __attribute__ ((__packed__));
+
+	struct INR_FC_EMH_RULE_TYPE4
+	{
+		uint16_t PORT_DST:16;	/**<input port*/
+		uint32_t IPv4_DST:32;	  /**<IPv4 destination address*/
+		uint8_t PROTOCOL:8;	/**<layer 3 protocol*/
+		uint16_t ETHERTYPE:16;  /**<ETHERTYPE*/
+		uint8_t filling[23];
+	} __attribute__ ((__packed__));
+#endif
+
+union INR_FC_EMH_RULE_TYPES     //put all types in same meory
 {
   struct INR_FC_EMH_RULE_TYPE1 TYPE1;
   struct INR_FC_EMH_RULE_TYPE2 TYPE2;
   struct INR_FC_EMH_RULE_TYPE3 TYPE3;
   struct INR_FC_EMH_RULE_TYPE4 TYPE4;
 };
-
-
 #if C_MMI_ADDR_MAP_REVISION<5
 struct INR_FC_EMH_RULE
 {
@@ -289,6 +502,7 @@ union INR_FC_EMA_HashTable_entry
 uint8_t INR_HashT_EMA_write (union INR_FC_EMA_HashTable_entry entry, uint16_t ID);	//TCAM
 uint8_t INR_HashTable_EMA_clear_entry (uint64_t id);
 uint64_t INR_HashTable_EMA_read_entry (uint16_t ID);
+
 
 struct INR_FC_ActT_RULE
 {

@@ -88,7 +88,7 @@ FCmemcpy (void *dst, const void *src, size_t len)
       if (MEMDUMP) {
 	struct timeval tv;
 	gettimeofday (&tv, NULL);
-	printf ("TNbar1 0x%llx w 0x%llx\n", dst - FCbase_EMA + i * sizeof (uint32_t), s[i]);
+	printf ("TNbar1 0x%08llx w 0x%08llx\n", dst - FCbase_EMA + i * sizeof (uint32_t), s[i]);
       }
 #endif
     }
@@ -146,19 +146,21 @@ uint8_t
 INR_HashTable_EMH_clear_entry (uint64_t id)
 {
   verblog printf ("__FUNCTION__ = %s\n", __FUNCTION__);
-  uint32_t *entry = (uint32_t *) INR_HashTable_EMH_get_addr (id);
+  struct INR_FC_EMH_HashTable_entry *entry = (struct INR_FC_EMH_HashTable_entry *) INR_HashTable_EMH_get_addr (id);
   if (entry == NULL) {
     return 1;
   }
   else {			//can't get address
-    entry = 0;			//clear entry
+    entry->RULEPOINTER = 0;
+    entry->unused = 0;		//clear entry
   }
-  *entry = INR_HashTable_EMH_shadow_get_addr (id);
+  struct INR_FC_EMH_HashTable_entry *entry_shadow = (struct INR_FC_EMH_HashTable_entry *) INR_HashTable_EMH_shadow_get_addr (id);
   if (entry == NULL) {
     return 1;
   }
   else {			//can't get address
-    entry = 0;			//clear entry
+    entry_shadow->RULEPOINTER = 0;
+    entry_shadow->unused = 0;	//clear entry
   }
   return 0;
 }
@@ -641,6 +643,7 @@ INR_HashTable_EMA_read_entry (uint16_t ID)
   return addr;
 }
 
+
 //************************************************************************************************************************************
 /**
 *returns address of ActT entry
@@ -707,54 +710,63 @@ INR_ActT_clear_entry (uint64_t id)
   return 0;
 }
 
+
+
 //************************************************************************************************************************************
 /**
 *returns address of next free ActT entry
 *@param start of search
 */
 uint64_t
-INR_ActT_get_next_free_entry (uint64_t id,uint8_t have_PQUEUE, uint8_t PQUEUE)
+INR_ActT_get_next_free_entry (uint64_t id, uint8_t have_PQUEUE, uint8_t PQUEUE, uint8_t overwrite_action)
 {
   uint16_t i = id;
+  uint64_t overwrite_offset=0;
   if (i == 0) {
     i++;
   }
-  if(have_PQUEUE==0){
-    			
-	  struct INR_FC_ActT_RULE *entry = NULL;
-	  if (id >= INR_FC_ActT_length) {
-	    return NULL;		//error id not valid
-	  }
-	  do {
-	    entry = (struct INR_FC_ActT_RULE *) INR_ActT_shadow_get_addr (i);
-	    i++;
-	  } while ((i < INR_FC_ActT_length) && (entry->OutPort_enable || entry->Bad_enable || entry->Cut_enable || (i == ActT_default_flow)||(i&ActT_queue_entrys_queue_mask)));
-	  if (i == INR_FC_ActT_length) {
-	    return 0;
+ 
+  
+  if (have_PQUEUE == 0) {
+
+    struct INR_FC_ActT_RULE *entry = NULL;
+    if (id >= INR_FC_ActT_length) {
+      return NULL;		//error id not valid
+    }
+    do {
+      entry = (struct INR_FC_ActT_RULE *) INR_ActT_shadow_get_addr (i);
+      i++;
+    } while ((i < INR_FC_ActT_length)
+	     && (entry->OutPort_enable || entry->Bad_enable || entry->Cut_enable || (i == ActT_default_flow) || (i & ActT_queue_entrys_queue_mask)));
+    if (i == INR_FC_ActT_length) {
+      return 0;
+    }
+    verblog printf ("Found free ActT entry %i  overwrite_offset:0x%x\n", i - 1 +((overwrite_offset&0x7f)<<16),overwrite_offset);
+    return (i - 1)|((overwrite_offset&0x7f)<<16);
   }
-  return i - 1;
-  }else{
-  PQUEUE&=0x1f;//limit length
-  
-  	uint16_t maxentry=~(ActT_queue_entrys_queue_mask-1);
-	 struct INR_FC_ActT_RULE *entry = NULL;
-	  if (id >= INR_FC_ActT_length) {
-	    return NULL;		//error id not valid
-	  }
-	  do {
-	    entry = (struct INR_FC_ActT_RULE *) INR_ActT_shadow_get_addr (i+(((uint16_t)PQUEUE<<7)));
-	    i++;
-	  } while ((i < maxentry) && (entry->OutPort_enable || entry->Bad_enable || entry->Cut_enable || (((uint16_t)PQUEUE<<7) == ActT_default_flow)));
-	  if (i == maxentry) {
-	    return 0;	 
-  
-  
+  else {
+    PQUEUE &= 0x1f;		//limit length
+
+    uint16_t maxentry = ~(ActT_queue_entrys_queue_mask - 1);
+    struct INR_FC_ActT_RULE *entry = NULL;
+    if (id >= INR_FC_ActT_length) {
+      return NULL;		//error id not valid
+    }
+    do {
+      entry = (struct INR_FC_ActT_RULE *) INR_ActT_shadow_get_addr (i + (((uint64_t) PQUEUE << 7)));
+      i++;
+    } while ((i < maxentry) && (entry->OutPort_enable || entry->Bad_enable || entry->Cut_enable || (((uint64_t) PQUEUE << 7) == ActT_default_flow)));
+    if (i == maxentry) {
+      return 0;
+
+
+    }
+    verblog printf ("Found free ActT entry %i pqueue:0x%x, overwrite_offset:0x%x\n", i - 1 + ((uint64_t) PQUEUE << 7)+((overwrite_offset&0x7f)<<16), ((uint64_t) PQUEUE << 7),overwrite_offset);
+
+    return ((i - 1) + ((uint64_t) PQUEUE << 7))+((overwrite_offset&0x7f)<<16); //returns the flow_id
   }
-  verblog printf("Found free ActT entry %i pqueue:0x%x\n",i-1+((uint16_t)PQUEUE<<7),((uint16_t)PQUEUE<<7));
-  
-  return (i - 1)+((uint16_t)PQUEUE<<7);
 }
-}
+
 //************************************************************************************************************************************
 /**
 *returns zumber of used entrys
@@ -890,6 +902,23 @@ hwaddr_aton2 (const char *txt, uint8_t * addr)
   }
   return pos - txt;
 }
+//************************************************************************************************************************************
+/**
+*swaps nibbles and position to match with FC overwrite unit data format
+*/
+void nibbletwist(uint8_t *data, uint8_t length){
+	uint8_t i=0;
+	uint8_t tmp;
+	//for(i=0;i<length;i++){
+	//	data[i]=(data[i]<<4)|(data[i]>>4);
+	//}
+	for(i=0;i<length/2;i++){
+	tmp=data[i];
+	data[i]=data[length-i-1];
+	data[length-i-1]=tmp;
+	}
+
+}
 
 //************************************************************************************************************************************
 /**
@@ -932,13 +961,14 @@ parseIPV4string (char *ipAddress)
 void
 FC_statistics_print ()
 {
+  uint64_t dummy;
   printf ("ActT, used:%i total:%i\n", INR_ActT_get_used (), INR_FC_ActT_length);
   printf ("HashTable_EMA, used:%i total:%i\n", INR_HashTable_EMA_get_used (), INR_FC_EMA_TCAM_length);
   printf ("RuleTable_EMA, used:%i total:%i\n", INR_RuleTable_EMA_get_used (), INR_FC_EMA_RuleTable_length);
   printf ("CTable_EMH, used:%i total:%i\n", INR_CTable_EMH_get_used (), INR_FC_EMH_CTable_length);
   printf ("RuleTable_EMH, used:%i total:%i\n", INR_RuleTable_EMH_get_used (), INR_FC_EMH_RuleTable_length);
   printf ("HashTable_EMH, used:%lli total:%lli\n", INR_RuleTable_EMH_get_used () - INR_CTable_EMH_get_used (), INR_FC_EMH_HashTable_length);
-  printf ("Mastertable, used:%lli total:%lli\n", INR_MasterT_get_used (), MASTERTABLE_length);
+  printf ("Mastertable, used:%lli total:%lli\n", INR_MasterT_get_used (&dummy), MASTERTABLE_length);
 
 }
 

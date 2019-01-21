@@ -20,6 +20,7 @@
 #include "flowtableactions.h"
 #include "mastertable.h"
 
+
 uint64_t MAbase = 0;		//base addres of master table
 const uint64_t MASTERTABLE_ENTRY_length = sizeof (struct arguments);
 
@@ -75,6 +76,10 @@ FC_MT_have_action (struct arguments *arguments)
     if (entry->BadReason != arguments->BadReason) {
       match = 0;
     }
+    
+
+    
+    
     if (entry->Cut_enable != arguments->Cut_enable) {
       match = 0;
     }
@@ -83,8 +88,9 @@ FC_MT_have_action (struct arguments *arguments)
     }
     if (entry->PQUEUE != arguments->PQUEUE) {
       match = 0;
-     }
+    }
     if (match) {
+      
       return entry->TableID.ActT;	//match found, return entry in action table
     }
   } while ((i < MASTERTABLE_length));
@@ -255,22 +261,23 @@ FC_MT_autotable (struct arguments * arguments)
       arguments->TYPE_ID = 4;	//set type
     }
   }
-  
+
   //if (arguments->dohave_PQUEUE == 0) {
 
-    arguments->ACTION_ID = FC_MT_have_action (arguments);	//try to find fitting action
-    arguments->TableID.ActT = arguments->ACTION_ID;
-    if (arguments->ACTION_ID == 0) {
-      AT_add (arguments);	//add new action if not found
-      at_added = 1;
-    }
+  arguments->ACTION_ID = FC_MT_have_action (arguments);	//try to find fitting action
+  arguments->TableID.ActT = arguments->ACTION_ID;
+  if (arguments->ACTION_ID == 0) {
+    AT_add (arguments);		//add new action if not found
+    at_added = 1;
+  }
+  
   /*} else {
-    arguments->ID = arguments->PQUEUE;
-    arguments->ACTION_ID = arguments->PQUEUE;
-    arguments->TableID.ActT = arguments->ACTION_ID;
-    AT_update (*arguments);
+     arguments->ID = arguments->PQUEUE;
+     arguments->ACTION_ID = arguments->PQUEUE;
+     arguments->TableID.ActT = arguments->ACTION_ID;
+     AT_update (*arguments);
 
-  }*/
+     } */
   get_HASH (arguments);		//calculate hashes
   if (arguments->TYPE_ID) {	//EMH
     if (FC_MT_have_EMH_hash (arguments->HASH.EMH)) {
@@ -287,16 +294,19 @@ FC_MT_autotable (struct arguments * arguments)
   }
   else {			//EMA
     if (INR_EMA_check ()) {
-      printf ("möp\n");
+      
       RT_EMA_add (arguments);	//add to table
       HT_EMA_add (arguments);	//add to hashtable
+      return 0;
     }
     else {
       printf ("Rule can't be applied the loaded bitstream doesn't provide a ruleset which can used for this rule.\n");
       if (at_added)
 	AT_del (*arguments);
+	
     }
   }
+return 1;
 }
 
 //************************************************************************************************************************************
@@ -349,27 +359,29 @@ FC_MasterT_add (struct arguments *arguments)
 {
   verblog printf ("__FUNCTION__ = %s\n", __FUNCTION__);
   uint16_t i;
-  for(i=0;i<arguments->bulk+1;i++){
-  if(arguments->bulk){
-  arguments->MAC_SRC++;
-  arguments->MAC_DST++;
-  arguments->VLAN_ID++;
-  arguments->IPv4_SRC++;
-  arguments->IPv4_DST++;//make some random values to don't have the same hash'
-  
+  for (i = 0; i < arguments->bulk + 1; i++) {
+    if (arguments->bulk) {
+      arguments->MAC_SRC++;
+      arguments->MAC_DST++;
+      arguments->VLAN_ID++;
+      arguments->IPv4_SRC++;
+      arguments->IPv4_DST++;	//make some random values to don't have the same hash'
+
+    }
+    if (INR_MasterT_get_next_free_entry (arguments->ID)) {
+      struct arguments *entry = (struct arguments *) INR_MasterT_get_addr (INR_MasterT_get_next_free_entry (arguments->ID));
+      arguments->used = 1;
+      if(FC_MT_autotable (arguments))return 0;
+      memcpy (entry, arguments, sizeof (struct arguments));
+
+      if ((arguments->bulk && (i == arguments->bulk)) || arguments->bulk == 0)
+	if (arguments->TableID.EMA_RT)
+	  FC_MT_apply_priority ();
+    }
+    else {
+      printf ("error: MasterTabele full");
+    }
   }
-  if (INR_MasterT_get_next_free_entry (arguments->ID)) {
-    struct arguments *entry = (struct arguments *) INR_MasterT_get_addr (INR_MasterT_get_next_free_entry (arguments->ID));
-    arguments->used = 1;
-    FC_MT_autotable (arguments);
-    memcpy (entry, arguments, sizeof (struct arguments));
-    
-    if((arguments->bulk&&(i==arguments->bulk))||arguments->bulk==0)if (arguments->TableID.EMA_RT)
-      FC_MT_apply_priority ();
-  }
-  else {
-    printf ("error: MasterTabele full");
-  }}
   return 0;
 }
 
@@ -385,35 +397,39 @@ FC_MasterT_del (uint64_t ID)
   verblog printf ("going to del entry %li\n", ID);
   if (ID > 0 && ID < MASTERTABLE_length) {
     struct arguments *entry = (struct arguments *) INR_MasterT_get_addr (ID);
-    verblog printf ("Entry stored in ");
-    verblog printf ("EMH_RT:%li ", entry->TableID.EMH_RT);
-    verblog printf ("EMH_HT:%li ", entry->TableID.EMH_HT);
-    verblog printf ("EMH_CT:%li ", entry->TableID.EMH_CT);
-    verblog printf ("EMA_RT:%li ", entry->TableID.EMA_RT);
-    verblog printf ("EMA_HT:%li ", entry->TableID.EMA_HT);
-    verblog printf ("ActT:%li\n ", entry->TableID.ActT);
-    //remove entry from tables where stored
-    if (entry->TableID.EMH_RT) {
-      INR_RuleTable_EMH_clear_entry (entry->TableID.EMH_RT);
-    }
-    if (entry->TableID.EMH_HT) {
-      INR_HashTable_EMH_clear_entry (entry->TableID.EMH_HT);
-    }
-    if (entry->TableID.EMH_CT) {
-      INR_CTable_EMH_clear_entry (entry->TableID.EMH_CT);
-    }
-    if (entry->TableID.EMA_RT) {
-      INR_RuleTable_EMA_clear_entry (entry->TableID.EMA_RT);
-    }
-    if (entry->TableID.EMA_HT) {
-      INR_HashTable_EMA_clear_entry (entry->TableID.EMA_HT);
-    }
-    if ((entry->TableID.ActT) && (FC_MT_count_action (entry->TableID.ActT) == 1)) {
-      INR_ActT_clear_entry (entry->TableID.ActT);	//can't remove because multible entrys could have the same action, first check
+    if (entry->used) {
+      verblog printf ("Entry stored in ");
+      verblog printf ("EMH_RT:%li ", entry->TableID.EMH_RT);
+      verblog printf ("EMH_HT:%li ", entry->TableID.EMH_HT);
+      verblog printf ("EMH_CT:%li ", entry->TableID.EMH_CT);
+      verblog printf ("EMA_RT:%li ", entry->TableID.EMA_RT);
+      verblog printf ("EMA_HT:%li ", entry->TableID.EMA_HT);
+      verblog printf ("ActT:%li\n ", entry->TableID.ActT);
+      
+      //remove entry from tables where stored
+      if (entry->TableID.EMH_RT) {
+	INR_RuleTable_EMH_clear_entry (entry->TableID.EMH_RT);
+      }
+      if (entry->TableID.EMH_HT) {
+	INR_HashTable_EMH_clear_entry (0x3fff & entry->HASH.EMH);
+      }
+      if (entry->TableID.EMH_CT) {
+	INR_CTable_EMH_clear_entry (entry->TableID.EMH_CT);
+      }
+      if (entry->TableID.EMA_RT) {
+	INR_RuleTable_EMA_clear_entry (entry->TableID.EMA_RT);
+      }
+      if (entry->TableID.EMA_HT) {
+	INR_HashTable_EMA_clear_entry (entry->TableID.EMA_HT);
+      }
+      if ((entry->TableID.ActT) && (FC_MT_count_action (entry->TableID.ActT) == 1)) {
+	INR_ActT_clear_entry (entry->TableID.ActT);	//can't remove because multible entrys could have the same action, first check
+      
+      }
     }
     entry->used = 0;
   }
-  FC_MT_apply_priority ();
+  //FC_MT_apply_priority ();
   return ID;
 }
 
@@ -494,10 +510,10 @@ INR_MasterT_get_next_free_entry (uint64_t id)
 //************************************************************************************************************************************
 /**
 *returns umber of used entrys
-*
+*@param *optioncount variable to store amount of used options in the mastertable
 */
 uint32_t
-INR_MasterT_get_used ()
+INR_MasterT_get_used (uint64_t * optioncount)
 {
   uint32_t i = 0;
   uint32_t c = 0;
@@ -509,9 +525,43 @@ INR_MasterT_get_used ()
     entry = (struct arguments *) INR_MasterT_get_addr (i);
     if ((entry->used))
       c++;
+    *optioncount += entry->OPTION_COUNT;
   }
   //printf("mtcount:%lli\n",c);
   return c;
+}
+
+//************************************************************************************************************************************
+/**
+*get mastetable MAX
+*/
+uint32_t
+FC_MasterT_get_MAX ()
+{
+  return MASTERTABLE_length;
+}
+
+//************************************************************************************************************************************
+/**
+*get mastetable entry
+*@param arguments struct with request
+*/
+uint8_t
+FC_MasterT_get_entry (struct arguments * entry, uint32_t id)
+{
+
+  if (id >= MASTERTABLE_length)
+    return 0;
+  entry = (struct arguments *) INR_MasterT_get_addr (0xffff & id);
+
+  if (entry->used == 0) {
+    return 0;
+  }
+  verblog printf ("__FUNCTION__ = %s\n", __FUNCTION__);
+  if (entry)
+    return 1;
+  else
+    return 0;
 }
 
 //************************************************************************************************************************************
@@ -565,6 +615,9 @@ FC_MasterT_print (struct arguments *arguments)
 	MT_dohaveprint (entry, BadReason);
 	MT_dohaveprint (entry, Cut_enable);
 	MT_dohaveprint (entry, CutValue);
+	
+
+	
 	printf ("\n");
 	printf ("prio:%li ", entry->PRIORITY);
 	if (entry->TableID.EMH_RT)
@@ -580,6 +633,7 @@ FC_MasterT_print (struct arguments *arguments)
 	if (entry->TableID.ActT) {
 	  printf ("ActT:%li ", entry->TableID.ActT);
 	}
+
       }
       printf ("\n");
     }

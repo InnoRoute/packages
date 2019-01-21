@@ -1,3 +1,8 @@
+/**
+*@file flowtableactions.h
+*@brief functions to handle flowtable
+*M.Ulbricht 2016
+**/
 //IDs used for finding the EMA rule type
 #include "tn_env.h"
 #define ID_MAC_SRC 1
@@ -13,6 +18,7 @@
 #define ID_INPORT 0
 #define ID_TOS 9
 
+#define HAVE_OVERWRITE 0
 
 /* Structure to store hashes */
 struct HASH
@@ -21,7 +27,7 @@ struct HASH
   uint8_t gauto;       /**<automatically generate hash values for rule entry*/
   struct INR_FC_EMA_HashTable_entry_data EMA;	    /**<masked fields hash storage*/
 } __attribute__ ((__packed__));
-	
+
 /* Structure to store table possition where entry is stored */
 struct tabid
 {
@@ -32,13 +38,17 @@ struct tabid
   uint64_t EMA_HT;		/**hashtable*/
   uint64_t ActT;	/**Action table*/
   uint64_t ACCDP;	/**ACCDP*/
+  
 } __attribute__ ((__packed__));
 
 struct arguments
 {
   char *args[1];		/* filename */
   uint8_t used;		/**<entry used */
-  int verbose;	
+  int verbose;
+  uint8_t sysrepo;
+  uint8_t EMH_HASH_OVERLAY;
+  uint8_t dohave_EMH_HASH_OVERLAY;
   uint16_t bulk;		/* The -v flag */
   uint8_t numberout;		/* print number of table after outosearch */
   uint8_t dohave_numberout;	/* print number of table after outosearch */
@@ -46,6 +56,7 @@ struct arguments
   uint8_t dohave_MAC_SRC;      /**<source MAC was set by user*/
   uint64_t MAC_DST;		/**<destination MAC*/
   uint8_t dohave_MAC_DST;      /**<destination MAC was set by user*/
+
   uint8_t PQUEUE;	/**<processor queue*/
   uint8_t dohave_PQUEUE;      /**<processor queue was set by user*/
   uint32_t VLAN_ID;		/**<VLAN_ID*/
@@ -56,12 +67,14 @@ struct arguments
   uint8_t dohave_IPv4_SRC;	/**<IPv4 source address was set by user*/
   uint32_t IPv4_DST;		/**<IPv4 destination address*/
   uint8_t dohave_IPv4_DST;	/**<IPv4 destination address was set by user*/
+
   uint32_t PROTOCOL;	  /**<IP protocol*/
   uint8_t dohave_PROTOCOL;	/**<IP protocol was set by user*/
   uint32_t PORT_SRC;		/**<TCP/UDP source port*/
   uint8_t dohave_PORT_SRC;	/**<TCP/UDP source port was set by user*/
   uint32_t PORT_DST;		/**<TCP/UDP destination port*/
   uint8_t dohave_PORT_DST;	/**<TCP/UDP destination port was set by user*/
+
   uint16_t ETHERTYPE;	   /**<Ethertype*/
   uint8_t dohave_ETHERTYPE;	 /**<Ethertype was set by user*/
   uint16_t NAL_ID;	/**<NAL_ID of videolayer used by Acceleration Datapath*/
@@ -99,6 +112,7 @@ struct arguments
   uint32_t ACTION_ID;		/**<pointer to action table*/
   uint32_t RULEPOINTER;	     /**<ID of rule, will be used for search actions*/
   uint64_t ID;	     /**<userspecific table ID*/
+  uint32_t OPTION_COUNT; /**<count the matches and actions*/
   struct HASH HASH;		/**<structure for hash storage*/
   uint64_t COUNT;      /**<count value for print actions*/
   uint8_t OutPort_enable;      /**<Action enable output port*/
@@ -147,3 +161,4 @@ void AT_del (struct arguments arguments);
 void AT_clear (struct arguments arguments);
 void AT_print (struct arguments arguments);
 void RT_EMA_TYPE_override (struct arguments *arguments);
+

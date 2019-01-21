@@ -1,3 +1,8 @@
+/**
+*@file tnlibaccdp.h
+*@brief functions to handle acceleration datapath
+*M.Ulbricht 2016
+**/
 #include "tn_env.h"
 
 uint8_t INR_accdp_check (void);
@@ -23,8 +28,8 @@ struct INR_ACCDP_RULE
   uint16_t UDP_DST:16;
   uint16_t NAL_ID:6;
   uint16_t pad1:6;
-  uint16_t pad2;
-  uint16_t pad3;
-  uint16_t pad4;
+  uint16_t pad2:16;
+  uint16_t pad3:16;
+  uint16_t pad4:16;
 
 } __attribute__ ((__packed__));

@@ -3,11 +3,13 @@
 *@brief main file of TNflowtable kernel module (for OVS interaction)
 *M.Ulbricht 2017
 **/
+
 #include <linux/init.h>
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include "tnlibflowtable.h"
 #include "flowtableactions.h"
+
 export clear_arguments ();
 export HT_EMH_add ();
 export HT_EMH_del ();
@@ -35,6 +37,7 @@ export AT_del ();
 export AT_clear ();
 export AT_print ();
 export RT_EMA_TYPE_override ();
+
 //*****************************************************************************************************************
 /**
 *init driver function

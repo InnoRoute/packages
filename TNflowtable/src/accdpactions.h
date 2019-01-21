@@ -1,3 +1,8 @@
+/**
+*@file accdpactions.h
+*@brief functions to handle acceleration datapath actions
+*M.Ulbricht 2016
+**/
 #include "tn_env.h"
 void ACCDP_add (struct arguments *arguments);
 void ACCDP_update (struct arguments arguments);

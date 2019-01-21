@@ -1,3 +1,8 @@
+/**
+*@file tnlibaccdp.c
+*@brief functions to handle accaleration datapath
+*M.Ulbricht 2018
+**/
 #ifndef __KERNEL__
 #include <inttypes.h>
 #include <stddef.h>

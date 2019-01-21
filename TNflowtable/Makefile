@@ -1,6 +1,6 @@
 include	$(TOPDIR)/rules.mk
 PKG_NAME :=tnflowtable
-PKG_RELEASE := 1.8
+PKG_RELEASE := 1.9
 PKG_BUILD_DIR:=	$(BUILD_DIR)/$(PKG_NAME)
 include	$(INCLUDE_DIR)/package.mk
 include $(INCLUDE_DIR)/kernel.mk

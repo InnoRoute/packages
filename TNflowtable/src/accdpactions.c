@@ -1,3 +1,8 @@
+/**
+*@file accdpactions.c
+*@brief functions to handle accleration datapath actions
+*M.Ulbricht 2018
+**/
 #ifndef __KERNEL__
 #include <inttypes.h>
 #include <stddef.h>

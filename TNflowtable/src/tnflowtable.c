@@ -27,12 +27,14 @@
 #include <fcntl.h>
 #include <time.h>
 
+
 #define MAP_SIZE 16384000UL
 //#define MAP_MASK (MAP_SIZE - 1)
 const char *argp_program_version = "tnflowcache 0.8";
 const char filename[] = "/sys/bus/pci/devices/0000:01:00.0/resource1";
 const char *argp_program_bug_address = "<ulbricht@innoroute.de>";
 struct flock lock;
+
 
 /*
    OPTIONS.  Field 1 in ARGP.
@@ -51,6 +53,7 @@ static struct argp_option options[] = {	//user interface
   {"AUTOHASH", 'a', 0, 0, "automatic generate and write hash to hashtable"},
   {"AUTOACT", 'z', 0, 0, "automatic write action to Actiontable"},
   {"RULEPOINTER", 'r', "", 0, "Pointer to rule"},
+  {"EMH_HASH_OVERLAY", 'o', "", 0, "EMH_HASH_OVERLAY"},
   {"RULETYPE", 't', "", 0, "Type of Rule"},
   {"HASH_EMH", 'H', "", 0, "Hash value for EMH table"},
   {"RULEPRIO", 'p', "", 0, "Priority of Rule"},
@@ -73,6 +76,21 @@ static struct argp_option options[] = {	//user interface
 #if EMH_hash_revision == 3
   {"RC_EMA_INPORT", 'I', "", 0, "Ingressport of packet"},
 #endif
+#if EMH_hash_revision == 5
+  {"RC_EMA_INPORT", 'I', "", 0, "Ingressport of packet"},
+#endif
+#if EMH_hash_revision == 6
+  {"RC_PORT_DST", 'A', "", 0, "UDP/TCP destination port"},
+#endif
+#if EMH_hash_revision == 7
+  {"RC_PORT_DST", 'A', "", 0, "UDP/TCP destination port"},
+#endif
+#if EMH_hash_revision == 8
+  {"RC_EMA_INPORT", 'I', "", 0, "Ingressport of packet"},
+#endif
+#if EMH_hash_revision == 9
+  {"RC_EMA_INPORT", 'I', "", 0, "Ingressport of packet"},
+#endif
   {0, 0, 0, 0, "Rule Type 2 options:", 3},
 #if EMH_hash_revision == 1
   {"RC_IPv4_SRC", 'C', "", 0, "IPv4 source address"},
@@ -89,15 +107,50 @@ static struct argp_option options[] = {	//user interface
   {"RC_ETHERTYPE", 'E', "", 0, "ETHERTYPE"},
 #endif
 #if EMH_hash_revision == 3
- 	{"RC_EMA_VLAN_PRIO", 'U', "", 0, "Priority of VLAN"},
+  {"RC_EMA_VLAN_PRIO", 'U', "", 0, "Priority of VLAN"},
+#endif
+#if EMH_hash_revision == 5
+  {"RC_EMA_VLAN_PRIO", 'U', "", 0, "Priority of VLAN"},
+#endif
+#if EMH_hash_revision == 6
+  {"RC_EMA_VLAN_PRIO", 'U', "", 0, "Priority of VLAN"},
+#endif
+#if EMH_hash_revision == 7
+  {"RC_EMA_VLAN_PRIO", 'U', "", 0, "Priority of VLAN"},
+#endif
+#if EMH_hash_revision == 8
+  {"RC_EMA_VLAN_PRIO", 'U', "", 0, "Priority of VLAN"},
+#endif
+#if EMH_hash_revision == 9
+  {"RC_EMA_VLAN_PRIO", 'U', "", 0, "Priority of VLAN"},
 #endif
   {0, 0, 0, 0, "Rule Type 3 options:", 4},
- #if EMH_hash_revision == 2
+#if EMH_hash_revision == 2
   {"RC_IPv4_SRC", 'C', "", 0, "IPv4 source address"},
   {"RC_IPv4_DST", 'T', "", 0, "IPv4 destination address"},
   {"RC_MAC_DST", 'D', "", 0, "destination Mac address (hex Format)"},
 #endif
 #if EMH_hash_revision == 3
+  {"RC_VLAN", 'V', "", 0, "ID of VLAN"},
+  {"RC_MAC_DST", 'D', "", 0, "destination Mac address (hex Format)"},
+#endif
+#if EMH_hash_revision == 5
+  {"RC_VLAN", 'V', "", 0, "ID of VLAN"},
+  {"RC_MAC_DST", 'D', "", 0, "destination Mac address (hex Format)"},
+#endif
+#if EMH_hash_revision == 6
+  {"RC_VLAN", 'V', "", 0, "ID of VLAN"},
+  {"RC_MAC_DST", 'D', "", 0, "destination Mac address (hex Format)"},
+#endif
+#if EMH_hash_revision == 7
+  {"RC_VLAN", 'V', "", 0, "ID of VLAN"},
+  {"RC_MAC_DST", 'D', "", 0, "destination Mac address (hex Format)"},
+#endif
+#if EMH_hash_revision == 8
+  {"RC_VLAN", 'V', "", 0, "ID of VLAN"},
+  {"RC_MAC_DST", 'D', "", 0, "destination Mac address (hex Format)"},
+#endif
+#if EMH_hash_revision == 9
   {"RC_VLAN", 'V', "", 0, "ID of VLAN"},
   {"RC_MAC_DST", 'D', "", 0, "destination Mac address (hex Format)"},
 #endif
@@ -109,6 +162,20 @@ static struct argp_option options[] = {	//user interface
   {"RC_VLAN", 'V', "", 0, "ID of VLAN"},
   {"RC_MAC_DST", 'D', "", 0, "destination Mac address (hex Format)"},
   {"RC_EMA_VLAN_PRIO", 'U', "", 0, "Priority of VLAN"},
+#endif
+#if EMH_hash_revision == 5
+  {"RC_EMA_INPORT", 'I', "", 0, "Ingressport of packet"},
+  {"RC_ETHERTYPE", 'E', "", 0, "ETHERTYPE"},
+#endif
+#if EMH_hash_revision == 6
+  {"RC_EMA_INPORT", 'I', "", 0, "Ingressport of packet"},
+  {"RC_ETHERTYPE", 'E', "", 0, "ETHERTYPE"},
+#endif
+#if EMH_hash_revision == 9
+  {"RC_PORT_DST", 'A', "", 0, "UDP/TCP destination port"},
+  {"RC_IPv4_DST", 'T', "", 0, "IPv4 destination address"},
+  {"RC_PROTO", 'P', "", 0, "Protocol type of packet"},
+  {"RC_ETHERTYPE", 'E', "", 0, "ETHERTYPE"},
 #endif
   {0, 0, 0, 0, "EMA_Rule Type options:", 6},
   {"RC_IPv4_SRC", 'C', "", 0, "IPv4 source address"},
@@ -130,6 +197,7 @@ static struct argp_option options[] = {	//user interface
   {"AT_Cut", 'X', "", 0, "Cut through assingment"},
   {0, 0, 0, 0, "Acceleration Datapath specific:", 8},
   {"NAL_ID", 'N', "", 0, "H265 video layer NAL_ID"},
+
   {0}
 };
 
@@ -147,6 +215,9 @@ parse_opt (int key, char *arg, struct argp_state *state)
     set_verbose (1);
     printallconst ();
     break;
+  case 'o':
+  	arguments->EMH_HASH_OVERLAY=strtoul (arg, 0, 0);
+  	break;
   case 'a':
     arguments->HASH.gauto = 1;
     break;
@@ -172,7 +243,7 @@ parse_opt (int key, char *arg, struct argp_state *state)
   case 'p':
     arguments->PRIORITY = strtoul (arg, 0, 0);
     break;
-   case 'Q':
+  case 'Q':
     arguments->bulk = strtoul (arg, 0, 0);
     break;
   case 'O':
@@ -180,18 +251,21 @@ parse_opt (int key, char *arg, struct argp_state *state)
     arguments->OutPort_enable = 1;
     arguments->dohave_OutPort = 1;
     arguments->dohave_OutPort_enable = 1;
+    arguments->OPTION_COUNT++;
     break;
   case 'b':
     arguments->Bad_enable = 1;
     arguments->BadValue = strtoul (arg, 0, 0);
     arguments->dohave_Bad_enable = 1;
     arguments->dohave_BadValue = 1;
+    arguments->OPTION_COUNT++;
     break;
   case 'B':
     arguments->BadReason = strtoul (arg, 0, 0);
     arguments->Bad_enable = 1;
     arguments->dohave_BadReason = 1;
     arguments->dohave_Bad_enable = 1;
+    arguments->OPTION_COUNT++;
     break;
   case 'N':
     arguments->NAL_ID = strtoul (arg, 0, 0);
@@ -219,6 +293,7 @@ parse_opt (int key, char *arg, struct argp_state *state)
     arguments->MASK_MAC_SRC = 0;
     arguments->dohave_MAC_SRC = 1;
     arguments->dohave_MASK_MAC_SRC = 1;
+    arguments->OPTION_COUNT++;
     break;
   case 'D':
     arguments->MAC_DST = strtoull (arg, 0, 0);
@@ -227,7 +302,9 @@ parse_opt (int key, char *arg, struct argp_state *state)
     arguments->MASK_MAC_DST = 0;
     arguments->dohave_MAC_DST = 1;
     arguments->dohave_MASK_MAC_DST = 1;
+    arguments->OPTION_COUNT++;
     break;
+
   case 'H':
     arguments->HASH.EMH = strtoull (arg, 0, 0);
     break;
@@ -236,65 +313,81 @@ parse_opt (int key, char *arg, struct argp_state *state)
     arguments->MASK_ETHERTYPE = 0;
     arguments->dohave_ETHERTYPE = 1;
     arguments->dohave_MASK_ETHERTYPE = 1;
+    arguments->OPTION_COUNT++;
     break;
   case 'V':
     arguments->VLAN_ID = strtoul (arg, 0, 0);
     arguments->MASK_VLAN_ID = 0;
     arguments->dohave_VLAN_ID = 1;
     arguments->dohave_MASK_VLAN_ID = 1;
+    arguments->OPTION_COUNT++;
     break;
   case 'q':
     arguments->PQUEUE = strtoul (arg, 0, 0);
-    if(arguments->PQUEUE)arguments->dohave_PQUEUE = 1; else arguments->dohave_PQUEUE = 0; // have to be >0 or nothing have to happen
+    if (arguments->PQUEUE)
+      arguments->dohave_PQUEUE = 1;
+    else
+      arguments->dohave_PQUEUE = 0;	// have to be >0 or nothing have to happen
+    arguments->OPTION_COUNT++;
     break;
   case 'W':
     arguments->TOS = strtoul (arg, 0, 0);
     arguments->MASK_TOS = 0;
     arguments->dohave_TOS = 1;
     arguments->dohave_MASK_TOS = 1;
+    arguments->OPTION_COUNT++;
     break;
   case 'U':
     arguments->VLAN_PRIO = strtoul (arg, 0, 0);
     arguments->MASK_VLAN_PRIO = 0;
     arguments->dohave_VLAN_PRIO = 1;
     arguments->dohave_MASK_VLAN_PRIO = 1;
+    arguments->OPTION_COUNT++;
     break;
   case 'I':
     arguments->INPORT = strtoul (arg, 0, 0);
     arguments->MASK_INPORT = 0;
     arguments->dohave_INPORT = 1;
     arguments->dohave_MASK_INPORT = 1;
+    arguments->OPTION_COUNT++;
     break;
   case 'C':
     arguments->IPv4_SRC = htobe32 (inet_addr (arg));
     arguments->MASK_IPv4_SRC = 0;
     arguments->dohave_IPv4_SRC = 1;
     arguments->dohave_MASK_IPv4_SRC = 1;
+    arguments->OPTION_COUNT++;
     break;
   case 'T':
     arguments->IPv4_DST = htobe32 (inet_addr (arg));
     arguments->MASK_IPv4_DST = 0;
     arguments->dohave_IPv4_DST = 1;
     arguments->dohave_MASK_IPv4_DST = 1;
+    arguments->OPTION_COUNT++;
     break;
+
   case 'P':
     arguments->PROTOCOL = strtoul (arg, 0, 0);
     arguments->MASK_PROTOCOL = 0;
     arguments->dohave_PROTOCOL = 1;
     arguments->dohave_MASK_PROTOCOL = 1;
+    arguments->OPTION_COUNT++;
     break;
   case 'R':
     arguments->PORT_SRC = strtoul (arg, 0, 0);
     arguments->MASK_PORT_SRC = 0;
     arguments->dohave_PORT_SRC = 1;
     arguments->dohave_MASK_PORT_SRC = 1;
+    arguments->OPTION_COUNT++;
     break;
   case 'A':
     arguments->PORT_DST = strtoul (arg, 0, 0);
     arguments->MASK_PORT_DST = 0;
     arguments->dohave_PORT_DST = 1;
     arguments->dohave_MASK_PORT_DST = 1;
+    arguments->OPTION_COUNT++;
     break;
+
   case ARGP_KEY_ARG:
     if (state->arg_num >= 2) {
       argp_usage (state);
@@ -388,11 +481,12 @@ main (int argc, char **argv)
   FCinit_EMH (map_base, map_base_shadow);
   FCinit_MasterTable (map_base_master);	//pass the memorypointer to the flowcache libs
   INR_ACCDP_init (map_base, map_base_shadow);
-  struct timespec ts1,ts2;
-  
-  timespec_get(&ts1, TIME_UTC);
+  struct timespec ts1, ts2;
+
+  timespec_get (&ts1, TIME_UTC);
   if (INR_FC_check) {
     switch (arguments.args[0][0]) {	//parse commandline arguments
+
     case 'A':
       switch (arguments.args[0][5]) {	//actiontable
       case 'a':
@@ -583,12 +677,14 @@ main (int argc, char **argv)
       break;
     }
   }
-  
+
   else
     printf ("Flow cache not available in this bitstream!\n");
-    
-    timespec_get(&ts2, TIME_UTC);
-  if(arguments.bulk)printf("%lli\n",(ts2.tv_nsec-ts1.tv_nsec)+((ts2.tv_sec-ts1.tv_sec)*1000000000));  
+
+  timespec_get (&ts2, TIME_UTC);
+  if (arguments.bulk)
+    printf ("%lli\n", (ts2.tv_nsec - ts1.tv_nsec) + ((ts2.tv_sec - ts1.tv_sec) * 1000000000));
+
   munmap (map_base, MAP_SIZE);	//unmap files and mmi from memory
   munmap (map_base_shadow, MAP_SIZE);
   munmap (map_base_master, MASTERTABLE_length * sizeof (struct arguments));
