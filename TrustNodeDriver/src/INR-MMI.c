@@ -3,8 +3,10 @@
 #include <linux/module.h>
 #include "INR-MMI.h"
 #include <TN_MMI.h>
+
 void (*MMI_handler)(void);
 void (*MMI_init)(uint64_t bar1);
+
 //*****************************************************************************************************************
 /**
 *init mmid address
@@ -16,6 +18,7 @@ void INR_MMI_interrupt_start(uint64_t bar1) {
     MMI_init= symbol_get(INR_MMI_init);
     if(MMI_init)MMI_init(bar1);
 }
+
 //*****************************************************************************************************************
 /**
 *ISR for MMI interrupt

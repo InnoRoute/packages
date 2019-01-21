@@ -3,15 +3,17 @@
 *@brief settings and definitions PCI communication
 *@author M.Ulbricht 2015
 **/
+
 #include<tn_env.h>
+
 int INR_init_drv (struct pci_dev *dev);
 void INR_UNMAP_all (struct pci_dev *dev);
 void INR_PCI_reset (void);
 void INR_remove_drv (struct pci_dev *dev);
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4,4,200)
-static irqreturn_t XPCIe_IRQHandler (int irq, void *dev_id);
+	static irqreturn_t XPCIe_IRQHandler (int irq, void *dev_id);
 #else
-static irqreturn_t XPCIe_IRQHandler (int irq, void *dev_id, struct pt_regs *regs);
+	static irqreturn_t XPCIe_IRQHandler (int irq, void *dev_id, struct pt_regs *regs);
 #endif
 
 int INR_TX_push (struct net_device *nwdev,struct sk_buff *skb, uint8_t * data, uint16_t datalength, uint8_t eof, uint8_t port, uint8_t ll, uint8_t paged, uint16_t fragcount,uint8_t time_queue,uint8_t extra_ts_fragment);
@@ -32,6 +34,7 @@ void INR_PCI_FPGA_PORT_status(uint8_t id, uint8_t status);
 uint8_t get_HW_user_feature(uint32_t featurerequest);
 void INR_PCI_BAR1_write_ext(uint32_t value,uint32_t addr);
 uint32_t INR_PCI_BAR1_read_ext(uint32_t addr);
+int INR_init_drv_dummy (struct pci_dev *dev);
 
 #define IfNotRuss if(TNrussian==0)
 #define HW_revision (C_SUB_ADDR_COMMON_TN_MAJOR_REV*10+C_SUB_ADDR_COMMON_TN_MINOR_REV)

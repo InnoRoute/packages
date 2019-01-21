@@ -9,6 +9,7 @@
 *@brief main driver Function
 *M.Ulbricht 2015
 **/
+
 #include <linux/kernel.h>
 #include <linux/export.h>
 #include <linux/module.h>
@@ -24,6 +25,7 @@
 #include "INR-NW.h"
 #include "INR-ctl.h"
 #include "INR-TIME.h"
+
 EXPORT_SYMBOL(INR_TIME_TX_transmit_interrupt);
 EXPORT_SYMBOL(INR_NW_carrier_update);
 volatile uint8_t probed=0;
@@ -63,6 +65,7 @@ INR_NWDEV_init (void)
             INR_LOG_debug (loglevel_info"flags2:%llx\n", INR_NW->hw_features);
             set_nwdev (i, INR_NW);
         }
+      INR_NW_carrier_update (i,0);//set carrier off (will be disabled via MDIO module later)  
     }
     return 0;
 }
@@ -108,10 +111,13 @@ probe (struct pci_dev *dev, const struct pci_device_id *id)
         INR_LOG_debug (loglevel_info"device enabled\n");
         INR_STATUS_set (INR_STATUS_DEVICE);
     }
-    if (0 == INR_NWDEV_init ()) {
+    if(get_RING0_dummy_loop()==0)if (0 == INR_NWDEV_init ()) {
         INR_STATUS_set (INR_STATUS_NW_enabled);
     }
-    INR_init_drv (dev);		//INIT pci and network
+    if(get_RING0_dummy_loop()==0){INR_init_drv (dev);		//INIT pci and network
+    }else{
+    	INR_init_drv_dummy (dev);
+    }
     INR_CTL_init_proc (dev);	//init proc fs
     if (get_HW_user_feature(HW_feature_RTC))INR_TIME_init_ptp_clock(dev);//init ptp
     INR_STATUS_set (INR_STATUS_DRV_INIT_done);
@@ -139,6 +145,7 @@ remove (struct pci_dev *dev)
     INR_LOG_debug (loglevel_info"remove Module\n");
     INR_LOG_debug (loglevel_info"Reset Logic\n");
     INR_remove_drv (dev);
+    INR_TIME_remove_ptp_clock();
     if(probed) {
         probed--;
     }

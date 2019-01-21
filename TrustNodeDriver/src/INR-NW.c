@@ -3,6 +3,7 @@
 *@brief Functions for the Network-stack
 *@author M.Ulbricht 2015
 **/
+
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/version.h>
@@ -24,6 +25,7 @@
 #include "INR.h"
 #include "INR-PCI.h"
 #include "INR-TIME.h"
+
 volatile uint8_t nwdev_counter = 0;
 volatile uint8_t send2cpu = 0;
 volatile uint8_t EN_TSN_sock_opt = 0;
@@ -32,7 +34,7 @@ volatile uint8_t TSN_TX_queue=0;
 struct net_device *globnwdev[INR_NW_devcount];
 struct hwtstamp_config INR_tstamp_config;
 volatile uint8_t INR_force_HW_ts[INR_NW_devcount]= {0};
-
+volatile uint8_t NO_TX=0;//disable packet TX completely
 
 /**
 *updates the interface carrier status
@@ -44,6 +46,9 @@ INR_NW_carrier_update (uint8_t index,uint16_t status)
 {
     INR_LOG_debug("TN%i link state changed to %i\n",index,status);
     if(status) {
+    #ifdef C_SUB_ADDR_COMMON_PARAM_PRT_CNT
+    if(index<INR_PCI_BAR1_read_ext(C_BASE_ADDR_COMMON_LOWER*256+C_SUB_ADDR_COMMON_PARAM_PRT_CNT))
+    #endif
         netif_carrier_on(get_nwdev(index));
     }
     else {
@@ -207,7 +212,16 @@ INR_NW_stop (struct net_device *nwdev)
     INR_LOG_debug (loglevel_info"NWDev stop\n");
     netif_stop_queue (nwdev);
 }
-
+//*****************************************************************************************************************
+/**
+*set NO-TX
+*@param TX state
+*/
+void 
+INR_NW_set_NO_TX (uint8_t tx_state)
+{
+    NO_TX=tx_state;
+}
 //*****************************************************************************************************************
 /**
 *Software transmit function, called by kernel
@@ -230,7 +244,11 @@ INR_NW_tx (struct sk_buff *skb, struct net_device *nwdev)
         uint32_t TXtimestamp=0;
         unsigned int consumed = 0;
         uint16_t TX_confirmastion_id=0;
-
+				
+				if(NO_TX){if (skb)
+                    kfree_skb (skb);    //free skb if dropped (handled by nw_stack if returned busy)
+                return NETDEV_TX_OK;
+        }
 
         if (EN_TSN_sock_opt) {
             time_queue=0x3f&skb->TN_TX_queue;

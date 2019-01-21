@@ -3,6 +3,7 @@
 *@brief Functions for Proc-filesystem
 *@author M.Ulbricht 2015
 **/
+
 #include <linux/kernel.h>
 #include <linux/export.h>
 
@@ -27,10 +28,119 @@
 #include "INR-TIME.h"
 
 #define PROCFS_MAX_SIZE		1024
+
 static char procfs_buffer[PROCFS_MAX_SIZE];
 static size_t procfs_buffer_size = 0;
-static struct proc_dir_entry *reg1, *reg2,*reg3,*reg4, *INR_proc_dir, *INR_proc_dir2,*reg5,*reg6,*reg7,*reg8,*reg9;
+static struct proc_dir_entry *reg1, *reg2,*reg3,*reg4, *INR_proc_dir, *INR_proc_dir2,*reg5,*reg6,*reg7,*reg8,*reg9,*reg10,*reg11;
+uint8_t ring0_dummy_loop=0; //disables all RX and TX handling, just reserver memory , where the memory pointers of RX0 and TX will be the same
 
+//*****************************************************************************************************************
+/**
+*  get status of ring0 dummy function
+*	 @brief if enabled no write acceses to TX or RX rings will be performed, the pointers of TX and RX0 ring will be eaqual
+*
+*/
+uint8_t get_RING0_dummy_loop(){
+	return ring0_dummy_loop;
+}
+//*****************************************************************************************************************
+/**
+*  proc write function
+*
+*/
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,14,50)
+ssize_t
+set_NO_TX_write (struct file *file, const char *buffer, size_t count, loff_t *data)
+#else
+int
+set_NO_TX_write (struct file *file, const char *buffer, size_t count, void *data)
+#endif
+{
+    procfs_buffer_size = count;
+    if (procfs_buffer_size > PROCFS_MAX_SIZE) {
+        procfs_buffer_size = PROCFS_MAX_SIZE;
+    }
+    if (copy_from_user (procfs_buffer, buffer, procfs_buffer_size)) {
+        return -EFAULT;
+    }
+    uint32_t tmp = 0;
+    sscanf (procfs_buffer, "%d", &tmp);
+    INR_LOG_debug (loglevel_info"write %d to set_NO_TX\n", tmp);
+    INR_NW_set_NO_TX(tmp);
+    return procfs_buffer_size;
+}
+
+//*****************************************************************************************************************
+/**
+*  proc print function
+*
+*/
+static int
+set_NO_TX_proc_show (struct seq_file *m, void *v)
+{
+    seq_printf (m, "not implemented\n");
+    return 0;
+}
+
+//*****************************************************************************************************************
+/**
+*  proc open function
+*
+*/
+static int
+set_NO_TX_proc_open (struct inode *inode, struct file *file)
+{
+    return single_open (file, set_NO_TX_proc_show, NULL);
+}
+//*****************************************************************************************************************
+/**
+*  proc write function
+*
+*/
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,14,50)
+ssize_t
+set_ring0_dummy_write (struct file *file, const char *buffer, size_t count, loff_t *data)
+#else
+int
+set_ring0_dummy_write (struct file *file, const char *buffer, size_t count, void *data)
+#endif
+{
+    procfs_buffer_size = count;
+    if (procfs_buffer_size > PROCFS_MAX_SIZE) {
+        procfs_buffer_size = PROCFS_MAX_SIZE;
+    }
+    if (copy_from_user (procfs_buffer, buffer, procfs_buffer_size)) {
+        return -EFAULT;
+    }
+    uint32_t tmp = 0;
+    sscanf (procfs_buffer, "%d", &tmp);
+    INR_LOG_debug (loglevel_info"write %d to set_ring0_dummy mode\nnow you have to reload the bitstream or reset the device\n", tmp);
+    ring0_dummy_loop=tmp;
+    return procfs_buffer_size;
+}
+
+//*****************************************************************************************************************
+/**
+*  proc print function
+*
+*/
+static int
+set_ring0_dummy_proc_show (struct seq_file *m, void *v)
+{
+    seq_printf (m, "not implemented\n");
+    return 0;
+}
+
+//*****************************************************************************************************************
+/**
+*  proc open function
+*
+*/
+static int
+set_ring0_dummy_proc_open (struct inode *inode, struct file *file)
+{
+    return single_open (file, set_ring0_dummy_proc_show, NULL);
+}
 //*****************************************************************************************************************
 /**
 *  proc write function
@@ -494,6 +604,22 @@ INR_CTL_init_proc (struct pci_dev *dev)
         .llseek = seq_lseek,
         .release = single_release,
     };
+    static const struct file_operations NO_TX = {
+        .owner = THIS_MODULE,
+        .open = set_NO_TX_proc_open,
+        .write = set_NO_TX_write,
+        .read = seq_read,
+        .llseek = seq_lseek,
+        .release = single_release,
+    };
+    static const struct file_operations ring0_dummy = {
+        .owner = THIS_MODULE,
+        .open = set_ring0_dummy_proc_open,
+        .write = set_ring0_dummy_write,
+        .read = seq_read,
+        .llseek = seq_lseek,
+        .release = single_release,
+    };
     static const struct file_operations TXdbg = {
         .owner = THIS_MODULE,
         .open = TXdbg_proc_open,
@@ -628,6 +754,19 @@ INR_CTL_init_proc (struct pci_dev *dev)
         printk (KERN_ALERT "Error: Could not initialize /proc/TrustNode/TSN/%s\n", "set_TSN_USE_ctrl_bridge_clock_offset");
         return -ENOMEM;
     }
+    reg10 = proc_create ("NO_TX", 0644, INR_proc_dir, &NO_TX);
+    if (reg10 == NULL) {
+        remove_proc_entry ("NO_TX", INR_proc_dir);
+        printk (KERN_ALERT "Error: Could not initialize /proc/%s\n", "NO_TX");
+        return -ENOMEM;
+        }
+    reg11 = proc_create ("ring0_dummy", 0644, INR_proc_dir, &ring0_dummy);
+    if (reg11 == NULL) {
+        remove_proc_entry ("ring0_dummy", INR_proc_dir);
+        printk (KERN_ALERT "Error: Could not initialize /proc/%s\n", "ring0_dummy");
+        return -ENOMEM;
+    }
+    printk (KERN_INFO "/proc/%s created\n", "TN_RXdbg");
     printk (KERN_INFO "/proc/%s created\n", "TN_russian");
 
     return 0;
@@ -645,10 +784,14 @@ INR_CTL_remove_proc (struct pci_dev *dev)
     printk (KERN_INFO "/proc/TrustNode/%s removed\n", "TN_send2cpu");
     remove_proc_entry ("TN_TXdbg", INR_proc_dir);
     printk (KERN_INFO "/proc/TrustNode/%s removed\n", "TN_TXdbg");
+    remove_proc_entry ("ring0_dummy", INR_proc_dir);
+    printk (KERN_INFO "/proc/TrustNode/%s removed\n", "ring0_dummy");
     remove_proc_entry ("TN_RXdbg", INR_proc_dir);
     printk (KERN_INFO "/proc/TrustNode/%s removed\n", "TN_RXdbg");
     remove_proc_entry ("TN_russian", INR_proc_dir);
     printk (KERN_INFO "/proc/TrustNode/%s removed\n", "TN_russian");
+    remove_proc_entry ("NO_TX", INR_proc_dir);
+    printk (KERN_INFO "/proc/TrustNode/%s removed\n", "NO_TX");
     remove_proc_entry ("set_TSN_sock_opt", INR_proc_dir2);
     printk (KERN_INFO "/proc/TrustNode/TSN/%s removed\n", "set_TSN_sock_opt");
     remove_proc_entry ("set_TSN_ts", INR_proc_dir2);

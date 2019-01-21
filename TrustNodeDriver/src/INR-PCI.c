@@ -3,6 +3,7 @@
 *@brief Functions for PCI communication
 *@author M.Ulbricht 2015
 **/
+
 #include <linux/kernel.h>
 #include <linux/version.h>
 #include <linux/module.h>
@@ -352,7 +353,7 @@ INR_PCI_get_new_rx_descriptor_ring_entry (uint8_t index)
         INR_LOG_debug (loglevel_err"error: zero INR_PCI_rx_descriptor_pool_dma_root[index]\n");
         INR_PCI_enable_error_LED
     }
-    rx_descriptor_pool_free[index] += 1;//incement page usage counter
+    rx_descriptor_pool_free[index] += 1;//increment page usage counter
     return tmp_rx_desc;
 }
 
@@ -1267,7 +1268,10 @@ INR_init_drv (struct pci_dev *dev)
     if (request_mem_region (gBaseHdwr0, REGISTER_SIZE, "INR_mem"))
         INR_STATUS_set (INR_STATUS_BAR0);
     INR_LOG_debug (loglevel_info"Init: dma mem requested\n");
-
+/*		if(C_SUB_ADDR_COMMON_TN_MAJOR_REV)if(INR_PCI_BAR1_read((C_BASE_ADDR_COMMON_LOWER<<8)+C_SUB_ADDR_COMMON_TN_MAJOR_REV)>250){*/
+/*		INR_LOG_debug (loglevel_err"Init: major ref to high.\n");*/
+/*		*/
+/*		return 1;} //something wrong with MMI interface*/
     if(C_SUB_ADDR_COMMON_ADDR_MAP_REV)INR_PCI_HW_timestamp=(INR_PCI_BAR1_read((C_BASE_ADDR_COMMON_LOWER<<8)+C_SUB_ADDR_COMMON_ADDR_MAP_REV)>>31)&1;
     INR_LOG_debug (loglevel_info"Hardware timestamping:%i.\n",INR_PCI_HW_timestamp);
 #ifdef C_SUB_ADDR_COMMON_ADDR_MAP_REV
@@ -1305,7 +1309,108 @@ INR_init_drv (struct pci_dev *dev)
     if(HW_addr_map_revision>=5)INR_PCI_BAR1_write(FPGA_PORT_mask,(C_BASE_ADDR_NET_LOWER<<8)+C_SUB_ADDR_NET_ENABLE);// enable ports
 
 #endif
+#ifdef C_SUB_ADDR_COMMON_PARAM_PRT_CNT
+    for(i=0;i<INR_PCI_BAR1_read(C_BASE_ADDR_COMMON_LOWER*256+C_SUB_ADDR_COMMON_PARAM_PRT_CNT);i++){
+    INR_NW_carrier_update (i,1);//set carrier on (will be disabled via MDIO module later)
+    }
+#endif
+return 0;
+}
+//*****************************************************************************************************************
+/**
+*init driver
+*@param *dev PCI-device with dummy mode enabled 
+*/
+int
+INR_init_drv_dummy (struct pci_dev *dev)
+{
+    globdev = dev;
+    pagesize = PAGE_SIZE;		//getpagesize();//get pagesze
+    INR_LOG_debug (loglevel_info"enable driver in dummy mode...\nTX and RX0 pointers will be eaqual, no SW interaction\n");
+    INR_LOG_debug (loglevel_info"Pagesize:%lli\n", pagesize);
+    INR_LOG_debug (loglevel_info"Zerocopy: TX:%i RX:%i\n", zerocopy_tx, zerocopy_rx);
+    INR_LOG_debug (loglevel_info"HW_TIMESTAMP_extra_fragment: %i\n", INR_HW_TIMESTAMP_extra_fragment);
+    INR_LOG_debug (loglevel_info"HW_TIMESTAMP_first_fragment: %i\n", INR_HW_TIMESTAMP_first_fragment);
+    INR_LOG_debug (loglevel_info"DEBUGMOD: TX:%i RX:%i\n", TX_DBG_mod, RX_DBG_mod);
+    INR_LOG_debug (loglevel_info"AutorepeatonTXdrop: %i\n", INR_NW_repeatonbusy);
+    INR_LOG_debug (loglevel_info"HW_revision: ");
+    printk("%i\n",HW_revision);
+    rx_descriptor_pool_length = (pagesize / data_size_rx);	//count of descriptor in one page , pool is empty at start
+    uint64_t i = 0;
+    for (i = 0; i < INR_PCI_rx_descriptor_ring_count; i++)
+        rx_descriptor_pool_free[i] = rx_descriptor_pool_length;
+    gBaseHdwr0 = pci_resource_start (dev, 0);
+    // Print Base Address to kernel log
+    INR_LOG_debug (loglevel_info"Init: Base hw val 0x%lx\n", (unsigned int) gBaseHdwr0);   // Get the Base Address Length
+    gBaseLen0 = pci_resource_len (dev, 0);    // Print the Base Address Length to Kernel Log
+    INR_LOG_debug (loglevel_info"Init: Base hw len %i\n", (unsigned int) gBaseLen0);
+    gBaseVirt0 = pci_iomap (dev, 0, 0);    //gBaseVirt = ioremap (gBaseHdwr, gBaseLen);  //prepare bar0 for access
+    INR_LOG_debug (loglevel_info"Init: Bar0 mapped\n");
+    if (!gBaseVirt0) {
+        INR_LOG_debug (loglevel_err"Init: Could not remap memory.\n");
+        return (1);
+    }
 
+    INR_LOG_debug (loglevel_info"Init: Base hw val 0x%lx\n", (unsigned int) gBaseHdwr1);   // Get the Base Address Length
+    gBaseLen1 = pci_resource_len (dev, 1);    // Print the Base Address Length to Kernel Log
+    INR_LOG_debug (loglevel_info"Init: Base hw len %i\n", (unsigned int) gBaseLen1);
+    gBaseVirt1 = pci_iomap (dev, 1, 0);    //gBaseVirt = ioremap (gBaseHdwr, gBaseLen);  //prepare bar1 for access
+    INR_LOG_debug (loglevel_info"Init: Bar1 mapped :0x%lx\n",gBaseVirt1);
+    if (!gBaseVirt1) {
+        INR_LOG_debug (loglevel_err"Init: Could not remap memory.\n");
+        return (1);
+    }
+
+    if (request_mem_region (gBaseHdwr1, REGISTER_SIZE, "INR_mem"))
+        INR_STATUS_set (INR_STATUS_BAR1);
+
+    INR_LOG_debug (loglevel_info"Init: mem region checked\n");
+    pci_set_master (dev);		//enable Master
+    INR_LOG_debug (loglevel_info"Init: device mastered\n");
+    INR_STATUS_set (INR_STATUS_BUSMASTER);
+    INR_PROBE_dma (dev);
+    //INR_TIME_set_bar1_base(gBaseVirt1);
+    INR_LOG_debug (loglevel_info"Init: try to get dma acces\n");    // Try to gain exclusive control of memory
+    if (request_mem_region (gBaseHdwr0, REGISTER_SIZE, "INR_mem"))
+        INR_STATUS_set (INR_STATUS_BAR0);
+    INR_LOG_debug (loglevel_info"Init: dma mem requested\n");
+
+    if(C_SUB_ADDR_COMMON_ADDR_MAP_REV)INR_PCI_HW_timestamp=(INR_PCI_BAR1_read((C_BASE_ADDR_COMMON_LOWER<<8)+C_SUB_ADDR_COMMON_ADDR_MAP_REV)>>31)&1;
+    INR_LOG_debug (loglevel_info"Hardware timestamping:%i.\n",INR_PCI_HW_timestamp);
+#ifdef C_SUB_ADDR_COMMON_ADDR_MAP_REV
+    HW_addr_map_revision=INR_PCI_BAR1_read((C_BASE_ADDR_COMMON_LOWER<<8)+C_SUB_ADDR_COMMON_ADDR_MAP_REV);
+#endif
+    INR_LOG_debug("HW address map revision:0x%llx\n",HW_addr_map_revision);
+#ifdef C_SUB_ADDR_COMMON_FEATURES_USER
+    HW_features_user=INR_PCI_BAR1_read((C_BASE_ADDR_COMMON_LOWER<<8)+C_SUB_ADDR_COMMON_FEATURES_USER);
+#endif
+    if((HW_features_user==0xffffffff)||(HW_features_user==0xEEEEEEEE))HW_features_user=0;
+    INR_LOG_debug("HW user features:0x%llx\n",HW_features_user);
+    if((HW_addr_map_revision==0xffffffff)||(HW_addr_map_revision==0xEEEEEEEE))HW_addr_map_revision=0;
+#ifdef C_SUB_ADDR_NET_ENABLE
+    if(HW_addr_map_revision>=5)INR_TIME_set_enable(1);//enable timing interrupt only if HW version support addresses
+#endif
+    
+
+    INR_TX_RING_init (dev);
+    for (i = 0; i < INR_PCI_rx_descriptor_ring_count; i++)
+        INR_RX_RING_init (dev, i);	//init all RX-Rings
+    
+    INR_LOG_debug (loglevel_info"Hardware setup done\n");
+    INR_PCI_BAR0_write64 (INR_PCI_BAR0_read64(INR_PCI_rx_descriptor_base_address_reg), INR_PCI_tx_descriptor_base_address_reg); 
+    INR_PCI_BAR0_write (INR_PCI_BAR0_read(INR_PCI_rx_descriptor_length_reg), INR_PCI_tx_descriptor_length_reg);
+    INR_LOG_debug (loglevel_info"TX and RX0 rind are overlapping\n");
+    INR_STATUS_set (INR_STATUS_HW_RUNNING);
+    INR_PCI_disable_error_LED
+    if(HW_addr_map_revision>=5)INR_MMI_interrupt();
+#ifdef C_SUB_ADDR_NET_ENABLE
+    if(HW_addr_map_revision>=5)INR_PCI_BAR1_write(FPGA_PORT_mask,(C_BASE_ADDR_NET_LOWER<<8)+C_SUB_ADDR_NET_ENABLE);// enable ports
+
+#endif
+#ifdef C_SUB_ADDR_COMMON_PARAM_PRT_CNT
+    for(i=0;i<INR_PCI_BAR1_read(C_BASE_ADDR_COMMON_LOWER*256+C_SUB_ADDR_COMMON_PARAM_PRT_CNT);i++){
+   }
+#endif
 }
 
 

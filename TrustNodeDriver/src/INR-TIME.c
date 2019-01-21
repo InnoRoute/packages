@@ -26,6 +26,7 @@
 #include "INR-PCI.h"
 //#include "INR-PCI.h"
 #include "INR.h"
+
 struct ptp_clock *ptp_clock;
 struct ptp_clock_info ptp_caps;
 //struct timecounter tc;
@@ -39,9 +40,8 @@ uint8_t INR_TIME_enable=0;
 uint8_t pollcount=0;
 DEFINE_SPINLOCK(hardwareLock);
 unsigned long flags;
+volatile uint8_t clock_registred=0;
 uint8_t USE_ctrl_bridge_clock_offset=1;
-
-
 
 //void *gBaseVirt1 = NULL;
 
@@ -193,10 +193,23 @@ struct ptp_clock* INR_TIME_get_ptp_clock() {
 }
 //*****************************************************************************************************************
 /**
+*del ptp clock device
+*@brief
+*/
+void INR_TIME_remove_ptp_clock(){
+
+if(clock_registred)ptp_clock_unregister(ptp_clock);
+clock_registred=0;
+
+
+}
+//*****************************************************************************************************************
+/**
 *init ptp clock device
 *@brief
 */
 void INR_TIME_init_ptp_clock(struct pci_dev *dev) {
+if(clock_registred==0){
     snprintf(ptp_caps.name, 16, "%s", "TrustNode");
     ptp_caps.owner = THIS_MODULE;
     ptp_caps.max_adj = 250000000;
@@ -214,8 +227,10 @@ void INR_TIME_init_ptp_clock(struct pci_dev *dev) {
     if (IS_ERR(ptp_clock)) {
         ptp_clock = NULL;
         INR_LOG_debug (loglevel_err"ptp_clock_register failed\n");
+        return ;
     } else
         INR_LOG_debug (loglevel_info"registered PHC device on %s\n", get_nwdev(0)->name);
+        clock_registred=1;
     //memset(&cc, 0, sizeof(cc));
     uint64_t BRIDGE_clock_value=0,CTRLD_clock_value=0;
     uint32_t BRIDGE_clock_value_L=0,CTRLD_clock_value_L=0,BRIDGE_clock_value_H=0,CTRLD_clock_value_H=0;
@@ -235,7 +250,7 @@ void INR_TIME_init_ptp_clock(struct pci_dev *dev) {
     //cc.mult = 1;
     //timecounter_init(&tc,&cc,CTRLD_clock_value);
     INR_TIME_ptp_adjtime(NULL,0);//synchonize controlled and freeruning clock
-}
+}}
 static int INR_TIME_ptp_adjfreq(struct ptp_clock_info *ptp, s32 ppb) {
 //ppb is from base frequency
     uint64_t freq=1;
@@ -305,8 +320,19 @@ static int INR_TIME_ptp_gettime(struct ptp_clock_info *ptp,struct timespec64 *ts
 static int INR_TIME_ptp_settime(struct ptp_clock_info *ptp, const struct timespec64 *ts) {
     //if (TIME_DBG_mod)
     INR_LOG_debug("PTP set time called vaule:%lli\n",timespec64_to_ns(ts));
-
-    //timecounter_init(&tc,&cc,timespec64_to_ns(ts));
+		uint64_t newvalue;
+    #ifdef C_BASE_ADDR_RTC
+     
+    
+    newvalue= timespec64_to_ns(ts);
+    spin_lock_irqsave(&hardwareLock, flags);
+    INR_PCI_BAR1_write_ext(newvalue&0xffffffff,(C_BASE_ADDR_RTC<<8)+C_SUB_ADDR_RTC_CTRLD_OFFSET_LOW);
+    INR_PCI_BAR1_write_ext((newvalue>>32)&0xffffffff,(C_BASE_ADDR_RTC<<8)+C_SUB_ADDR_RTC_CTRLD_OFFSET_HIGH);
+    INR_PCI_BAR1_write_ext(1,(C_BASE_ADDR_RTC<<8)+  C_SUB_ADDR_RTC_CLKSEL);
+    spin_unlock_irqrestore(&hardwareLock, flags);
+    if (TIME_DBG_mod)
+        INR_LOG_debug("PTP adjtime called new value:%lli\n",newvalue);
+#endif
     return 0;
 }
 static int INR_TIME_ptp_enable(struct ptp_clock_info *ptp,struct ptp_clock_request *rq, int on) {

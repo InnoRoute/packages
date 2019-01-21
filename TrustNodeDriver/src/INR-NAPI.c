@@ -3,6 +3,7 @@
 *@brief Functions for NewNetworkAPI
 *@author M.Ulbricht 2015
 **/
+
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/version.h>
@@ -19,6 +20,7 @@
 #include "INR-NW.h"
 #include "INR-PCI.h"
 #include "INR-NAPI.h"
+
 struct napi_struct INR_NAPI_rx[INR_PCI_rx_descriptor_ring_count];
 
 //*****************************************************************************************************************

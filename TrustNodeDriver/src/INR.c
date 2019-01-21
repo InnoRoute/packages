@@ -3,6 +3,7 @@
 *@brief Global helper functions
 *@author M.Ulbricht 2015
 **/
+
 #include <linux/kernel.h>
 #include <linux/version.h>
 #include <linux/module.h>
@@ -13,6 +14,7 @@
 #include <linux/netdevice.h>
 #include <linux/etherdevice.h>
 #include "INR.h"
+
 const uint8_t debug_enable = 1;
 const uint8_t fpga_read_check = 1;
 const uint8_t timelog_enable = 1;

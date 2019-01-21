@@ -3,6 +3,7 @@
 *@brief settings and definitions NAPI
 *@author  M.Ulbricht 2015
 **/
+
 void INR_NAPI_init (uint8_t index);
 void INR_NAPI_remove (uint8_t index);
 void INR_NAPI_schedule (uint8_t index);

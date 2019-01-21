@@ -3,14 +3,17 @@
 *@brief settings and definitions Netork communication
 *@author M.Ulbricht 2015
 **/
+
 #include <linux/netdev_features.h>
 #include <linux/netdevice.h>
 #ifndef NETIF_F_MULTI_QUEUE
-#define NETIF_F_MULTI_QUEUE	16384
+	#define NETIF_F_MULTI_QUEUE	16384
 #endif
 #define INR_NWDEV_features NETIF_F_SG | NETIF_F_FRAGLIST //| NETIF_F_MULTI_QUEUE
 #define INR_NWDEV_features_HW NETIF_F_SG | NETIF_F_FRAGLIST //| NETIF_F_MULTI_QUEUE
+
 //no, we dont support TCP-checsum.. NETIF_F_IP_CSUM
+
 /**
 *Network packet structure
 */
@@ -51,6 +54,7 @@ void set_TSN_ts (uint32_t flag);
 void set_TSN_sock_opt (uint8_t flag);
 void INR_NW_carrier_update (uint8_t index,uint16_t status);
 int INR_NW_set_mac(struct net_device *nwdev, void *addr);
+void INR_NW_set_NO_TX (uint8_t tx_state);
 
 //*****************************************************************************************************************
 /**
