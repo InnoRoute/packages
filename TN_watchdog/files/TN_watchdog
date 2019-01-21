@@ -1,0 +1,15 @@
+#!/bin/sh /etc/rc.common
+
+START=95
+
+start() {
+	source /usr/share/InnoRoute/TNmod.conf
+	source /usr/share/InnoRoute/tn_env.sh
+	/usr/share/InnoRoute/TN_watchdogd.sh &	
+
+}
+
+stop() {
+echo "stop"
+}
+
