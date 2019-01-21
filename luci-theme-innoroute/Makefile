@@ -10,7 +10,7 @@ THEME_NAME:=innoroute
 THEME_TITLE:=innoroute
 
 PKG_NAME:=luci-theme-$(THEME_NAME)
-PKG_VERSION:=1
+PKG_VERSION:=1.1
 PKG_RELEASE:=1
 
 include $(INCLUDE_DIR)/package.mk
