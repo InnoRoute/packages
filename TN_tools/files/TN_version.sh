@@ -13,15 +13,25 @@ else
   let mainboard=`i2cget -y 0 4 0x07`
   case $mainboard in
   0)
-    echo "* Main Board V1.1" ;;
+    echo " - Main Board V1.1" ;;
   1)
-    echo "* Main Board V1.2";;
+    echo " - Main Board V1.2";;
   *)
-    echo "* Main Board Version unknown";;
+    echo " - Main Board Version unknown";;
   esac
   
-  
-  printf "* System Controller Firmware Version %d\n" `i2cget -y 0 4 0x00`
+  let firmware=`i2cget -y 0 4 0x00`
+  printf  " - System Controller Firmware Version %d\n" $firmware
+  case $firmware in
+  [1-14])
+    echo " -     -> FW too old - please update";;
+  15)
+    echo " -     -> FW2.0";;
+  16)
+    echo " -     -> FW2.1";;
+  *)
+    echo " -     -> TBD";;
+  esac
   
   tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_TN_MAJOR_REV
   let    major=$read_data
@@ -33,23 +43,18 @@ else
   
   tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_BITGEN_TIME
   let       day=$((($read_data & 0xF8000000) >> 27))
-  tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER 
   let     month=$((($read_data & 0x07800000) >> 23))
-  tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER 
   let      year=$((($read_data & 0x007E0000) >> 17))
-  tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER 
   let      hour=$((($read_data & 0x0001F000) >> 12))
-  tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER 
   let    minute=$((($read_data & 0x00000FC0) >> 6))
-  tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER 
   let    second=$((($read_data & 0x0000003F) >> 0))
   printf   "Bitstream generation start was at %02d.%02d.20%02d %02d:%02d:%02d\n" $day $month $year $hour $minute $second
-  
+
   tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_ADDR_MAP_REV
-  let    addrmap=$read_data
+  let    addrmap=$(($read_data & 0x7FFFFFFF))
   echo   "MMI address map revision is $addrmap"
   
-  printf "* Linux image: "; cat /etc/banner | grep Trust
+  printf " - Linux image: "; cat /etc/banner | grep Trust
   printf "  -> "; cat /proc/version
   
   echo "### TrustNode ID:"

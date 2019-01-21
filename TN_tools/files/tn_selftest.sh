@@ -42,13 +42,13 @@ else
   # PCIe BAR1 Test
   for wr_data in 0xC0FFEE12 0x1C0FFEE2 0x12C0FFEE; do
     tn_ll_mmi_write $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_RW_TEST $wr_data
-	tn_ll_mmi_read  $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_RW_TEST
+    tn_ll_mmi_read  $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_RW_TEST
     if [[ $read_data -ne $wr_data ]]; then
       printf " ** Bad MMI Write Data (0x%08x isn't 0x%08x) -> FPGA Bitstream Test FAILED **\n" $read_data $wr_data;
       #exit;
     fi
-	tn_ll_mmi_read  $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_RW_TEST
-	tn_ll_mmi_read  $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_RW_TEST
+    tn_ll_mmi_read  $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_RW_TEST
+    tn_ll_mmi_read  $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_RW_TEST
     if [[ $read_data -ne $wr_data ]]; then
       printf " ** Bad MMI Read Data (0x%08x isn't 0x%08x) -> FPGA Bitstream Test FAILED **\n" $read_data $wr_data;
       #exit;

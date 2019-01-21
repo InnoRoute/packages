@@ -4,7 +4,7 @@ source /usr/share/InnoRoute/tn_env.sh
 source /usr/share/InnoRoute/tn_func_ll.sh
 
 if [[ $# == 0 ]]; then
-  echo "$0 <loopback> is used to set the MAC-to-MAC loopback in the Ethernt PHY chips"
+  echo "$0 <loopback> is used to set the MAC-to-MAC loopback in the Ethernet PHY chips"
   echo "Parameter <loopback> can be between 0 or 1"
   echo "  0: no loopback (default)"
   echo "  1: loopback"

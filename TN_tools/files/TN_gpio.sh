@@ -18,24 +18,24 @@ else
   printf "Setting GPIO headers to mask/drive 0x%04x\n" $gpio
   for pin in `seq 0 9`; do
     if   [[ $(( $gpio & ( 2**( $pin + 16 ) ) )) -eq $(( 2**( $pin + 16 ) )) ]]; then
-      echo -e "* User-IO pin $pin is an input";
+      echo " - User-IO pin $pin is an input";
     else
       if [[ $(( $gpio & ( 2**( $pin +  0 ) ) )) -eq $(( 2**( $pin +  0 ) )) ]]; then
-        echo -e "* User-IO pin $pin is driving a 1 (output)";
+        echo " - User-IO pin $pin is driving a 1 (output)";
       else
-        echo -e "* User-IO pin $pin is driving a 0 (output)";
+        echo " - User-IO pin $pin is driving a 0 (output)";
       fi;
     fi;
   done
   
   for pin in `seq 0 3`; do
     if   [[ $(( $gpio & ( 2**( $pin + 26 ) ) )) -eq $(( 2**( $pin + 26 ) )) ]]; then
-      echo -e "* PMod pin $pin is an input";
+      echo " - PMod pin $pin is an input";
     else
       if [[ $(( $gpio & ( 2**( $pin + 10 ) ) )) -eq $(( 2**( $pin + 10 ) )) ]]; then
-        echo -e "* PMod pin $pin is driving a 1 (output)";
+        echo " - PMod pin $pin is driving a 1 (output)";
       else
-        echo -e "* PMod pin $pin is driving a 0 (output)";
+        echo " - PMod pin $pin is driving a 0 (output)";
       fi;
     fi;
   done

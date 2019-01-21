@@ -58,6 +58,8 @@ echo "C_SUB_ADDR_COMMON_BITGEN_TIME"
 tn_ll_mmi_read 0x00041C
 echo "C_SUB_ADDR_COMMON_RW_TEST"
 tn_ll_mmi_read 0x000420
+echo "C_SUB_ADDR_COMMON_SYS_RESET"
+#tn_ll_mmi_read 0x0004F0
 echo "C_SUB_ADDR_COMMON_FEATURES_6TREE"
 tn_ll_mmi_read 0x000500
 echo "C_SUB_ADDR_COMMON_FEATURES_ETH_SW"

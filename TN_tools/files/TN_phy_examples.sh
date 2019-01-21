@@ -34,7 +34,7 @@ else
     echo "Done"
   elif [[ $1 == 1 ]]; then
     echo "Setting all PHYs to disabled transceiver test mode,"
-	echo "manual master/slave configuration, ... (MDIO.GCTRL register)"
+    echo "manual master/slave configuration, ... (MDIO.GCTRL register)"
     let page=0
     let reg=9
     let write_data=0x1A00
@@ -76,9 +76,9 @@ else
     echo "Done"
   elif [[ $1 == 2 ]]; then
     echo "Setting all PHYs to disabled test loops, transmitter enabled,"
-	echo "transmitter adjustment level of 0, no polarity inversion,"
-	echo "no MDI-X mode, disabled 10BASE-Te amplitude, manual MDI/MDI-X"
-	echo "(MDIO.PHYCTL1 register)"
+    echo "transmitter adjustment level of 0, no polarity inversion,"
+    echo "no MDI-X mode, disabled 10BASE-Te amplitude, manual MDI/MDI-X"
+    echo "(MDIO.PHYCTL1 register)"
     let page=0
     let reg=13
     let write_data=0x0001
@@ -91,10 +91,10 @@ else
     echo "Done"
   elif [[ $1 == 3 ]]; then
     echo "Setting all PHYs to disabled auto-downspeed, 25MHz out,"
-	echo "active-low SIGDET input, disabled sticky-bit handling,"
-	echo "default ADC resolution, disabled power-consumption scaling"
-	echo "based on link quality, disabled auto-negotiation power down,"
-	echo "disabled EEE (MDIO.PHYCTL2 register)"
+    echo "active-low SIGDET input, disabled sticky-bit handling,"
+    echo "default ADC resolution, disabled power-consumption scaling"
+    echo "based on link quality, disabled auto-negotiation power down,"
+    echo "disabled EEE (MDIO.PHYCTL2 register)"
     let page=0
     let reg=14
     let write_data=0x0000
@@ -107,7 +107,7 @@ else
     echo "Done"
   elif [[ $1 == 4 ]]; then
     echo "Setting all PHYs to RXCLK is active on link down, RXSKEW 0,"
-	echo "2V5, TXSKEW 0, CRS=TXRX_RX, copper RGMII mode (MDIO.MMICTRL register)"
+    echo "2V5, TXSKEW 0, CRS=TXRX_RX, copper RGMII mode (MDIO.MMICTRL register)"
     let page=0
     let reg=17
     let write_data=0x8800

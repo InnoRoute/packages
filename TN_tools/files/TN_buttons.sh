@@ -15,7 +15,7 @@ else
   else
     printf "Front Buttons: 0x%04x, User Event Button: 0\n" $(( $read_data & 0xFFFF ))
   fi
-  if [[ $read_data -eq 0xEEEEEEEE ]]; then
+  if [[ $status -ne 0 ]]; then
     echo " ** MMI Read Timeout **"
   fi
 

@@ -1,6 +1,6 @@
 include	$(TOPDIR)/rules.mk
 PKG_NAME :=TN_tools
-PKG_RELEASE := 1.5
+PKG_RELEASE := 1.6
 PKG_BUILD_DIR:=	$(BUILD_DIR)/$(PKG_NAME)
 include	$(INCLUDE_DIR)/package.mk
 
@@ -8,11 +8,12 @@ define Package/TN_tools
  SECTION:=TN_tools
  CATEGORY:=InnoRoute
  TITLE:=TN_tools
- DEPENDS:=TNbar1
+ DEPENDS:=+TNbar1 +tnstatistics
  endef
 define Build/Prepare
 	$(CP) ./src/* $(PKG_BUILD_DIR)/
 	rm -f $(PKG_BUILD_DIR)/../TN6tree/.prepared*
+	
 endef
 define Package/TN_tools/install
 	$(INSTALL_DIR) $(1)/usr/share/InnoRoute

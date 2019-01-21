@@ -44,25 +44,25 @@ else
   echo "Check programming results:"
   let biterr=`i2cget -y 0 4 2`
   if [[ $(( $biterr & 140 )) -eq 0 ]]; then
-    echo "-> No error";
+    echo " -> No error";
   fi
   if [[ $(( $biterr & 128 )) -eq 128 ]]; then
-    echo "-> Pinout ID warning";
+    echo " -> Pinout ID warning";
   fi
   if [[ $(( $biterr & 3 )) -eq 1 ]]; then
-    echo "-> Error configuring from Flash";
+    echo " -> Error configuring from Flash";
   fi
   if [[ $(( $biterr & 3 )) -eq 2 ]]; then
-    echo "-> Error configuring via LPC";
+    echo " -> Error configuring via LPC";
   fi
   if [[ $(( $biterr & 3 )) -eq 3 ]]; then
-    echo "-> Error configuring via OPTO";
+    echo " -> Error configuring via OPTO";
   fi
   if [[ $(( $biterr & 4 )) -gt 0 ]]; then
-    echo "-> Cause: INIT_B went low";
+    echo " -> Cause: INIT_B went low";
   fi
   if [[ $(( $biterr & 8 )) -gt 0 ]]; then
-    echo "-> Cause: DONE timeout";
+    echo " -> Cause: DONE timeout";
   fi
   echo "All FPGA-internal state/tables cleared"
 

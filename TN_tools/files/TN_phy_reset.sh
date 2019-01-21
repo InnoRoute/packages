@@ -4,7 +4,7 @@ source /usr/share/InnoRoute/tn_env.sh
 source /usr/share/InnoRoute/tn_func_ll.sh
 
 if [[ $# == 0 ]]; then
-  echo "$0 <ex> is used to to reset all PHYs"
+  echo "$0 <ex> is used to hard reset all PHYs, thereby loosing their configuration"
   echo "The parameter <ex> can have any value. Without it, this help is displayed"
 else
   echo "Hard-resetting the Ethernet PHYs"

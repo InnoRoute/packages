@@ -66,7 +66,7 @@ else
 
   if [[ $# > 1 ]]; then
     echo "Starting bwm-ng: press enter"
-	read ack
+    read ack
     bwm-ng -T sum -u packets
   fi
 fi

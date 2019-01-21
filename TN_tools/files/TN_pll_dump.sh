@@ -8,10 +8,10 @@ if [[ $# == 0 ]]; then
   echo "The parameter <ex> can have any value. Without it, this help is displayed"
 else
   let plladdr=0x69
-  
-  echo "Dumping PLL register contents:"
-  
-  echo "Serial Control Port Configuration and Device Identification"
+
+  echo "Dumping PLL register contents to pll_dump.txt"
+
+  echo "Serial Control Port Configuration and Device Identification" >> pll_dump.txt
   for regaddr in 0x0000\
                  0x0004\
                  0x0005\
@@ -20,8 +20,11 @@ else
                  0x000A\
                  0x000B\
                  0x000C\
-                 0x000D; do pllctl $plladdr $regaddr; done
-  echo "System Clock"
+                 0x000D; do
+    pllctl $plladdr $regaddr > pll_dump.txt
+    echo -n "."
+  done
+  echo "System Clock" >> pll_dump.txt
   for regaddr in 0x0100\
                  0x0101\
                  0x0102\
@@ -30,8 +33,11 @@ else
                  0x0105\
                  0x0106\
                  0x0107\
-                 0x0108; do pllctl $plladdr $regaddr; done
-  echo "General Configuration"
+                 0x0108; do
+    pllctl $plladdr $regaddr >> pll_dump.txt
+    echo -n "."
+  done
+  echo "General Configuration" >> pll_dump.txt
   for regaddr in 0x0200\
                  0x0201\
                  0x0202\
@@ -96,8 +102,11 @@ else
                  0x032B\
                  0x032C\
                  0x032D\
-                 0x032E; do pllctl $plladdr $regaddr; done
-  echo "Output PLL (APLL)"
+                 0x032E; do
+    pllctl $plladdr $regaddr >> pll_dump.txt
+    echo -n "."
+  done
+  echo "Output PLL (APLL)" >> pll_dump.txt
   for regaddr in 0x0400\
                  0x0401\
                  0x0402\
@@ -106,8 +115,11 @@ else
                  0x0405\
                  0x0406\
                  0x0407\
-                 0x0408; do pllctl $plladdr $regaddr; done
-  echo "Output Clock Distribution"
+                 0x0408; do
+    pllctl $plladdr $regaddr >> pll_dump.txt
+    echo -n "."
+  done
+  echo "Output Clock Distribution" >> pll_dump.txt
   for regaddr in 0x0500\
                  0x0501\
                  0x0502\
@@ -129,16 +141,25 @@ else
                  0x0512\
                  0x0513\
                  0x0514\
-                 0x0515; do pllctl $plladdr $regaddr; done
-  echo "Reference Inputs"
+                 0x0515; do
+    pllctl $plladdr $regaddr >> pll_dump.txt
+    echo -n "."
+  done
+  echo "Reference Inputs" >> pll_dump.txt
   for regaddr in 0x0600\
                  0x0601\
                  0x0602\
-                 0x0603; do pllctl $plladdr $regaddr; done
-  echo "Frame Synchronization Mode"
+                 0x0603; do
+    pllctl $plladdr $regaddr >> pll_dump.txt
+    echo -n "."
+  done
+  echo "Frame Synchronization Mode" >> pll_dump.txt
   for regaddr in 0x0640\
-                 0x0641; do pllctl $plladdr $regaddr; done
-  echo "DPLL Profile A (for REFA)"
+                 0x0641; do
+    pllctl $plladdr $regaddr >> pll_dump.txt
+    echo -n "."
+  done
+  echo "DPLL Profile A (for REFA)" >> pll_dump.txt
   for regaddr in 0x0700\
                  0x0701\
                  0x0702\
@@ -177,8 +198,11 @@ else
                  0x0723\
                  0x0724\
                  0x0725\
-                 0x0726; do pllctl $plladdr $regaddr; done
-  echo "DPLL Profile B (for REFB)"
+                 0x0726; do
+    pllctl $plladdr $regaddr >> pll_dump.txt
+    echo -n "."
+  done
+  echo "DPLL Profile B (for REFB)" >> pll_dump.txt
   for regaddr in 0x0740\
                  0x0741\
                  0x0742\
@@ -217,8 +241,11 @@ else
                  0x0763\
                  0x0764\
                  0x0765\
-                 0x0766; do pllctl $plladdr $regaddr; done
-  echo "DPLL Profile C (for REFC)"
+                 0x0766; do
+    pllctl $plladdr $regaddr >> pll_dump.txt
+    echo -n "."
+  done
+  echo "DPLL Profile C (for REFC)" >> pll_dump.txt
   for regaddr in 0x0780\
                  0x0781\
                  0x0782\
@@ -257,8 +284,11 @@ else
                  0x07A3\
                  0x07A4\
                  0x07A5\
-                 0x07A6; do pllctl $plladdr $regaddr; done
-  echo "DPLL Profile D (for REFD)"
+                 0x07A6; do
+    pllctl $plladdr $regaddr >> pll_dump.txt
+    echo -n "."
+  done
+  echo "DPLL Profile D (for REFD)" >> pll_dump.txt
   for regaddr in 0x07C0\
                  0x07C1\
                  0x07C2\
@@ -297,8 +327,11 @@ else
                  0x07E3\
                  0x07E4\
                  0x07E5\
-                 0x07E6; do pllctl $plladdr $regaddr; done
-  echo "Operational Controls"
+                 0x07E6; do
+    pllctl $plladdr $regaddr >> pll_dump.txt
+    echo -n "."
+  done
+  echo "Operational Controls" >> pll_dump.txt
   for regaddr in 0x0A00\
                  0x0A01\
                  0x0A02\
@@ -312,8 +345,11 @@ else
                  0x0A0A\
                  0x0A0B\
                  0x0A0C\
-                 0x0A0D; do pllctl $plladdr $regaddr; done
-  echo "Quick In-Out Frequency Soft Pin Configuration"
+                 0x0A0D; do
+    pllctl $plladdr $regaddr >> pll_dump.txt
+    echo -n "."
+  done
+  echo "Quick In-Out Frequency Soft Pin Configuration" >> pll_dump.txt
   for regaddr in 0x0C00\
                  0x0C01\
                  0x0C02\
@@ -322,8 +358,11 @@ else
                  0x0C05\
                  0x0C06\
                  0x0C07\
-                 0x0C08; do pllctl $plladdr $regaddr; done
-  echo "Read-Only Status (Accessible During EEPROM Transactions)"
+                 0x0C08; do
+    pllctl $plladdr $regaddr >> pll_dump.txt
+    echo -n "."
+  done
+  echo "Read-Only Status (Accessible During EEPROM Transactions)" >> pll_dump.txt
   for regaddr in 0x0D00\
                  0x0D01\
                  0x0D02\
@@ -344,13 +383,19 @@ else
                  0x0D11\
                  0x0D12\
                  0x0D13\
-                 0x0D14; do pllctl $plladdr $regaddr; done
-  echo "EEPROM Control"
+                 0x0D14; do
+    pllctl $plladdr $regaddr >> pll_dump.txt
+    echo -n "."
+  done
+  echo "EEPROM Control" >> pll_dump.txt
   for regaddr in 0x0E00\
                  0x0E01\
                  0x0E02\
-                 0x0E03; do pllctl $plladdr $regaddr; done
-  echo "EEPROM Storage Sequence"
+                 0x0E03; do
+    pllctl $plladdr $regaddr >> pll_dump.txt
+    echo -n "."
+  done
+  echo "EEPROM Storage Sequence" >> pll_dump.txt
   for regaddr in 0x0E10\
                  0x0E11\
                  0x0E12\
@@ -395,64 +440,67 @@ else
                  0x0E39\
                  0x0E3A\
                  0x0E3B\
-                 0x0E3C; do pllctl $plladdr $regaddr; done
-  
+                 0x0E3C; do
+    pllctl $plladdr $regaddr >> pll_dump.txt
+    echo -n "."
+  done
+
   ###### 0x69 to be replaced by $plladdr in the following line
   let refab=`pllctl 0x69 0x0D0B | tr -d '\n' | sed -e 's/0x69 0x0d0bread-->//g'`
-  printf "0x%02x\n" $refab
+  printf "\n0x%02x\n" $refab
   if [[ $(( $refab & 1 )) -eq 1 ]]; then
-    echo "* REFA slow";
+    echo " - REFA slow";
   fi
   if [[ $(( $refab & 2 )) -eq 2 ]]; then
-    echo "* REFA fast";
+    echo " - REFA fast";
   fi
   if [[ $(( $refab & 4 )) -eq 4 ]]; then
-    echo "* REFA fault";
+    echo " - REFA fault";
   fi
   if [[ $(( $refab & 8 )) -eq 8 ]]; then
-    echo "* REFA valid";
+    echo " - REFA valid";
   fi
-  echo "-"
+  echo " -"
   if [[ $(( $refab & 16 )) -eq 16 ]]; then
-    echo "* REFB slow";
+    echo " - REFB slow";
   fi
   if [[ $(( $refab & 32 )) -eq 32 ]]; then
-    echo "* REFB fast";
+    echo " - REFB fast";
   fi
   if [[ $(( $refab & 64 )) -eq 64 ]]; then
-    echo "* REFB fault";
+    echo " - REFB fault";
   fi
   if [[ $(( $refab & 128 )) -eq 128 ]]; then
-    echo "* REFB valid";
+    echo " - REFB valid";
   fi
-  
+
   ###### 0x69 to be replaced by $plladdr in the following line
   let refcd=`pllctl 0x69 0x0D0C | tr -d '\n' | sed -e 's/0x69 0x0d0cread-->//g'`
   printf "0x%02x\n" $refcd
   if [[ $(( $refcd & 1 )) -eq 1 ]]; then
-    echo "* REFC slow";
+    echo " - REFC slow";
   fi
   if [[ $(( $refcd & 2 )) -eq 2 ]]; then
-    echo "* REFC fast";
+    echo " - REFC fast";
   fi
   if [[ $(( $refcd & 4 )) -eq 4 ]]; then
-    echo "* REFC fault";
+    echo " - REFC fault";
   fi
   if [[ $(( $refcd & 8 )) -eq 8 ]]; then
-    echo "* REFC valid";
+    echo " - REFC valid";
   fi
-  echo "-"
+  echo " -"
   if [[ $(( $refcd & 16 )) -eq 16 ]]; then
-    echo "* REFD slow";
+    echo " - REFD slow";
   fi
   if [[ $(( $refcd & 32 )) -eq 32 ]]; then
-    echo "* REFD fast";
+    echo " - REFD fast";
   fi
   if [[ $(( $refcd & 64 )) -eq 64 ]]; then
-    echo "* REFD fault";
+    echo " - REFD fault";
   fi
   if [[ $(( $refcd & 128 )) -eq 128 ]]; then
-    echo "* REFD valid";
+    echo " - REFD valid";
   fi
   echo "Done"
 fi

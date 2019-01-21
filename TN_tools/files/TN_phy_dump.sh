@@ -13,17 +13,17 @@ else
   echo "Cleaning up"
   
   for phy in `seq 0 9`; do
-    if [ -e /tmp/gphy$(($phy & 0x1F)).txt ]; then
+    if [[ -e /tmp/gphy$(($phy & 0x1F)).txt ]]; then
          rm /tmp/gphy$(($phy & 0x1F)).txt;
     fi;
   done
   for phy in `seq 0 9`; do
-    if [ -e /tmp/gphy_mmd$(($phy & 0x1F)).txt ]; then
+    if [[ -e /tmp/gphy_mmd$(($phy & 0x1F)).txt ]]; then
          rm /tmp/gphy_mmd$(($phy & 0x1F)).txt;
     fi;
   done
   for phy in `seq 10 11`; do
-    if [ -e /tmp/alaska$(($phy & 0x1F)).txt ]; then
+    if [[ -e /tmp/alaska$(($phy & 0x1F)).txt ]]; then
          rm /tmp/alaska$(($phy & 0x1F)).txt;
     fi;
   done
@@ -36,14 +36,16 @@ else
     for phy in `seq 0 9`;   do
       tn_ll_read_phy $phy $page $reg;
       printf "Reg0x%02x:%08x\n" $(($reg & 0x1F)) $read_data | cut -c1-8,13-16 >> /tmp/gphy$(($phy & 0x1F)).txt;
+      echo -n "."
     done
     for phy in `seq 10 11`; do
       tn_ll_read_phy $phy $page $reg;
       printf "Reg0x%02x:%08x\n" $(($reg & 0x1F)) $read_data | cut -c1-8,13-16 >> /tmp/alaska$(($phy & 0x1F)).txt;
+      echo -n "."
     done
   done
   
-  echo "Differences between GPHYs:"
+  echo -e "\nDifferences between GPHYs:"
   for phy in `seq 1 9`; do
     echo -e "GPHY0 vs. GPHY$(($phy & 0x1F))"
     diff -y --suppress-common-lines /tmp/gphy0.txt /tmp/gphy$(($phy & 0x1F)).txt
@@ -122,10 +124,11 @@ else
       # Read reg 0x0e (MMD Data reg)
       let reg=0x0E
       tn_ll_read_phy $phy $page $reg
-      if [[ $read_data -eq 0xEEEEEEEE ]]; then
+      if [[ $status -ne 0 ]]; then
         echo " ** MMI Read Timeout **"
       fi
       printf "Reg %02X.%04XH:0x%08x\n" $devaddr $regno $read_data | cut -c1-15,20-23 >> /tmp/gphy_mmd$(($phy & 0x1F)).txt
+      echo -n "."
     done
   done
   

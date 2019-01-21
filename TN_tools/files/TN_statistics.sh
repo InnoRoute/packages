@@ -5,6 +5,8 @@
 source /usr/share/InnoRoute/tn_env.sh
 source /usr/share/InnoRoute/tn_func_ll.sh
 
+export waiting_time=5
+
 if [[ $# == 0 ]]; then
   echo "$0 <verbosity> is used to read current system statistics."
   echo "The parameter <verbosity> can be:"
@@ -33,61 +35,61 @@ else
   case $1 in
     0)
       echo " 0 - all outputs, with waiting times"
-	  let __mac_phy=1
-	  let __rxphy=1
-	  let __inoutcnt=1
-	  let __dropcnt=1
-	  let __portcnt=1
-	  let __flowcnt=1
-	  let __ethsw=1
-	  let __txphy=1
-	  let __wait=1
-	  ;;
+      let __mac_phy=1
+      let __rxphy=1
+      let __inoutcnt=1
+      let __dropcnt=1
+      let __portcnt=1
+      let __flowcnt=1
+      let __ethsw=1
+      let __txphy=1
+      let __wait=1
+      ;;
     1)
-      echo " 1 - all outputs, without wating times"
-	  let __mac_phy=1
-	  let __rxphy=1
-	  let __inoutcnt=1
-	  let __dropcnt=1
-	  let __portcnt=1
-	  let __flowcnt=1
-	  let __ethsw=1
-	  let __txphy=1
-	  let __wait=0
-	  ;;
+      echo " 1 - all outputs, without waiting times"
+      let __mac_phy=1
+      let __rxphy=1
+      let __inoutcnt=1
+      let __dropcnt=1
+      let __portcnt=1
+      let __flowcnt=1
+      let __ethsw=1
+      let __txphy=1
+      let __wait=0
+      ;;
     2)
       echo " 2 - specific outputs only: PHY & MAC states"
-	  let __mac_phy=1
-	  ;;
+      let __mac_phy=1
+      ;;
     3)
       echo " 3 - specific outputs only: PHY counters (RX+TX)"
-	  let __rxphy=1
-	  let __txphy=1
-	  ;;
+      let __rxphy=1
+      let __txphy=1
+      ;;
     4)
       echo " 4 - specific outputs only: inport-outport counts (RX+TX)"
-	  let __inoutcnt=1
-	  ;;
+      let __inoutcnt=1
+      ;;
     5)
       echo " 5 - specific outputs only: drop/bad reason counts (RX+TX)"
-	  let __dropcnt=1
-	  ;;
+      let __dropcnt=1
+      ;;
     6)
       echo " 6 - specific outputs only: port counts (RX+TX)"
-	  let __portcnt=1
-	  ;;
+      let __portcnt=1
+      ;;
     7)
       echo " 7 - specific outputs only: flow match counts (RX+TX)"
-	  let __flowcnt=1
-	  ;;
+      let __flowcnt=1
+      ;;
     8)
       echo " 8 - specific outputs only: Ethernet Switch Statistics"
-	  let __ethsw=1
-	  ;;
+      let __ethsw=1
+      ;;
     *)
-	  echo "Bad parameter"
-	  exit
-	  ;;
+      echo "Bad parameter"
+      exit
+      ;;
   esac
 
   if [[ __mac_phy -eq 1 ]]; then
@@ -100,8 +102,12 @@ else
       let reg=0x18
       tn_ll_read_phy $phy $page $reg;
       ## check $read_data -> still busy?
-      let speed=$(($read_data & 3))
-      let duplex=$((($read_data >> 3) & 1))
+      if [[ -n $read_data ]]; then
+        let speed=$(($read_data & 3))
+        let duplex=$((($read_data >> 3) & 1))
+      else
+        echo "ERROR: empty read_data returned. status=$status"
+      fi
       let reg=0x01
       tn_ll_read_phy $phy $page $reg;
       ## check $read_data -> still busy?
@@ -112,6 +118,8 @@ else
         let link=$((($read_data >> 2) & 1))
       fi
       echo "Port=$phy, LinkUp=$link, Speed=$speed, Duplex=$duplex"
+      phy_speed[$phy]=$speed
+      phy_duplex[$phy]=$duplex
     done
     
     let page=0x0
@@ -131,6 +139,8 @@ else
       let link=$((($read_data >> 10) & 1))
       fi
       echo "Port=$phy, Valid=$valid, LinkUp=$link, Speed=$speed, Duplex=$duplex"
+      phy_speed[$phy]=$speed
+      phy_duplex[$phy]=$duplex
     done
     
     echo " - MACs:"
@@ -144,7 +154,11 @@ else
       let mac_enable=$((($enable >> $mac) & 1))
       let mac_speed=$((($speed   >> 2*$mac) & 3))
       let mac_duplex=$((($duplex >> $mac) & 1))
-      echo "Port=$mac, Enabled=$mac_enable, Speed=$mac_speed, Duplex=$mac_duplex"
+      if [[ ${phy_speed[$mac]} != $mac_speed || ${phy_duplex[$mac]} != $mac_duplex ]]; then
+        echo -e "Port=$mac, Enabled=$mac_enable, Speed=$mac_speed, Duplex=$mac_duplex [PHY-MAC MISMATCH]"
+      else                                         
+        echo -e "Port=$mac, Enabled=$mac_enable, Speed=$mac_speed, Duplex=$mac_duplex"
+      fi                                              
     done
   fi # __mac_phy == 1
 
@@ -176,15 +190,15 @@ else
       ## check $read_data -> still busy?
     done
     if [[ __wait -eq 1 ]]; then
-      echo "Waiting for 10 seconds to aggregate statistics"
-      sleep 10
+      echo -e "Waiting for sleep $waiting_time seconds to aggregate statistics"
+      sleep $waiting_time
     fi # __wait == 1
     #echo "GPHY PAGE:$page, REG:$reg"
     let total=0
     for phy in `seq 0 9`; do
       tn_ll_read_phy $phy $page $reg;
       ## check $read_data -> still busy? + read data
-      if [ $(($read_data & 0xFF)) -ne 0 ]; then
+      if [[ $(($read_data & 0xFF)) -ne 0 ]]; then
         printf "PHY $phy: %d packets received\n" $(($read_data & 0xFF))
         let total+=$(($read_data & 0xFF))
       fi
@@ -214,15 +228,15 @@ else
       ## check $read_data -> still busy?
     done
     if [[ __wait -eq 1 ]]; then
-      echo "Waiting for 10 seconds to aggregate statistics"
-      sleep 10
+      echo -e "Waiting for sleep $waiting_time seconds to aggregate statistics"
+      sleep $waiting_time
     fi # __wait == 1
     #echo "GPHY PAGE:$page, REG:$reg"
     let total=0
     for phy in `seq 0 9`; do
       tn_ll_read_phy $phy $page $reg;
       ## check $read_data -> still busy? + read data
-      if [ $(($read_data & 0xFF)) -ne 0 ]; then
+      if [[ $(($read_data & 0xFF)) -ne 0 ]]; then
         printf "PHY $phy: %d errors received\n" $(($read_data & 0xFF))
         let total+=$(($read_data & 0xFF))
       fi
@@ -252,15 +266,15 @@ else
       ## check $read_data -> still busy?
     done
     if [[ __wait -eq 1 ]]; then
-      echo "Waiting for 10 seconds to aggregate statistics"
-      sleep 10
+      echo -e "Waiting for sleep $waiting_time seconds to aggregate statistics"
+      sleep $waiting_time
     fi # __wait == 1
     #echo "GPHY PAGE:$page, REG:$reg"
     let total=0
     for phy in `seq 0 9`; do
       tn_ll_read_phy $phy $page $reg;
       ## check $read_data -> still busy? + read data
-      if [ $(($read_data & 0xFF)) -ne 0 ]; then
+      if [[ $(($read_data & 0xFF)) -ne 0 ]]; then
         printf "PHY $phy: %d ESD errors received\n" $(($read_data & 0xFF))
         let total+=$(($read_data & 0xFF))
     fi
@@ -290,15 +304,15 @@ else
       ## check $read_data -> still busy?
     done
     if [[ __wait -eq 1 ]]; then
-      echo "Waiting for 10 seconds to aggregate statistics"
-      sleep 10
+      echo -e "Waiting for sleep $waiting_time seconds to aggregate statistics"
+      sleep $waiting_time
     fi # __wait == 1
     #echo "GPHY PAGE:$page, REG:$reg"
     let total=0
     for phy in `seq 0 9`; do
       tn_ll_read_phy $phy $page $reg;
       ## check $read_data -> still busy? + read data
-      if [ $(($read_data & 0xFF)) -ne 0 ]; then
+      if [[ $(($read_data & 0xFF)) -ne 0 ]]; then
         printf "PHY $phy: %d SSD errors received\n" $(($read_data & 0xFF))
         let total+=$(($read_data & 0xFF))
     fi
@@ -318,7 +332,7 @@ else
     #for phy in `seq 10 11`; do
     #  tn_ll_read_phy $phy $page $reg;
     #  ## check $read_data -> still busy? + read data
-    #  if [ $(($read_data & 0xFFFF)) -ne 0 ]; then
+    #  if [[ $(($read_data & 0xFFFF)) -ne 0 ]]; then
     #    printf "PHY $phy: %d errors received\n" $(($read_data & 0xFFFF))
     #    let total+=$(($read_data & 0xFFFF))
     #fi
@@ -343,8 +357,8 @@ else
     #  ## check $read_data -> still busy?
     #done
     #if [[ __wait -eq 1 ]]; then
-    #  echo "Waiting for 10 seconds to aggregate statistics"
-    #  sleep 10
+    #  echo -e "Waiting for sleep $waiting_time seconds to aggregate statistics"
+    #  sleep $waiting_time
     #fi # __wait == 1
     #let page=0x12
     #let reg=0x11
@@ -357,7 +371,7 @@ else
     #  let reg=0x11
     #  tn_ll_read_phy $phy $page $reg;
     #  ## check $read_data -> still busy? + read data
-    #  if [ $(($read_data & 0xFFFF)) -ne 0 ]; then
+    #  if [[ $(($read_data & 0xFFFF)) -ne 0 ]]; then
     #    printf "PHY $phy: %d packets received (%d with CRC errors)\n" $((($read_data >> 8) & 0xFF)) $(($read_data & 0xFF))
     #    let total+=$(($read_data & 0xFF))
     #    let total_err+=$((($read_data >> 8) & 0xFF))
@@ -381,8 +395,8 @@ else
     #  ## check $read_data -> still busy?
     #done
     #if [[ __wait -eq 1 ]]; then
-    #  echo "Waiting for 10 seconds to aggregate statistics"
-    #  sleep 10
+    #  echo -e "Waiting for sleep $waiting_time seconds to aggregate statistics"
+    #  sleep $waiting_time
     #fi # __wait == 1
     #let reg=0x11
     #let write_data=0x0010
@@ -394,7 +408,7 @@ else
     #  let reg=0x11
     #  tn_ll_read_phy $phy $page $reg;
     #  ## check $read_data -> still busy? + read data
-    #  if [ $(($read_data & 0xFFFF)) -ne 0 ]; then
+    #  if [[ $(($read_data & 0xFFFF)) -ne 0 ]]; then
     #    printf "PHY $phy (Copper): %d packets received (%d with CRC errors)\n" $((($read_data >> 8) & 0xFF)) $(($read_data & 0xFF))
     #    let total+=$(($read_data & 0xFF))
     #    let total_err+=$((($read_data >> 8) & 0xFF))
@@ -427,130 +441,133 @@ else
 
   if [[ __dropcnt -eq 1 ]]; then
     echo -e "\n### Displaying non-zero fragment dropping counts at HC modules (saturating at 65535)"
-    let total=0
-    for i in `seq 0 11`; do
-      let hcbase=C_BASE_ADDR_HC_$i
-      tn_ll_mmi_read $hcbase $C_SUB_ADDR_HC_CNT_BAD_FRAMES
-      if [[ $read_data -gt 0 ]]; then
-        let total+=$read_data
-        printf "* Port $i: %d\n" $read_data
-      fi
-    done
-    for i in `seq 0 1`; do
-      let hcbase=C_BASE_ADDR_HC_PCIE_$i
-      tn_ll_mmi_read $hcbase $C_SUB_ADDR_HC_CNT_BAD_FRAMES
-      if [[ $read_data -gt 0 ]]; then
-        let total+=$read_data
-        printf "* PCIe Port $i: %d\n" $read_data
-      fi
-    done
-    echo "Total Fragments: $total packets"
+    TNstatistics bad_counters
+#    let total=0
+#    for i in `seq 0 11`; do
+#      let hcbase=C_BASE_ADDR_HC_$i
+#      tn_ll_mmi_read $hcbase $C_SUB_ADDR_HC_CNT_BAD_FRAMES
+#      if [[ $read_data -gt 0 ]]; then
+#        let total+=$read_data
+#        printf " - Port $i: %d\n" $read_data
+#      fi
+#    done
+#    for i in `seq 0 1`; do
+#      let hcbase=C_BASE_ADDR_HC_PCIE_$i
+#      tn_ll_mmi_read $hcbase $C_SUB_ADDR_HC_CNT_BAD_FRAMES
+#      if [[ $read_data -gt 0 ]]; then
+#        let total+=$read_data
+#        printf " - PCIe Port $i: %d\n" $read_data
+#      fi
+#    done
+#    echo "Total Fragments: $total packets"
 
-    echo -e "\n### Displaying non-zero frame drop reason counts at RX Statistics"
-    let total=0
-    for prt in `seq 0 31`; do
-      for badrsn in `seq 0 31`; do
-        tn_ll_mmi_read $C_BASE_ADDR_STATISTICS_RX_BADRSN_LOWER_0 $((($prt*32+$badrsn)*4))
-        if [[ $read_data -gt 0 ]]; then
-          let total+=$read_data
-          printf "DP0 Port %d - BadReason %d: %d\n" $prt $badrsn $read_data
-        fi
-      done
-    done
-    for prt in `seq 0 31`; do
-      for badrsn in `seq 0 31`; do
-        tn_ll_mmi_read $C_BASE_ADDR_STATISTICS_RX_BADRSN_LOWER_1 $((($prt*32+$badrsn)*4))
-        if [[ $read_data -gt 0 ]]; then
-          let total+=$read_data
-          printf "DP1 Port %d - BadReason %d: %d\n" $prt $badrsn $read_data
-        fi
-      done
-    done
-    echo "Total Bad: $total packets"
+#    echo -e "\n### Displaying non-zero frame drop reason counts at RX Statistics"
+#    let total=0
+#    for prt in `seq 0 31`; do
+#      for badrsn in `seq 0 31`; do
+#        tn_ll_mmi_read $C_BASE_ADDR_STATISTICS_RX_BADRSN_LOWER_0 $((($prt*32+$badrsn)*4))
+#        if [[ $read_data -gt 0 ]]; then
+#          let total+=$read_data
+#          printf "DP0 Port %d - BadReason %d: %d\n" $prt $badrsn $read_data
+#        fi
+#      done
+#    done
+#    for prt in `seq 0 31`; do
+#      for badrsn in `seq 0 31`; do
+#        tn_ll_mmi_read $C_BASE_ADDR_STATISTICS_RX_BADRSN_LOWER_1 $((($prt*32+$badrsn)*4))
+#        if [[ $read_data -gt 0 ]]; then
+#          let total+=$read_data
+#          printf "DP1 Port %d - BadReason %d: %d\n" $prt $badrsn $read_data
+#        fi
+#      done
+#    done
+#    echo "Total Bad: $total packets"
   fi # __dropcnt == 1
 
   if [[ __portcnt -eq 1 ]]; then
-    echo -e "\n### Displaying non-zero RX Statistics (good packets only)"
-    let total=0
-    for i in `seq 0 15`; do
-      tn_ll_mmi_read $C_BASE_ADDR_STATISTICS_RX_GOOD_PRT_LOWER_0 $(($i*4))
-      if [ $read_data -ne 0 ]; then
-        let total+=$read_data
-        echo "Input Port $i (PHY): $read_data"
-      fi
-    done
-    for i in `seq 0 15`; do
-      tn_ll_mmi_read $C_BASE_ADDR_STATISTICS_RX_GOOD_PRT_LOWER_1 $(($i*4))
-      if [ $read_data -ne 0 ]; then
-        let total+=$read_data
-        echo "Input Port $i (PHY): $read_data"
-      fi
-    done
-    for i in `seq 16 31`; do
-      tn_ll_mmi_read $C_BASE_ADDR_STATISTICS_RX_GOOD_PRT_LOWER_0 $(($i*4))
-      if [ $read_data -ne 0 ]; then
-        let total+=$read_data
-        echo "Input Port $i (CPU): $read_data"
-      fi
-    done
-    for i in `seq 16 31`; do
-      tn_ll_mmi_read $C_BASE_ADDR_STATISTICS_RX_GOOD_PRT_LOWER_1 $(($i*4))
-      if [ $read_data -ne 0 ]; then
-        let total+=$read_data
-        echo "Input Port $i (CPU): $read_data"
-      fi
-    done
-    echo "Total Good Input Port: $total packets"
+    echo -e "\n### Displaying non-zero RX+TX Statistics (good packets only)"
+    TNstatistics port_counters
+#    let total=0
+#    for i in `seq 0 15`; do
+#      tn_ll_mmi_read $C_BASE_ADDR_STATISTICS_RX_GOOD_PRT_LOWER_0 $(($i*4))
+#      if [[ $read_data -ne 0 ]]; then
+#        let total+=$read_data
+#        echo "Input Port $i (PHY): $read_data"
+#      fi
+#    done
+#    for i in `seq 0 15`; do
+#      tn_ll_mmi_read $C_BASE_ADDR_STATISTICS_RX_GOOD_PRT_LOWER_1 $(($i*4))
+#      if [[ $read_data -ne 0 ]]; then
+#        let total+=$read_data
+#        echo "Input Port $i (PHY): $read_data"
+#      fi
+#    done
+#    for i in `seq 16 31`; do
+#      tn_ll_mmi_read $C_BASE_ADDR_STATISTICS_RX_GOOD_PRT_LOWER_0 $(($i*4))
+#      if [[ $read_data -ne 0 ]]; then
+#        let total+=$read_data
+#        echo "Input Port $i (CPU): $read_data"
+#      fi
+#    done
+#    for i in `seq 16 31`; do
+#      tn_ll_mmi_read $C_BASE_ADDR_STATISTICS_RX_GOOD_PRT_LOWER_1 $(($i*4))
+#      if [[ $read_data -ne 0 ]]; then
+#        let total+=$read_data
+#        echo "Input Port $i (CPU): $read_data"
+#      fi
+#    done
+#    echo "Total Good Input Port: $total packets"
   fi # __portcnt == 1
 
   if [[ __inoutcnt -eq 1 ]]; then
     echo -e "\n### Displaying non-zero frame count matrix (input-output) at RX Statistics"
-    let total=0
-    for i in `seq 0 1023`; do
-      tn_ll_mmi_read $C_BASE_ADDR_STATISTICS_RX_PKT_CNT_LOWER_0 $(($i*4))
-      if [ $read_data -ne 0 ]; then
-        let inprt=$i%32
-        let outprt=$i/32
-        let total+=$read_data
-        if [ $inprt -eq $outprt ]; then
-          echo "DP0 counter $i ($inprt loopback): $read_data"
-        elif [ $inprt -eq $(($outprt+16)) ]; then
-          echo "DP0 counter $i (CPU->$outprt):     $read_data"
-        elif [ $(($inprt+16)) -eq $outprt ]; then
-          echo "DP0 counter $i ($inprt->CPU):     $read_data"
-        else
-          echo "DP0 counter $i ($inprt->$outprt):       $read_data"
-        fi
-      fi
-    done
-    for i in `seq 0 1023`; do
-      tn_ll_mmi_read $C_BASE_ADDR_STATISTICS_RX_PKT_CNT_LOWER_1 $(($i*4))
-      if [ $read_data -ne 0 ]; then
-        let inprt=$i%32
-        let outprt=$i/32
-        let total+=$read_data
-        if [ $inprt -eq $outprt ]; then
-          echo "DP1 counter $i ($inprt loopback): $read_data"
-        elif [ $inprt -eq $(($outprt+16)) ]; then
-          echo "DP1 counter $i (CPU->$outprt):     $read_data"
-        elif [ $(($inprt+16)) -eq $outprt ]; then
-          echo "DP1 counter $i ($inprt->CPU):     $read_data"
-        else
-          echo "DP1 counter $i ($inprt->$outprt):       $read_data"
-        fi
-      fi
-    done
-    echo "Total Matrix: $total packets"
+    TNstatistics io_counters
+#    let total=0
+#    for i in `seq 0 1023`; do
+#      tn_ll_mmi_read $C_BASE_ADDR_STATISTICS_RX_PKT_CNT_LOWER_0 $(($i*4))
+#      if [[ $read_data -ne 0 ]]; then
+#        let inprt=$i%32
+#        let outprt=$i/32
+#        let total+=$read_data
+#        if [[ $inprt -eq $outprt ]]; then
+#          echo "DP0 counter $i ($inprt loopback): $read_data"
+#        elif [[ $inprt -eq $(($outprt+16)) ]]; then
+#          echo "DP0 counter $i (CPU->$outprt):     $read_data"
+#        elif [[ $(($inprt+16)) -eq $outprt ]]; then
+#          echo "DP0 counter $i ($inprt->CPU):     $read_data"
+#        else
+#          echo "DP0 counter $i ($inprt->$outprt):       $read_data"
+#        fi
+#      fi
+#    done
+#    for i in `seq 0 1023`; do
+#     tn_ll_mmi_read $C_BASE_ADDR_STATISTICS_RX_PKT_CNT_LOWER_1 $(($i*4))
+#      if [[ $read_data -ne 0 ]]; then
+#        let inprt=$i%32
+#        let outprt=$i/32
+#        let total+=$read_data
+#        if [[ $inprt -eq $outprt ]]; then
+#          echo "DP1 counter $i ($inprt loopback): $read_data"
+#        elif [[ $inprt -eq $(($outprt+16)) ]]; then
+#          echo "DP1 counter $i (CPU->$outprt):     $read_data"
+#        elif [[ $(($inprt+16)) -eq $outprt ]]; then
+#          echo "DP1 counter $i ($inprt->CPU):     $read_data"
+#        else
+#          echo "DP1 counter $i ($inprt->$outprt):       $read_data"
+#        fi
+#      fi
+#    done
+#    echo "Total Matrix: $total packets"
   fi # __inoutcnt == 1
 
   if [[ __flowcnt -eq 1 ]]; then
-    echo -e "\n### Displaying non-zero FlowID Match Statistics (good packets only)"
+    echo -e "\n### Displaying non-zero FlowID Match Statistics (RX, good packets only)"
     let total=0
     for i in `seq 0 1023`; do
       tn_ll_mmi_read $C_BASE_ADDR_STATISTICS_RX_GOOD_FLOWID_LOWER_0 $(($i*4))
-      if [ $read_data -ne 0 ]; then
+      if [[ $read_data -ne 0 ]]; then
         let total+=$read_data
-        if [ $i -eq 0 ]; then
+        if [[ $i -eq 0 ]]; then
           echo "DP0 FlowID $i (default): $read_data"
         else
           echo "DP0 FlowID $i:           $read_data"
@@ -559,9 +576,9 @@ else
     done
     for i in `seq 0 1023`; do
       tn_ll_mmi_read $C_BASE_ADDR_STATISTICS_RX_GOOD_FLOWID_LOWER_1 $(($i*4))
-      if [ $read_data -ne 0 ]; then
+      if [[ $read_data -ne 0 ]]; then
         let total+=$read_data
-        if [ $i -eq 0 ]; then
+        if [[ $i -eq 0 ]]; then
           echo "DP1 FlowID $i (default): $read_data"
         else
           echo "DP1 FlowID $i:           $read_data"
@@ -585,7 +602,7 @@ else
     echo " - Number of directly learned addresses:      $read_data"
     tn_ll_mmi_read $C_BASE_ADDR_ETH_SW_0 $C_SUB_ADDR_ETH_SW_NUM_FLOOD_UNKNOWN
     echo " - Number of floods due to unknown addresses: $read_data"
-	# directly learned as opposed to sync-learned from other datapath's Eth Switch
+    # directly learned as opposed to sync-learned from other datapath's Eth Switch
     tn_ll_mmi_read $C_BASE_ADDR_ETH_SW_0 $C_SUB_ADDR_ETH_SW_NUM_AGED_OUT     
     echo " - Number of aged out addresses:              $read_data"
     tn_ll_mmi_read $C_BASE_ADDR_ETH_SW_0 $C_SUB_ADDR_ETH_SW_NUM_FLOOD_FULL   
@@ -602,7 +619,7 @@ else
     echo " - Number of directly learned addresses:      $read_data"
     tn_ll_mmi_read $C_BASE_ADDR_ETH_SW_1 $C_SUB_ADDR_ETH_SW_NUM_FLOOD_UNKNOWN
     echo " - Number of floods due to unknown addresses: $read_data"
-	# directly learned as opposed to sync-learned from other datapath's Eth Switch
+    # directly learned as opposed to sync-learned from other datapath's Eth Switch
     tn_ll_mmi_read $C_BASE_ADDR_ETH_SW_1 $C_SUB_ADDR_ETH_SW_NUM_AGED_OUT     
     echo " - Number of aged out addresses:              $read_data"
     tn_ll_mmi_read $C_BASE_ADDR_ETH_SW_1 $C_SUB_ADDR_ETH_SW_NUM_FLOOD_FULL   
@@ -618,112 +635,112 @@ else
   #echo "## Missing: TM Drop Counters (Buffer Full, Queue Threshold)  ##"
   #echo "###############################################################"
   
-  if [[ __portcnt -eq 1 ]]; then
-    echo -e "\n### Displaying non-zero TX Statistics (good packets only)"
-    let total=0
-    for i in `seq 0 15`; do
-      tn_ll_mmi_read $C_BASE_ADDR_STATISTICS_TX_GOOD_PRT_LOWER_0 $(($i*4))
-      if [ $read_data -ne 0 ]; then
-        let total+=$read_data
-        echo "Output Port $i (PHY): $read_data"
-      fi
-    done
-    for i in `seq 0 15`; do
-      tn_ll_mmi_read $C_BASE_ADDR_STATISTICS_TX_GOOD_PRT_LOWER_1 $(($i*4))
-      if [ $read_data -ne 0 ]; then
-        let total+=$read_data
-        echo "Output Port $i (PHY): $read_data"
-      fi
-    done
-    for i in `seq 16 31`; do
-      tn_ll_mmi_read $C_BASE_ADDR_STATISTICS_TX_GOOD_PRT_LOWER_0 $(($i*4))
-      if [ $read_data -ne 0 ]; then
-        let total+=$read_data
-        echo "Output Port $i (CPU): $read_data"
-      fi
-    done
-    for i in `seq 16 31`; do
-      tn_ll_mmi_read $C_BASE_ADDR_STATISTICS_TX_GOOD_PRT_LOWER_1 $(($i*4))
-      if [ $read_data -ne 0 ]; then
-        let total+=$read_data
-        echo "Output Port $i (CPU): $read_data"
-      fi
-    done
-    echo "Total Good Output Port: $total packets"
-  fi # __portcnt == 1
+#  if [[ __portcnt -eq 1 ]]; then
+#    echo -e "\n### Displaying non-zero TX Statistics (good packets only)"
+#    let total=0
+#    for i in `seq 0 15`; do
+#      tn_ll_mmi_read $C_BASE_ADDR_STATISTICS_TX_GOOD_PRT_LOWER_0 $(($i*4))
+#      if [[ $read_data -ne 0 ]]; then
+#        let total+=$read_data
+#        echo "Output Port $i (PHY): $read_data"
+#      fi
+#    done
+#    for i in `seq 0 15`; do
+#      tn_ll_mmi_read $C_BASE_ADDR_STATISTICS_TX_GOOD_PRT_LOWER_1 $(($i*4))
+#      if [[ $read_data -ne 0 ]]; then
+#        let total+=$read_data
+#        echo "Output Port $i (PHY): $read_data"
+#      fi
+#    done
+#    for i in `seq 16 31`; do
+#      tn_ll_mmi_read $C_BASE_ADDR_STATISTICS_TX_GOOD_PRT_LOWER_0 $(($i*4))
+#      if [[ $read_data -ne 0 ]]; then
+#        let total+=$read_data
+#        echo "Output Port $i (CPU): $read_data"
+#      fi
+#    done
+#    for i in `seq 16 31`; do
+#      tn_ll_mmi_read $C_BASE_ADDR_STATISTICS_TX_GOOD_PRT_LOWER_1 $(($i*4))
+#      if [[ $read_data -ne 0 ]]; then
+#        let total+=$read_data
+#        echo "Output Port $i (CPU): $read_data"
+#      fi
+#    done
+#    echo "Total Good Output Port: $total packets"
+#  fi # __portcnt == 1
     
-  if [[ __dropcnt -eq 1 ]]; then
-    echo -e "\n### Displaying non-zero frame drop reason counts at TX Statistics - should all be zero"
-    let total=0
-    for prt in `seq 0 31`; do
-      for badrsn in `seq 0 31`; do
-        tn_ll_mmi_read $C_BASE_ADDR_STATISTICS_TX_BADRSN_LOWER_0 $((($prt*32+$badrsn)*4))
-        if [[ $read_data -gt 0 ]]; then
-          let total+=$read_data
-          printf "DP0 Port %d - BadReason %d: %d\n" $prt $badrsn $read_data
-        fi
-      done
-    done
-    for prt in `seq 0 31`; do
-      for badrsn in `seq 0 31`; do
-        tn_ll_mmi_read $C_BASE_ADDR_STATISTICS_TX_BADRSN_LOWER_1 $((($prt*32+$badrsn)*4))
-        if [[ $read_data -gt 0 ]]; then
-          let total+=$read_data
-          printf "DP1 Port %d - BadReason %d: %d\n" $prt $badrsn $read_data
-        fi
-      done
-    done
-    echo "Total Bad: $total packets"
-  fi # __dropcnt == 1
+#  if [[ __dropcnt -eq 1 ]]; then
+#    echo -e "\n### Displaying non-zero frame drop reason counts at TX Statistics - should all be zero"
+#    let total=0
+#    for prt in `seq 0 31`; do
+#      for badrsn in `seq 0 31`; do
+#        tn_ll_mmi_read $C_BASE_ADDR_STATISTICS_TX_BADRSN_LOWER_0 $((($prt*32+$badrsn)*4))
+#        if [[ $read_data -gt 0 ]]; then
+#          let total+=$read_data
+#          printf "DP0 Port %d - BadReason %d: %d\n" $prt $badrsn $read_data
+#        fi
+#      done
+#    done
+#    for prt in `seq 0 31`; do
+#      for badrsn in `seq 0 31`; do
+#        tn_ll_mmi_read $C_BASE_ADDR_STATISTICS_TX_BADRSN_LOWER_1 $((($prt*32+$badrsn)*4))
+#        if [[ $read_data -gt 0 ]]; then
+#          let total+=$read_data
+#          printf "DP1 Port %d - BadReason %d: %d\n" $prt $badrsn $read_data
+#        fi
+#      done
+#    done
+#    echo "Total Bad: $total packets"
+#  fi # __dropcnt == 1
     
-  if [[ __inoutcnt -eq 1 ]]; then
-    echo -e "\n### Displaying non-zero frame count matrix (input-output) at TX Statistics"
-    let total=0
-    for i in `seq 0 1023`; do
-      tn_ll_mmi_read $C_BASE_ADDR_STATISTICS_TX_PKT_CNT_LOWER_0 $(($i*4))
-      if [ $read_data -ne 0 ]; then
-        let inprt=$i%32
-        let outprt=$i/32
-        let total+=$read_data
-        if [ $inprt -eq $outprt ]; then
-          echo "DP0 counter $i ($inprt loopback): $read_data"
-        elif [ $inprt -eq $(($outprt+16)) ]; then
-          echo "DP0 counter $i (CPU->$outprt):     $read_data"
-        elif [ $(($inprt+16)) -eq $outprt ]; then
-          echo "DP0 counter $i ($inprt->CPU):     $read_data"
-        else
-          echo "DP0 counter $i ($inprt->$outprt):       $read_data"
-        fi
-      fi
-    done
-    for i in `seq 0 1023`; do
-      tn_ll_mmi_read $C_BASE_ADDR_STATISTICS_TX_PKT_CNT_LOWER_1 $(($i*4))
-      if [ $read_data -ne 0 ]; then
-        let inprt=$i%32
-        let outprt=$i/32
-        let total+=$read_data
-        if [ $inprt -eq $outprt ]; then
-          echo "DP1 counter $i ($inprt loopback): $read_data"
-        elif [ $inprt -eq $(($outprt+16)) ]; then
-          echo "DP1 counter $i (CPU->$outprt):     $read_data"
-        elif [ $(($inprt+16)) -eq $outprt ]; then
-          echo "DP1 counter $i ($inprt->CPU):     $read_data"
-        else
-          echo "DP1 counter $i ($inprt->$outprt):       $read_data"
-        fi
-      fi
-    done
-    echo "Total Matrix: $total packets"
-  fi # __inoutcnt == 1
+#  if [[ __inoutcnt -eq 1 ]]; then
+#    echo -e "\n### Displaying non-zero frame count matrix (input-output) at TX Statistics"
+#    let total=0
+#    for i in `seq 0 1023`; do
+#      tn_ll_mmi_read $C_BASE_ADDR_STATISTICS_TX_PKT_CNT_LOWER_0 $(($i*4))
+#      if [[ $read_data -ne 0 ]]; then
+#        let inprt=$i%32
+#        let outprt=$i/32
+#        let total+=$read_data
+#        if [[ $inprt -eq $outprt ]]; then
+#          echo "DP0 counter $i ($inprt loopback): $read_data"
+#        elif [[ $inprt -eq $(($outprt+16)) ]]; then
+#          echo "DP0 counter $i (CPU->$outprt):     $read_data"
+#        elif [[ $(($inprt+16)) -eq $outprt ]]; then
+#          echo "DP0 counter $i ($inprt->CPU):     $read_data"
+#        else
+#          echo "DP0 counter $i ($inprt->$outprt):       $read_data"
+#        fi
+#      fi
+#    done
+#    for i in `seq 0 1023`; do
+#      tn_ll_mmi_read $C_BASE_ADDR_STATISTICS_TX_PKT_CNT_LOWER_1 $(($i*4))
+#      if [[ $read_data -ne 0 ]]; then
+#        let inprt=$i%32
+#        let outprt=$i/32
+#        let total+=$read_data
+#        if [[ $inprt -eq $outprt ]]; then
+#          echo "DP1 counter $i ($inprt loopback): $read_data"
+#        elif [[ $inprt -eq $(($outprt+16)) ]]; then
+#          echo "DP1 counter $i (CPU->$outprt):     $read_data"
+#        elif [[ $(($inprt+16)) -eq $outprt ]]; then
+#          echo "DP1 counter $i ($inprt->CPU):     $read_data"
+#        else
+#          echo "DP1 counter $i ($inprt->$outprt):       $read_data"
+#        fi
+#      fi
+#    done
+#    echo "Total Matrix: $total packets"
+#  fi # __inoutcnt == 1
 
   if [[ __flowcnt -eq 1 ]]; then
-    echo -e "\n### Displaying non-zero FlowID Match Statistics (good packets only)"
+    echo -e "\n### Displaying non-zero FlowID Match Statistics (TX, good packets only)"
     let total=0
     for i in `seq 0 1023`; do
       tn_ll_mmi_read $C_BASE_ADDR_STATISTICS_TX_GOOD_FLOWID_LOWER_0 $(($i*4))
-      if [ $read_data -ne 0 ]; then
+      if [[ $read_data -ne 0 ]]; then
         let total+=$read_data
-        if [ $i -eq 0 ]; then
+        if [[ $i -eq 0 ]]; then
           echo "DP0 FlowID $i (default): $read_data"
         else
           echo "DP0 FlowID $i:           $read_data"
@@ -732,9 +749,9 @@ else
     done
     for i in `seq 0 1023`; do
       tn_ll_mmi_read $C_BASE_ADDR_STATISTICS_TX_GOOD_FLOWID_LOWER_1 $(($i*4))
-      if [ $read_data -ne 0 ]; then
+      if [[ $read_data -ne 0 ]]; then
         let total+=$read_data
-        if [ $i -eq 0 ]; then
+        if [[ $i -eq 0 ]]; then
           echo "DP1 FlowID $i (default): $read_data"
         else
           echo "DP1 FlowID $i:           $read_data"
@@ -770,15 +787,15 @@ else
       ## check $read_data -> still busy?
     done
     if [[ __wait -eq 1 ]]; then
-      echo "Waiting for 10 seconds to aggregate statistics"
-      sleep 10
+      echo -e "Waiting for sleep $waiting_time seconds to aggregate statistics"
+      sleep $waiting_time
     fi # __wait == 1
     #echo "GPHY PAGE:$page, REG:$reg"
     let total=0
     for phy in `seq 0 9`; do
       tn_ll_read_phy $phy $page $reg;
       ## check $read_data -> still busy? + read data
-      if [ $(($read_data & 0xFF)) -ne 0 ]; then
+      if [[ $(($read_data & 0xFF)) -ne 0 ]]; then
         printf "PHY $phy: %d packets transmitted\n" $(($read_data & 0xFF))
         let total+=$(($read_data & 0xFF))
       fi
@@ -808,15 +825,15 @@ else
       ## check $read_data -> still busy?
     done
     if [[ __wait -eq 1 ]]; then
-      echo "Waiting for 10 seconds to aggregate statistics"
-      sleep 10
+      echo -e "Waiting for sleep $waiting_time seconds to aggregate statistics"
+      sleep $waiting_time
     fi # __wait == 1
     #echo "GPHY PAGE:$page, REG:$reg"
     let total=0
     for phy in `seq 0 9`; do
       tn_ll_read_phy $phy $page $reg;
       ## check $read_data -> still busy? + read data
-      if [ $(($read_data & 0xFF)) -ne 0 ]; then
+      if [[ $(($read_data & 0xFF)) -ne 0 ]]; then
         printf "PHY $phy: %d packets with errors transmitted\n" $(($read_data & 0xFF))
         let total+=$(($read_data & 0xFF))
       fi
@@ -846,15 +863,15 @@ else
       ## check $read_data -> still busy?
     done
     if [[ __wait -eq 1 ]]; then
-      echo "Waiting for 10 seconds to aggregate statistics"
-      sleep 10
+      echo -e "Waiting for sleep $waiting_time seconds to aggregate statistics"
+      sleep $waiting_time
     fi # __wait == 1
     #echo "GPHY PAGE:$page, REG:$reg"
     let total=0
     for phy in `seq 0 9`; do
       tn_ll_read_phy $phy $page $reg;
       ## check $read_data -> still busy? + read data
-      if [ $(($read_data & 0xFF)) -ne 0 ]; then
+      if [[ $(($read_data & 0xFF)) -ne 0 ]]; then
         printf "PHY $phy: %d collisions\n" $(($read_data & 0xFF))
         let total+=$(($read_data & 0xFF))
       fi

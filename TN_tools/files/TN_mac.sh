@@ -82,7 +82,7 @@ else
       tn_ll_mmi_write $C_BASE_ADDR_NET_LOWER $C_SUB_ADDR_NET_ENABLE 0x00000000
     fi
 
-	echo "Done"
+    echo "Done"
   elif [[ $port -ge 0 && $port -lt 16 ]]; then
     if [[ $# -gt 2 ]]; then
       echo "Disabling MAC"
