@@ -46,6 +46,8 @@ static struct argp_option options[] = {	//user interface
   {"memdump", 'm', 0, 0, "print out TNbar1 accesses"},
   {0, 0, 0, 0, "General TSN config:", 1},
   {"PORT", 'P', "", 0, "TrustNode port to configure"},
+  {"HILSCHER", 'H', 0, 0, "Hilscher TAS compatibility mode"},
+  {"HILSCHER2", 'X', 0, 0, "second (opefully, last) Hilscher TAS compatibility mode"},
 
   {"ADMIN_GCL_LEN", 'a', "", 0, "The length of the gate list to be programmed."},
   {"ADMIN_BASE_TIME", 'b', "", 0, "The base time for the gate list to be programmed."},
@@ -90,6 +92,12 @@ parse_opt (int key, char *arg, struct argp_state *state)
   case 'm':
     memdump_en ();
     MEMDUMP2=1;
+    break;
+  case 'H':
+    arguments->hilscher_mode=1;
+    break;
+  case 'X':
+    arguments->hilscher_mode2=1;
     break;
   case 'n':
     arguments->numberout = 1;
@@ -157,7 +165,7 @@ parse_opt (int key, char *arg, struct argp_state *state)
     break;
   case 'o':
     arguments->OPER_CYCLE_TIME = strtoull (arg, 0, 0);
-    arguments->dohave_OPER_CYCLE_TIME = 1;
+    //arguments->dohave_OPER_CYCLE_TIME = 1;
     break;
   case 'q':
     arguments->OPER_CYCLE_TIME_EXT = strtoull (arg, 0, 0);
@@ -165,7 +173,7 @@ parse_opt (int key, char *arg, struct argp_state *state)
     break;
   case 'r':
     arguments->OPER_BASE_TIME = strtoull (arg, 0, 0);
-    arguments->dohave_OPER_BASE_TIME = 1;
+    //arguments->dohave_OPER_BASE_TIME = 1;
     break;
 
   case 'I':
@@ -216,7 +224,7 @@ parse_opt (int key, char *arg, struct argp_state *state)
      that we accept.
 */
 //static char args_doc[] = "[AdminCTL_list_|OperCTL_list_|config_][add|del|print|change]"; //old doku
-static char args_doc[] = "[apply|QueuePrio_list_|GateControl_list_|TGateControl_list_|config_][print|change]";
+static char args_doc[] = "Commands: oldapply|newapply|apply|Change_entry|QueuePrio_list_{print|change}|GateControl_list_{print|change}|TGateControl_list_{print|change}|config_{print|change}";
 
 /*
   DOC.  Field 4 in ARGP.
@@ -322,8 +330,18 @@ uint16_t i=0;
   timespec_get(&ts2, TIME_UTC);
   if(arguments.bulk)printf("%lli\n",(ts2.tv_nsec-ts1.tv_nsec)+((ts2.tv_sec-ts1.tv_sec)*1000000000));  
   break;
-  case 'a':
+  case 'o':
     TSN_apply (&arguments);
+    break;
+  case 'a':
+  arguments.hilscher_mode2=1;// set hilscher2 mode standardt 
+  case 'n':
+  	if(arguments.dohave_PORT)new_TSN_apply(&arguments);else{
+  		for (arguments.PORT=0; arguments.PORT < PORT_count; arguments.PORT++)new_TSN_apply(&arguments);
+  	}
+    break;
+  case 'C':
+    GCL_entry (&arguments);
     break;
   case 'G':
     switch (arguments.args[0][17]) {

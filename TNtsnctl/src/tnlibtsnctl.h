@@ -3,6 +3,7 @@
 *@brief userspace TSN acces tool
 *M.Ulbricht 2018
 **/
+
 #include "tn_env.h"
 #ifdef C_TM_SCHED_TAS_ADMIN_GCL_LEN
 #define TSN_enable 1
@@ -76,11 +77,13 @@ void printallconst (void);
 
 #define TSN_config_print(type, shadow) {MACHINEREADABLE printf("{'"#type"':0x%lx},", TSN_get_config(C_TM_SCHED_TAS_ ## type , arguments->PORT, shadow )); else printf(#type":0x%lx \n", TSN_get_config(C_TM_SCHED_TAS_ ## type , arguments->PORT, shadow ));}
 #define TSN_config_dohavewrite(entry, type) {if( entry ->dohave_ ## type )TSN_set_config(C_TM_SCHED_TAS_ ## type , entry -> PORT, entry -> type );}
+#define TSN_config_dohavewrite_time(entry, type) {if( entry ->dohave_ ## type )TSN_set_config(C_TM_SCHED_TAS_ ## type , entry -> PORT,TSN_time_ganularity( entry -> type ));}
 #define POLLSLEEP usleep(500);
 #define MACHINEREADABLE if(arguments->machinereadable)
 #define not_MACHINEREADABLE if(arguments->machinereadable==0)
 
 #define HW_TIMEBASE 1		// one HW tick are X nanoseconds
+#define TSN_TIME_GRANULARITY 5 //granularity of the hardware tas in ns, all time values have to be multibles of this value
 
 struct arguments
 {
@@ -89,24 +92,26 @@ struct arguments
   int verbose;			/* The -v flag */
   uint8_t numberout;
   uint8_t machinereadable;
+  uint8_t hilscher_mode;
+  uint8_t hilscher_mode2;
   uint64_t ID;
   uint64_t COUNT;
   uint32_t ADMIN_GCL_LEN;
-  uint32_t ADMIN_BASE_TIME;
-  uint32_t ADMIN_CYCLE_TIME;
-  uint32_t ADMIN_CYCLE_TIME_EXT;
-  uint32_t CONFIG_CHANGE_TIME;
-  uint32_t CYCLE_START_TIME;
+  uint64_t ADMIN_BASE_TIME;
+  uint64_t ADMIN_CYCLE_TIME;
+  uint64_t ADMIN_CYCLE_TIME_EXT;
+  uint64_t CONFIG_CHANGE_TIME;
+  uint64_t CYCLE_START_TIME;
   uint32_t GATE_ENABLE;
   uint16_t bulk;
   uint32_t CONFIG_CHANGE;
   uint32_t CONFIG_CHANGE_PENDING;
   uint32_t CONFIG_CHANGE_ACK;
-  uint32_t OPER_GCL_LEN;
-  uint32_t OPER_BASE_TIME;
-  uint32_t OPER_CYCLE_TIME;
-  uint32_t OPER_CYCLE_TIME_EXT;
-  uint32_t INTERVAL;
+  uint64_t OPER_GCL_LEN;
+  uint64_t OPER_BASE_TIME;
+  uint64_t OPER_CYCLE_TIME;
+  uint64_t OPER_CYCLE_TIME_EXT;
+  uint64_t INTERVAL;
   uint8_t PORT;
   uint8_t GATE_STATE_VECTOR;
   uint8_t QUEUE_PRIO;
@@ -180,5 +185,9 @@ void TSN_apply (struct arguments *arguments);
 uint32_t ns2ticks (uint32_t ns);
 uint32_t tick2ns (uint32_t ticks);
 void memdump_en (void);
-
+uint32_t TSN_time_ganularity(uint32_t inputtime);
+void GCL_entry (struct arguments *arguments);
+void new_TSN_apply (struct arguments *arguments);
 void TSN_init (uint64_t * base, uint64_t * shadow_base);
+void check_gcl(uint8_t port);
+uint64_t check_tgcl(uint8_t port);
