@@ -2,36 +2,64 @@
 
 START=98
 
-
-
 start() {
-echo "configuring TrustNode..."
-echo "mounting boot partiton"
-mount /dev/sda1 /boot/ 2>/dev/null
-sensors -c /usr/share/InnoRoute/tn_sensor.conf -s > /usr/share/InnoRoute/TNstart.log 2>&1
-stty -F /dev/ttyS1 115200 #set FPGA terminal baudrate
-#/usr/share/InnoRoute/inr_slide.sh &,
-/usr/share/InnoRoute/TN_phy_init.sh
-opkg update &
-/usr/share/InnoRoute/TN_phy_force_linkspeed.sh 1
-/usr/share/InnoRoute/scripts/start_ovs.sh
-#/usr/share/InnoRoute/TN_phy_init.sh 1
-TN_phy_access.sh 0 0 0x19 7 #init PHY interrupt masks
-TN_phy_access.sh 1 0 0x19 7
-TN_phy_access.sh 2 0 0x19 7
-TN_phy_access.sh 3 0 0x19 7
-TN_phy_access.sh 4 0 0x19 7
-TN_phy_access.sh 5 0 0x19 7
-TN_phy_access.sh 6 0 0x19 7
-TN_phy_access.sh 7 0 0x19 7
-TN_phy_access.sh 8 0 0x19 7
-TN_phy_access.sh 9 0 0x19 7
-cat /proc/TN_MMI/TN_PHYspeed #trigger phy state update
-TN_mac_addr.sh 0x00534E554C00 #set hardware switch mac address
-echo "done"
+	echo "configuring TrustNode..."
+
+	echo "mounting boot partiton"
+	mount /dev/sda1 /boot/ 2>/dev/null
+	
+	# Apply sensor configuration
+	sensors -c /usr/share/InnoRoute/tn_sensor.conf -s > /usr/share/InnoRoute/TNstart.log 2>&1
+	
+	# set FPGA terminal baudrate
+	stty -F /dev/ttyS1 115200
+
+	# Initialize PHYs
+	/usr/share/InnoRoute/TN_phy_init.sh
+	
+	# Search for package updates
+	#opkg update &
+	
+	# Set all ports to 100 Mbps
+	/usr/share/InnoRoute/TN_phy_force_linkspeed.sh 1
+	
+	# Start Open vSwitch
+	/usr/share/InnoRoute/scripts/start_ovs.sh
+	
+	# Set PHY interrupt masks
+	TN_phy_access.sh 0 0 0x19 7
+	TN_phy_access.sh 1 0 0x19 7
+	TN_phy_access.sh 2 0 0x19 7
+	TN_phy_access.sh 3 0 0x19 7
+	TN_phy_access.sh 4 0 0x19 7
+	TN_phy_access.sh 5 0 0x19 7
+	TN_phy_access.sh 6 0 0x19 7
+	TN_phy_access.sh 7 0 0x19 7
+	TN_phy_access.sh 8 0 0x19 7
+	TN_phy_access.sh 9 0 0x19 7
+	
+	# Trigger phy state update
+	cat /proc/TN_MMI/TN_PHYspeed
+	
+	# Set hardware switch mac address
+	TN_mac_addr.sh 0x00534E554C00
+	
+	# Start WLAN, if available
+	wpa_supplicant -i wlan0 -D wext -c /etc/wpa_supplicant/wpa_supplicant.conf -B &
+	sysrepod -d &
+	sleep 10
+	netopeer2-server -d &
+	sleep 10
+	sysrepo-plugind
+	sleep 10
+	
+	sysrepoctl --feature-enable=scheduled-traffic --module=ieee802-dot1q-sched
+	#TNrulestorage sysrepo &
+	/usr/share/InnoRoute/FlowCache_persistent.sh
+	echo "done"
 }
 
 stop() {
-echo "stop"
+	echo "stop"
 }
 

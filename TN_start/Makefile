@@ -1,6 +1,6 @@
 include	$(TOPDIR)/rules.mk
 PKG_NAME :=TN_start
-PKG_RELEASE := 1.3
+PKG_RELEASE := 1.4
 PKG_BUILD_DIR:=	$(BUILD_DIR)/$(PKG_NAME)
 include	$(INCLUDE_DIR)/package.mk
 
@@ -23,15 +23,15 @@ define Package/TN_start/install
 	$(INSTALL_BIN) ./files/start_ovs.sh $(1)/usr/share/InnoRoute/scripts/
 #	$(INSTALL_CONF) ./files/tn_sensor.conf $(1)/usr/share/InnoRoute/
 endef
-define Package/TN_start/postinst
+#define Package/TN_start/postinst
 #!/bin/sh
 # check if we are on real system
-if [ -z "$${IPKG_INSTROOT}" ]; then
-	echo "Enabling rc.d symlink for TN_start"
-	/etc/init.d/TN_start enable
-fi
-exit 0
-endef
+#if [ -z "$${IPKG_INSTROOT}" ]; then
+#	echo "Enabling rc.d symlink for TN_start"
+#	/etc/init.d/TN_start enable
+#fi
+#exit 0
+#endef
 
 define Package/TN_start/prerm
 #!/bin/sh
