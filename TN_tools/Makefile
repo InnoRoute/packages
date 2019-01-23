@@ -8,11 +8,12 @@ define Package/TN_tools
  SECTION:=TN_tools
  CATEGORY:=InnoRoute
  TITLE:=TN_tools
- DEPENDS:=+TNbar1 +tnstatistics
+ DEPENDS:=+TNbar1 
  endef
 define Build/Prepare
 	$(CP) ./src/* $(PKG_BUILD_DIR)/
 	rm -f $(PKG_BUILD_DIR)/../TN6tree/.prepared*
+	$(INSTALL_CONF) ./files/*.h $(STAGING_DIR)/usr/include/
 	
 endef
 define Package/TN_tools/install
