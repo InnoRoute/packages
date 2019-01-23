@@ -33,10 +33,10 @@ do
 	datum=$(date "+%F-%T")
 	sleep 0.1
 	state2=$(( $mask & $(cat /proc/TN_MMI/TN_COMint) ))
-	echo "-----------------------------"
-	echo "TXF_error_last:$TXF_error_last TXF_error:$TXF_error"
-	echo "TXF_FULL:$TXF_FULL TXF_FULL_last:$TXF_FULL_last"
-	echo "TXF_ACT:$TXF_ACT TXF_ACT_last:$TXF_ACT_last"
+#	echo "-----------------------------"
+#	echo "TXF_error_last:$TXF_error_last TXF_error:$TXF_error"
+#	echo "TXF_FULL:$TXF_FULL TXF_FULL_last:$TXF_FULL_last"
+#	echo "TXF_ACT:$TXF_ACT TXF_ACT_last:$TXF_ACT_last"
 	if [ "$state" -gt "0" ] || [ "$(( $TXF_error & $TXF_error_last))" -gt "0" ] || [ "$(( $PKT_BUF_full & $PKT_BUF_full_last))" -gt "0" ]; then
 		#reconfigure FPGA
 		echo "$datum FPGA fail interrupt:$state TXF_err:$TXF_error PKT_BUF:$PKT_BUF_full" >> /var/log/TN_FPGA_fail.log
