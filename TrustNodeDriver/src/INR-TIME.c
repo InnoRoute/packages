@@ -33,6 +33,8 @@ struct ptp_clock_info ptp_caps;
 //struct cyclecounter cc;
 struct INR_TIME_TX_entry INR_TIME_vortex[INR_TIME_vortex_length]; //no, its not bigger on the inside :D
 uint16_t INR_TIME_TX_vortex_current=1;
+
+volatile uint16_t INR_TIME_TX_vortex_lastread=1;
 #define CTRLD_rate 0x5000000
 uint64_t CTRLD_offset=15;
 uint8_t TIME_DBG_mod=0;
@@ -42,6 +44,7 @@ DEFINE_SPINLOCK(hardwareLock);
 unsigned long flags;
 volatile uint8_t clock_registred=0;
 uint8_t USE_ctrl_bridge_clock_offset=1;
+void (*MMI_common_interrupt_handler)(uint32_t status);
 
 //void *gBaseVirt1 = NULL;
 
@@ -101,6 +104,13 @@ void INR_TIME_set_debug(uint8_t enable) {
 */
 
 uint16_t INR_TIME_TX_add(struct sk_buff *skb) {
+uint16_t waiting_queue_length=0;
+if(MMI_common_interrupt_handler){
+  
+	}else{
+		MMI_common_interrupt_handler= symbol_get(INR_MMI_common_interrupt_handler);
+    
+}
     if(INR_TIME_enable) {
         INR_TIME_TX_vortex_current++;
         if(INR_TIME_TX_vortex_current==0) INR_TIME_TX_vortex_current=1;
@@ -109,8 +119,14 @@ uint16_t INR_TIME_TX_add(struct sk_buff *skb) {
         }
         INR_TIME_vortex[INR_TIME_TX_vortex_current].skb=skb;
         INR_TIME_vortex[INR_TIME_TX_vortex_current].used=1;
-
-        if (TIME_DBG_mod)INR_LOG_debug(loglevel_warn"Net TX skb stored in timevortex at position %i\n",INR_TIME_TX_vortex_current);
+				if(INR_TIME_TX_vortex_current<INR_TIME_TX_vortex_lastread){
+					waiting_queue_length=65536-INR_TIME_TX_vortex_lastread-INR_TIME_TX_vortex_current;
+					}else{
+					waiting_queue_length=INR_TIME_TX_vortex_current-INR_TIME_TX_vortex_lastread;
+					}
+				if(waiting_queue_length>MAX_TIME_TX_vortex_queue)if(MMI_common_interrupt_handler)MMI_common_interrupt_handler(0xffff);// if waiting for to much interrupts, call common fpga fail interrupt
+        if (TIME_DBG_mod)INR_LOG_debug(loglevel_warn"Net TX skb stored in timevortex at position %i waiting for %i\n",INR_TIME_TX_vortex_current,waiting_queue_length);
+        
         return INR_TIME_TX_vortex_current;
     }
 }
@@ -145,6 +161,7 @@ void INR_TIME_TX_transmit_interrupt() {
 
                     pollcount=0;
                     while(entry_current!=0) {
+                    		INR_TIME_TX_vortex_lastread=entry_current;
                         pollcount++;
                         if(pollcount>=INR_TIME_MAX_pollcount) {
                             //INR_TIME_enable=0;
@@ -154,6 +171,7 @@ void INR_TIME_TX_transmit_interrupt() {
                         entry_current=0xffff&INR_PCI_BAR1_read_ext((C_BASE_ADDR_NET_LOWER<<8)+C_SUB_ADDR_NET_TX_CONF_L+(i*2*4));
                         timestamp=INR_PCI_BAR1_read_ext((C_BASE_ADDR_NET_LOWER<<8)+C_SUB_ADDR_NET_TX_CONF_L+((i*2)+1)*4);
                         if(entry_current) {
+                        
                             if (TIME_DBG_mod)INR_LOG_debug(loglevel_warn"Port: %i TX entry id: %i timestamp:0x%lx\n",i,entry_current,timestamp);
                             if(INR_TIME_vortex[entry_current].used) {
                                 struct skb_shared_hwtstamps *skbtimestamp = skb_hwtstamps(INR_TIME_vortex[entry_current].skb);

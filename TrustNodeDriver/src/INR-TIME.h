@@ -31,6 +31,8 @@ void INR_TIME_set_USE_ctrl_bridge_clock_offset(uint8_t enable);
 #define INR_TIME_vortex_length 65536
 #define INR_TIME_base 1
 #define INR_TIME_MAX_pollcount 50
+#define MAX_TIME_TX_vortex_queue 2
+extern void INR_MMI_common_interrupt_handler(uint32_t status);
 
 struct INR_TIME_TX_entry
 {
