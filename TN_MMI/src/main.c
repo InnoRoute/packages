@@ -36,6 +36,7 @@ static struct proc_dir_entry *reg1,*reg2, *INR_proc_dir;
 
 EXPORT_SYMBOL(INR_MMI_interrupt_handler);
 EXPORT_SYMBOL(INR_MMI_init);
+EXPORT_SYMBOL(INR_MMI_common_interrupt_handler);
 //*****************************************************************************************************************
 /**
 *  proc write function
