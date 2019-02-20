@@ -93,8 +93,8 @@ TN_sysrepo_tas_update (sr_session_ctx_t * session, uint8_t id)
 	uint8_t gcl_id=0;
 	struct arguments arguments;	//create structure for passing comandlinearguments and settings
   	memset(&arguments,0,sizeof(arguments));// clear structure
-	arguments.verbose=1;
-	TN_tsn_set_verbose(1);
+	arguments.verbose=0;
+	TN_tsn_set_verbose(0);
 	snprintf (xpath, XPATH_MAX_LEN, "/TNsysrepo:TNtas/ports[id='%i']/gate_enable", id);
 	rc = sr_get_item (session, xpath, &value);
 	if (SR_ERR_OK != rc) {
