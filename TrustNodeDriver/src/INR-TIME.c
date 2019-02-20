@@ -115,7 +115,7 @@ if(MMI_common_interrupt_handler){
         INR_TIME_TX_vortex_current++;
         if(INR_TIME_TX_vortex_current==0) INR_TIME_TX_vortex_current=1;
         if(INR_TIME_vortex[INR_TIME_TX_vortex_current].used) { //overrun detected, clear entry
-            skb_tx_timestamp(INR_TIME_vortex[INR_TIME_TX_vortex_current].skb);
+            if(INR_TIME_vortex[INR_TIME_TX_vortex_current].skb)skb_tx_timestamp(INR_TIME_vortex[INR_TIME_TX_vortex_current].skb);
         }
         INR_TIME_vortex[INR_TIME_TX_vortex_current].skb=skb;
         INR_TIME_vortex[INR_TIME_TX_vortex_current].used=1;
