@@ -1,0 +1,46 @@
+module TNsysrepo {
+
+  	namespace "urn:sysrepo:TrustNode:TNsysrepo";
+  	prefix "tn";
+	import TNflowtable-types {prefix flowtabletypes;revision-date "2019-02-01";}
+	import TNtas-port {prefix tasport;revision-date "2019-02-01";}
+  	description  "Data model for TrustNode";
+
+  	revision 2019-02-01 {
+    	description  "Initial revision.";
+  	}
+
+  /* Typedefs */
+
+
+  /* State data and Configuration */
+
+  	container TNflowtable {
+    	description   "Data model for TrustNode FlowCache";   	
+			leaf config_time {
+		  		type uint64;
+		  		description "time where flowchange is executed";
+			}
+			list mastertable {
+				key id;
+				leaf id {
+					type uint32;
+				}
+				uses flowtabletypes:flow;
+				}
+
+    }
+    container TNtas {
+    	description   "Data model for TrustNode TAS";   	
+
+			list ports {
+				key id;
+				leaf id {
+					type uint32;
+				}
+				uses tasport:port;
+				}
+
+    }
+   
+}

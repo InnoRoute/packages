@@ -1,0 +1,56 @@
+module: TNsysrepo
+  +--rw TNflowtable
+  |  +--rw config_time?   uint64
+  |  +--rw mastertable* [id]
+  |     +--rw id        uint32
+  |     +--rw match
+  |     |  +--rw in-port?                      inv:node-connector-id
+  |     |  +--rw ethernet-match
+  |     |  |  +--rw ethernet-source!
+  |     |  |  |  +--rw address    yang:mac-address
+  |     |  |  +--rw ethernet-destination!
+  |     |  |  |  +--rw address    yang:mac-address
+  |     |  |  +--rw ethernet-type!
+  |     |  |     +--rw type    l2t:ether-type
+  |     |  +--rw vlan-match
+  |     |  |  +--rw vlan-id!
+  |     |  |  |  +--rw vlan-id?   l2t:vlan-id
+  |     |  |  +--rw vlan-pcp?   l2t:vlan-pcp
+  |     |  +--rw ip-match
+  |     |  |  +--rw ip-protocol?   uint8
+  |     |  |  +--rw ip-dscp?       inet:dscp
+  |     |  |  +--rw ip-ecn?        uint8
+  |     |  +--rw (layer-3-match)?
+  |     |  |  +--:(ipv4-match)
+  |     |  |     +--rw ipv4-source?            inet:ipv4-address
+  |     |  |     +--rw ipv4-destination?       inet:ipv4-address
+  |     |  +--rw (layer-4-match)?
+  |     |     +--:(udp-match)
+  |     |     |  +--rw udp-source-port?        inet:port-number
+  |     |     |  +--rw udp-destination-port?   inet:port-number
+  |     |     +--:(tcp-match)
+  |     |        +--rw tcp-source-port?        inet:port-number
+  |     |        +--rw tcp-destination-port?   inet:port-number
+  |     +--rw action
+  |        +--rw action* [order]
+  |           +--rw order                  int32
+  |           +--rw (action)?
+  |              +--:(output-action-case)
+  |              |  +--rw output-action
+  |              |     +--rw output-port?   uint8
+  |              +--:(drop-action-case)
+  |              |  +--rw drop-action
+  |              |     +--rw drop-reason?   uint16
+  |              +--:(queue-action-case)
+  |                 +--rw queue-action
+  |                    +--rw queue?   uint8
+  +--rw TNtas
+     +--rw ports* [id]
+        +--rw id                      uint32
+        +--rw GCL* [id]
+        |  +--rw id            uint32
+        |  +--rw timeperiod?   uint32
+        |  +--rw gatestates?   uint8
+        +--rw admin_base_time?        uint64
+        +--rw admin_cycle_time_ext?   uint32
+        +--rw gate_enable?            bool
