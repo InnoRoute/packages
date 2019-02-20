@@ -8,7 +8,8 @@ if [[ $# -ne 1 ]]; then
   echo "The parameter <speed> can be 0 (10 Mbps), 1 (100 Mbps), or 2 (1000 Mbps)"
   echo "The setting applies to all ports"
 else
-
+echo "Hard resetting PHYs"
+/usr/share/InnoRoute/TN_phy_reset.sh 1
   echo "Disabling RX MACs ..."
   /usr/share/InnoRoute/TN_mac.sh all 0
   
