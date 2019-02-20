@@ -85,7 +85,7 @@ ssh-keygen -m pem -t rsa -q -N "" -f /etc/keystored/keys/ssh_host_rsa_key.pem
 
 
 # Enable SYSREPO TAS
-sysrepoctl --feature-enable=scheduled-traffic --module=ieee802-dot1q-sched
+#sysrepoctl --feature-enable=scheduled-traffic --module=ieee802-dot1q-sched
 # Start usual start scripts, again
 /etc/init.d/TN_start enable
 
