@@ -51,6 +51,7 @@ static struct argp_option options[] = {	//user interface
 
   {"ADMIN_GCL_LEN", 'a', "", 0, "The length of the gate list to be programmed."},
   {"ADMIN_BASE_TIME", 'b', "", 0, "The base time for the gate list to be programmed."},
+  {"ADMIN_BASE_TIME_DT", 'B', "", 0, "The base time for the gate list to be programmed. In datetime format."},
   {"ADMIN_CYCLE_TIME", 'C', "", 0, "The admin cycle time constant for the gate list to be programmed."},
   {"ADMIN_CYCLE_TIME_EXT", 'd', "", 0, "The admin cycle time extension constant for the gate list to be programmed."},
   {"CONFIG_CHANGE_TIME", 'e', "", 0, "The calculated config change time. Assumption is that calculations done in software."},
@@ -80,6 +81,7 @@ static error_t
 parse_opt (int key, char *arg, struct argp_state *state)
 {
   struct arguments *arguments = state->input;
+  struct tm *t;
   switch (key) {
   case 'v':
     arguments->verbose = 1;
@@ -125,6 +127,11 @@ parse_opt (int key, char *arg, struct argp_state *state)
 
   case 'b':
     arguments->ADMIN_BASE_TIME = strtoull (arg, 0, 0);
+    arguments->dohave_ADMIN_BASE_TIME = 1;
+    break;
+  case 'B':
+  	t=getdate(arg);
+  	arguments->ADMIN_BASE_TIME = mktime(&t);
     arguments->dohave_ADMIN_BASE_TIME = 1;
     break;
   case 'C':
