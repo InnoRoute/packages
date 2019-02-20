@@ -1,0 +1,1 @@
+The sysrepo endpoint is not started automatically, you have to start it via "TNsysrepo start"
