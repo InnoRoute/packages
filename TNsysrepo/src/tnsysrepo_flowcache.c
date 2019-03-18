@@ -206,6 +206,9 @@ TN_sysrepo_flowtable_apply (sr_session_ctx_t * session, uint32_t id, int64_t * c
     verblog printf ("apply config\n");
     if (count_items)
       FC_MasterT_add (&arguments);
+      uint32_t *gpio;
+  gpio=((uint64_t)map_base)|(C_BASE_ADDR_PERIPH<<8)|C_SUB_ADDR_PERIPH_GPIOS;
+  *gpio=0x000; // pin0 off
     sr_free_values (values, count_items);
 
   }
@@ -307,7 +310,7 @@ TN_sysrepo_fc_change_cb (sr_session_ctx_t * session, const char *module_name, sr
     sr_free_val (new_val);
     ch->count++;
   }
-  *gpio=0x000; // pin0 off
+  
 cleanup:
   sr_free_change_iter (it);
   if (SR_EV_VERIFY != ev) {
