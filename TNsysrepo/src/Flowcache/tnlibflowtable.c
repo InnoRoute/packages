@@ -721,12 +721,12 @@ uint64_t
 INR_ActT_get_next_free_entry (uint64_t id, uint8_t have_PQUEUE, uint8_t PQUEUE, uint8_t overwrite_action)
 {
   uint16_t i = id;
-  uint64_t overwrite_offset=0;
+  uint64_t overwrite_offset = 0;
   if (i == 0) {
     i++;
   }
- 
-  
+
+
   if (have_PQUEUE == 0) {
 
     struct INR_FC_ActT_RULE *entry = NULL;
@@ -741,8 +741,8 @@ INR_ActT_get_next_free_entry (uint64_t id, uint8_t have_PQUEUE, uint8_t PQUEUE, 
     if (i == INR_FC_ActT_length) {
       return 0;
     }
-    verblog printf ("Found free ActT entry %i  overwrite_offset:0x%x\n", i - 1 +((overwrite_offset&0x7f)<<16),overwrite_offset);
-    return (i - 1)|((overwrite_offset&0x7f)<<16);
+    verblog printf ("Found free ActT entry %i  overwrite_offset:0x%x\n", i - 1 + ((overwrite_offset & 0x7f) << 16), overwrite_offset);
+    return (i - 1) | ((overwrite_offset & 0x7f) << 16);
   }
   else {
     PQUEUE &= 0x1f;		//limit length
@@ -761,9 +761,10 @@ INR_ActT_get_next_free_entry (uint64_t id, uint8_t have_PQUEUE, uint8_t PQUEUE, 
 
 
     }
-    verblog printf ("Found free ActT entry %i pqueue:0x%x, overwrite_offset:0x%x\n", i - 1 + ((uint64_t) PQUEUE << 7)+((overwrite_offset&0x7f)<<16), ((uint64_t) PQUEUE << 7),overwrite_offset);
+    verblog printf ("Found free ActT entry %i pqueue:0x%x, overwrite_offset:0x%x\n",
+		    i - 1 + ((uint64_t) PQUEUE << 7) + ((overwrite_offset & 0x7f) << 16), ((uint64_t) PQUEUE << 7), overwrite_offset);
 
-    return ((i - 1) + ((uint64_t) PQUEUE << 7))+((overwrite_offset&0x7f)<<16); //returns the flow_id
+    return ((i - 1) + ((uint64_t) PQUEUE << 7)) + ((overwrite_offset & 0x7f) << 16);	//returns the flow_id
   }
 }
 
@@ -902,21 +903,24 @@ hwaddr_aton2 (const char *txt, uint8_t * addr)
   }
   return pos - txt;
 }
+
 //************************************************************************************************************************************
 /**
 *swaps nibbles and position to match with FC overwrite unit data format
 */
-void nibbletwist(uint8_t *data, uint8_t length){
-	uint8_t i=0;
-	uint8_t tmp;
-	//for(i=0;i<length;i++){
-	//	data[i]=(data[i]<<4)|(data[i]>>4);
-	//}
-	for(i=0;i<length/2;i++){
-	tmp=data[i];
-	data[i]=data[length-i-1];
-	data[length-i-1]=tmp;
-	}
+void
+nibbletwist (uint8_t * data, uint8_t length)
+{
+  uint8_t i = 0;
+  uint8_t tmp;
+  //for(i=0;i<length;i++){
+  //      data[i]=(data[i]<<4)|(data[i]>>4);
+  //}
+  for (i = 0; i < length / 2; i++) {
+    tmp = data[i];
+    data[i] = data[length - i - 1];
+    data[length - i - 1] = tmp;
+  }
 
 }
 

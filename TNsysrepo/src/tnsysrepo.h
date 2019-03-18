@@ -7,6 +7,3 @@
 #define verblog if(TN_sr_verbose)
 
 void TN_sysrepo_init (uint8_t ver);
-
-
-

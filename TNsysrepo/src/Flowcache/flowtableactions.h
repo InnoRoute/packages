@@ -38,7 +38,7 @@ struct tabid
   uint64_t EMA_HT;		/**hashtable*/
   uint64_t ActT;	/**Action table*/
   uint64_t ACCDP;	/**ACCDP*/
-  
+
 } __attribute__ ((__packed__));
 
 struct arguments
@@ -161,4 +161,3 @@ void AT_del (struct arguments arguments);
 void AT_clear (struct arguments arguments);
 void AT_print (struct arguments arguments);
 void RT_EMA_TYPE_override (struct arguments *arguments);
-

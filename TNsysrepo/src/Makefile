@@ -19,7 +19,11 @@ tnsysrepo_main: $(OBJ)
 doku:
 	indent -br -l150 *.c
 	indent -br -l150 *.h
-	cd .. && doxygen Doxyfile
+	indent -br -l150 TAS/*.c
+	indent -br -l150 TAS/*.h
+	indent -br -l150 Flowcache/*.c
+	indent -br -l150 Flowcache/*.h
+#	cd .. && doxygen Doxyfile
 	
 clean:
 	$(MAKE) -C ${KERNEL}  M=$(PWD) clean

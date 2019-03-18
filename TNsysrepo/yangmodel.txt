@@ -53,4 +53,4 @@ module: TNsysrepo
         |  +--rw gatestates?   uint8
         +--rw admin_base_time?        uint64
         +--rw admin_cycle_time_ext?   uint32
-        +--rw gate_enable?            bool
+        +--rw gate_enable?            boolean

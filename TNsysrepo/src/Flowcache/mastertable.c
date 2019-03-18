@@ -76,10 +76,10 @@ FC_MT_have_action (struct arguments *arguments)
     if (entry->BadReason != arguments->BadReason) {
       match = 0;
     }
-    
 
-    
-    
+
+
+
     if (entry->Cut_enable != arguments->Cut_enable) {
       match = 0;
     }
@@ -90,7 +90,7 @@ FC_MT_have_action (struct arguments *arguments)
       match = 0;
     }
     if (match) {
-      
+
       return entry->TableID.ActT;	//match found, return entry in action table
     }
   } while ((i < MASTERTABLE_length));
@@ -270,7 +270,7 @@ FC_MT_autotable (struct arguments * arguments)
     AT_add (arguments);		//add new action if not found
     at_added = 1;
   }
-  
+
   /*} else {
      arguments->ID = arguments->PQUEUE;
      arguments->ACTION_ID = arguments->PQUEUE;
@@ -294,7 +294,7 @@ FC_MT_autotable (struct arguments * arguments)
   }
   else {			//EMA
     if (INR_EMA_check ()) {
-      
+
       RT_EMA_add (arguments);	//add to table
       HT_EMA_add (arguments);	//add to hashtable
       return 0;
@@ -303,10 +303,10 @@ FC_MT_autotable (struct arguments * arguments)
       printf ("Rule can't be applied the loaded bitstream doesn't provide a ruleset which can used for this rule.\n");
       if (at_added)
 	AT_del (*arguments);
-	
+
     }
   }
-return 1;
+  return 1;
 }
 
 //************************************************************************************************************************************
@@ -371,7 +371,8 @@ FC_MasterT_add (struct arguments *arguments)
     if (INR_MasterT_get_next_free_entry (arguments->ID)) {
       struct arguments *entry = (struct arguments *) INR_MasterT_get_addr (INR_MasterT_get_next_free_entry (arguments->ID));
       arguments->used = 1;
-      if(FC_MT_autotable (arguments))return 0;
+      if (FC_MT_autotable (arguments))
+	return 0;
       memcpy (entry, arguments, sizeof (struct arguments));
 
       if ((arguments->bulk && (i == arguments->bulk)) || arguments->bulk == 0)
@@ -405,7 +406,7 @@ FC_MasterT_del (uint64_t ID)
       verblog printf ("EMA_RT:%li ", entry->TableID.EMA_RT);
       verblog printf ("EMA_HT:%li ", entry->TableID.EMA_HT);
       verblog printf ("ActT:%li\n ", entry->TableID.ActT);
-      
+
       //remove entry from tables where stored
       if (entry->TableID.EMH_RT) {
 	INR_RuleTable_EMH_clear_entry (entry->TableID.EMH_RT);
@@ -424,7 +425,7 @@ FC_MasterT_del (uint64_t ID)
       }
       if ((entry->TableID.ActT) && (FC_MT_count_action (entry->TableID.ActT) == 1)) {
 	INR_ActT_clear_entry (entry->TableID.ActT);	//can't remove because multible entrys could have the same action, first check
-      
+
       }
     }
     entry->used = 0;
@@ -615,9 +616,9 @@ FC_MasterT_print (struct arguments *arguments)
 	MT_dohaveprint (entry, BadReason);
 	MT_dohaveprint (entry, Cut_enable);
 	MT_dohaveprint (entry, CutValue);
-	
 
-	
+
+
 	printf ("\n");
 	printf ("prio:%li ", entry->PRIORITY);
 	if (entry->TableID.EMH_RT)

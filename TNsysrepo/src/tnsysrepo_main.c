@@ -30,17 +30,18 @@ const char *argp_program_version = "tnsysrepo 0.1";
 const char *argp_program_bug_address = "<ulbricht@innoroute.de>";
 struct flock lock;
 
-struct arguments{
-	char *args[1];
-	uint8_t verbose;
-	};
+struct arguments
+{
+  char *args[1];
+  uint8_t verbose;
+};
 /*
    OPTIONS.  Field 1 in ARGP.
    Order of fields: {NAME, KEY, ARG, FLAGS, DOC}.
 */
 static struct argp_option options[] = {	//user interface
   {0, 0, 0, 0, "General options:", 0},
-  {"verbose", 'v', 0, 0, "Produce verbose output"}  
+  {"verbose", 'v', 0, 0, "Produce verbose output"}
 };
 
 /*
@@ -78,8 +79,7 @@ parse_opt (int key, char *arg, struct argp_state *state)
    A description of the non-option command-line arguments
      that we accept.
 */
-static char args_doc[] =
-  "start";
+static char args_doc[] = "start";
 
 /*
   DOC.  Field 4 in ARGP.
@@ -107,20 +107,21 @@ main (int argc, char **argv)
 {
 
   struct arguments arguments;	//create structure for passing comandlinearguments and settings
-  memset(&arguments,0,sizeof(arguments));// clear structure
+  memset (&arguments, 0, sizeof (arguments));	// clear structure
   argp_parse (&argp, argc, argv, 0, 0, &arguments);
-  
-  
-  switch (arguments.args[0][0]) {	//parse commandline arguments
-  case 's':TN_sysrepo_init (arguments.verbose);
-  	break;
-      
-  default:
-	printf ("unknown action\n");
-	break;
-      }
-      
 
-  
+
+  switch (arguments.args[0][0]) {	//parse commandline arguments
+  case 's':
+    TN_sysrepo_init (arguments.verbose);
+    break;
+
+  default:
+    printf ("unknown action\n");
+    break;
+  }
+
+
+
   return 0;
 }

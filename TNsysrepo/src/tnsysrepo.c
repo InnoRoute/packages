@@ -38,9 +38,9 @@
 #include "tnsysrepo_flowcache.h"
 #include "tnsysrepo_tas.h"
 
-uint8_t TN_sr_verbose=0;
+uint8_t TN_sr_verbose = 0;
 
-volatile int exit_application=0;
+volatile int exit_application = 0;
 int clkid;
 #define XPATH_MAX_LEN 100
 typedef struct changes_s
@@ -55,6 +55,7 @@ sigint_handler (int signum)
 {
   exit_application = 1;
 }
+
 //************************************************************************************************************************************
 /**
 *sysrepo init function
@@ -64,17 +65,17 @@ sigint_handler (int signum)
 void
 TN_sysrepo_init (uint8_t verb)
 {
-  TN_sr_verbose=verb;
-  TN_sysrepo_tas_init();
-  TN_sysrepo_flowcache_init();
+  TN_sr_verbose = verb;
+  TN_sysrepo_tas_init ();
+  TN_sysrepo_flowcache_init ();
   verblog printf ("__FUNCTION__ = %s\n", __FUNCTION__);
-  
+
   changes_t sync = {.mutex = PTHREAD_MUTEX_INITIALIZER,.cond = PTHREAD_COND_INITIALIZER,.count = 0 };
   sr_subscription_ctx_t *subscription = NULL;
   int rc = SR_ERR_OK;
   sr_conn_ctx_t *connection = NULL;
   sr_session_ctx_t *session = NULL;
-  
+
   /* connect to sysrepo */
   rc = sr_connect ("example_application", SR_CONN_DEFAULT, &connection);
   if (SR_ERR_OK != rc) {
@@ -95,24 +96,24 @@ TN_sysrepo_init (uint8_t verb)
     fprintf (stderr, "Error by sr_module_change_subscribe TNflowtable: %s\n", sr_strerror (rc));
     goto cleanup;
   }
-  rc = sr_subtree_change_subscribe (session, "/TNsysrepo:TNtas", TN_sysrepo_tas_change_cb, &sync, 
+  rc = sr_subtree_change_subscribe (session, "/TNsysrepo:TNtas", TN_sysrepo_tas_change_cb, &sync,
 				    0, SR_SUBSCR_DEFAULT | SR_SUBSCR_APPLY_ONLY, &subscription);
   if (SR_ERR_OK != rc) {
     fprintf (stderr, "Error by sr_module_change_subscribe TNtas: %s\n", sr_strerror (rc));
     goto cleanup;
   }
-  
-    /* loop until ctrl-c is pressed / SIGINT is received */
+
+  /* loop until ctrl-c is pressed / SIGINT is received */
   signal (SIGINT, sigint_handler);
   signal (SIGPIPE, SIG_IGN);
   while (!exit_application) {
     sleep (1000);		/* or do some more useful work... */
   }
-    printf ("Application exit requested, exiting.\n");
+  printf ("Application exit requested, exiting.\n");
 
 cleanup:
-  TN_sysrepo_tas_exit();
-  TN_sysrepo_flowcache_exit();
+  TN_sysrepo_tas_exit ();
+  TN_sysrepo_flowcache_exit ();
   if (NULL != subscription) {
     sr_unsubscribe (session, subscription);
   }

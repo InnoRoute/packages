@@ -1,6 +1,6 @@
 include	$(TOPDIR)/rules.mk
 PKG_NAME :=tnsysrepo
-PKG_RELEASE := 0.1
+PKG_RELEASE := 0.2
 PKG_BUILD_DIR:=	$(BUILD_DIR)/$(PKG_NAME)
 include	$(INCLUDE_DIR)/package.mk
 include	$(INCLUDE_DIR)/package-defaults.mk
@@ -26,6 +26,7 @@ define Package/tnsysrepo/install
 	$(INSTALL_DIR) $(1)/usr/sbin
 	$(INSTALL_DIR) $(1)/usr/share/InnoRoute/
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/tnsysrepo_main $(1)/usr/sbin/TNsysrepo
+	$(INSTALL_BIN) ./files/TN_sysrepo_watchdog.sh $(1)/usr/share/InnoRoute/
 #	$(INSTALL_BIN) files/*.sh $(1)/usr/share/InnoRoute/
 	$(INSTALL_DIR) $(1)/etc/sysrepo/yang/
 	$(INSTALL_CONF) ./files/yang/* $(1)/etc/sysrepo/yang/

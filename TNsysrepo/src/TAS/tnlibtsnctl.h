@@ -83,7 +83,7 @@ void TN_tsn_printallconst (void);
 #define not_MACHINEREADABLE if(arguments->machinereadable==0)
 
 #define HW_TIMEBASE 1		// one HW tick are X nanoseconds
-#define TSN_TIME_GRANULARITY 5 //granularity of the hardware tas in ns, all time values have to be multibles of this value
+#define TSN_TIME_GRANULARITY 5	//granularity of the hardware tas in ns, all time values have to be multibles of this value
 
 struct arguments
 {
@@ -185,9 +185,9 @@ void TSN_apply (struct arguments *arguments);
 uint32_t TN_tsn_ns2ticks (uint32_t ns);
 uint32_t TN_tsn_tick2ns (uint32_t ticks);
 void TN_tsn_memdump_en (void);
-uint32_t TSN_time_ganularity(uint32_t inputtime);
+uint32_t TSN_time_ganularity (uint32_t inputtime);
 void TN_tsn_GCL_entry (struct arguments *arguments);
 void new_TSN_apply (struct arguments *arguments);
 void TSN_init (uint64_t * base, uint64_t * shadow_base);
-void TN_tsn_check_gcl(uint8_t port);
-uint64_t TN_tsn_check_tgcl(uint8_t port);
+void TN_tsn_check_gcl (uint8_t port);
+uint64_t TN_tsn_check_tgcl (uint8_t port);

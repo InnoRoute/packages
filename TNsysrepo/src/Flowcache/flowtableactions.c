@@ -38,7 +38,7 @@ clear_arguments (struct arguments *arguments)
   arguments->VLAN_ID = 0;
   arguments->VLAN_PRIO = 0;
   arguments->INPORT = 0;
-  arguments->EMH_HASH_OVERLAY=0;
+  arguments->EMH_HASH_OVERLAY = 0;
   arguments->IPv4_SRC = 0;
   arguments->IPv4_DST = 0;
   arguments->PROTOCOL = 0;
@@ -192,7 +192,7 @@ get_HASH (struct arguments *arguments)
   case 4:
     arguments->HASH.EMH = (0x3fff & (arguments->MAC_DST >> 0)) ^
       (0x3fff & (arguments->MAC_DST >> 14)) ^ (0x3fff & (arguments->MAC_DST >> 28)) ^ (0x3fff & (arguments->MAC_DST >> 42));
-    arguments->HASH.EMH^=(0x7&arguments->EMH_HASH_OVERLAY)<<11;// manupulate last 3 bits
+    arguments->HASH.EMH ^= (0x7 & arguments->EMH_HASH_OVERLAY) << 11;	// manupulate last 3 bits
     break;
   default:
     verblog printf ("Type not valid\n");
@@ -218,7 +218,7 @@ get_HASH (struct arguments *arguments)
       (0x3fff & (arguments->MAC_DST >> 0)) ^
       (0x3fff & (arguments->MAC_DST >> 14)) ^
       (0x3fff & (arguments->MAC_DST >> 28)) ^ (0x3fff & (arguments->MAC_DST >> 42)) ^ (0x3fff & (arguments->VLAN_PRIO << 0));
-    arguments->HASH.EMH^=(0x7&arguments->EMH_HASH_OVERLAY)<<11;// manupulate last 3 bits
+    arguments->HASH.EMH ^= (0x7 & arguments->EMH_HASH_OVERLAY) << 11;	// manupulate last 3 bits
     break;
   default:
     verblog printf ("Type not valid\n");
@@ -244,7 +244,7 @@ get_HASH (struct arguments *arguments)
       (0x3fff & (arguments->MAC_DST >> 0)) ^
       (0x3fff & (arguments->MAC_DST >> 14)) ^
       (0x3fff & (arguments->MAC_DST >> 28)) ^ (0x3fff & (arguments->MAC_DST >> 42)) ^ (0x3fff & (arguments->VLAN_PRIO << 0));
-    arguments->HASH.EMH^=(0x7&arguments->EMH_HASH_OVERLAY)<<11;// manupulate last 3 bits
+    arguments->HASH.EMH ^= (0x7 & arguments->EMH_HASH_OVERLAY) << 11;	// manupulate last 3 bits
     break;
   default:
     verblog printf ("Type not valid\n");
@@ -266,8 +266,7 @@ get_HASH (struct arguments *arguments)
       (0x3fff & (arguments->MAC_DST >> 14)) ^ (0x3fff & (arguments->MAC_DST >> 28)) ^ (0x3fff & (arguments->MAC_DST >> 42));
     break;
   case 4:
-    arguments->HASH.EMH = (0x3fff & (arguments->INPORT << 0))^
-    (0x3fff & (arguments->ETHERTYPE << 0));
+    arguments->HASH.EMH = (0x3fff & (arguments->INPORT << 0)) ^ (0x3fff & (arguments->ETHERTYPE << 0));
     break;
   default:
     verblog printf ("Type not valid\n");
@@ -289,8 +288,7 @@ get_HASH (struct arguments *arguments)
       (0x3fff & (arguments->MAC_DST >> 14)) ^ (0x3fff & (arguments->MAC_DST >> 28)) ^ (0x3fff & (arguments->MAC_DST >> 42));
     break;
   case 4:
-    arguments->HASH.EMH = (0x3fff & (arguments->INPORT << 0))^
-    (0x3fff & (arguments->ETHERTYPE << 0));
+    arguments->HASH.EMH = (0x3fff & (arguments->INPORT << 0)) ^ (0x3fff & (arguments->ETHERTYPE << 0));
     break;
   default:
     verblog printf ("Type not valid\n");
@@ -312,8 +310,7 @@ get_HASH (struct arguments *arguments)
       (0x3fff & (arguments->MAC_DST >> 14)) ^ (0x3fff & (arguments->MAC_DST >> 28)) ^ (0x3fff & (arguments->MAC_DST >> 42));
     break;
   case 1:
-    arguments->HASH.EMH = (0x3fff & (arguments->INPORT << 0))^
-    (0x3fff & (arguments->ETHERTYPE << 0));
+    arguments->HASH.EMH = (0x3fff & (arguments->INPORT << 0)) ^ (0x3fff & (arguments->ETHERTYPE << 0));
     break;
   default:
     verblog printf ("Type not valid\n");
@@ -357,9 +354,11 @@ get_HASH (struct arguments *arguments)
       (0x3fff & (arguments->MAC_DST >> 14)) ^ (0x3fff & (arguments->MAC_DST >> 28)) ^ (0x3fff & (arguments->MAC_DST >> 42));
     break;
   case 4:
-    arguments->HASH.EMH = (0x3fff & (arguments->PORT_DST << 0))^(0x3fff & (arguments->IPv4_DST >> 0)) ^
+    arguments->HASH.EMH = (0x3fff & (arguments->PORT_DST << 0)) ^ (0x3fff & (arguments->IPv4_DST >> 0)) ^
       (0x3fff & (arguments->IPv4_DST >> 14)) ^
-      (0x3fff & (arguments->IPv4_DST >> 28)) ^(0x3fff & (arguments->PROTOCOL << 0))^(0x3fff & (arguments->ETHERTYPE >> 0)) ^ (0x3fff & (arguments->ETHERTYPE >> 14));
+      (0x3fff & (arguments->IPv4_DST >> 28)) ^ (0x3fff & (arguments->PROTOCOL << 0)) ^ (0x3fff & (arguments->ETHERTYPE >> 0)) ^ (0x3fff &
+																 (arguments->ETHERTYPE
+																  >> 14));
     break;
   default:
     verblog printf ("Type not valid\n");
@@ -519,7 +518,7 @@ RT_EMH_add (struct arguments *arguments)
       arguments->RULEPOINTER = INR_RuleTable_EMH_get_next_free_entry (0xffff & arguments->ID);	//save where rule is stored
       if (arguments->autoaction) {
 	if (arguments->dohave_PQUEUE == 0) {
-	  arguments->ACTION_ID = INR_ActT_get_next_free_entry (arguments->ID, arguments->dohave_PQUEUE, arguments->PQUEUE,HAVE_OVERWRITE);
+	  arguments->ACTION_ID = INR_ActT_get_next_free_entry (arguments->ID, arguments->dohave_PQUEUE, arguments->PQUEUE, HAVE_OVERWRITE);
 	  AT_add (arguments);
 	}
 	else {
@@ -1190,7 +1189,7 @@ RT_EMH_print (struct arguments arguments)
 #if EMH_hash_revision == 8
       switch (entry->TYPE_ID) {
       case 1:
-				printf ("INPORT:0x%lx  ", entry->COMP_FIELDS.TYPE1.INPORT);
+	printf ("INPORT:0x%lx  ", entry->COMP_FIELDS.TYPE1.INPORT);
 	break;
       case 2:
 	printf ("ETHERTYPE:0x%lx  ", entry->COMP_FIELDS.TYPE2.ETHERTYPE);
@@ -1200,9 +1199,9 @@ RT_EMH_print (struct arguments arguments)
 	printf ("VLAN_ID:0x%lx  ", entry->COMP_FIELDS.TYPE3.VLAN_ID);
 	break;
       case 4:
-  printf ("DSTPORT:0x%lx  ", entry->COMP_FIELDS.TYPE4.PORT_DST);
-	
-	
+	printf ("DSTPORT:0x%lx  ", entry->COMP_FIELDS.TYPE4.PORT_DST);
+
+
 	break;
       default:
 	printf ("action type not valid\n");
@@ -1212,7 +1211,7 @@ RT_EMH_print (struct arguments arguments)
 #if EMH_hash_revision == 9
       switch (entry->TYPE_ID) {
       case 1:
-				printf ("INPORT:0x%lx  ", entry->COMP_FIELDS.TYPE1.INPORT);
+	printf ("INPORT:0x%lx  ", entry->COMP_FIELDS.TYPE1.INPORT);
 	break;
       case 2:
 	printf ("ETHERTYPE:0x%lx  ", entry->COMP_FIELDS.TYPE2.ETHERTYPE);
@@ -1222,12 +1221,12 @@ RT_EMH_print (struct arguments arguments)
 	printf ("VLAN_ID:0x%lx  ", entry->COMP_FIELDS.TYPE3.VLAN_ID);
 	break;
       case 4:
-  printf ("DSTPORT:0x%lx  ", entry->COMP_FIELDS.TYPE4.PORT_DST);
-  printf ("IPv4_DST:0x%lx  ", entry->COMP_FIELDS.TYPE4.IPv4_DST);
-  printf ("PROTOCOL:0x%lx  ", entry->COMP_FIELDS.TYPE4.PROTOCOL);
-  printf ("ETHERTYPE:0x%lx  ", entry->COMP_FIELDS.TYPE4.ETHERTYPE);
-	
-	
+	printf ("DSTPORT:0x%lx  ", entry->COMP_FIELDS.TYPE4.PORT_DST);
+	printf ("IPv4_DST:0x%lx  ", entry->COMP_FIELDS.TYPE4.IPv4_DST);
+	printf ("PROTOCOL:0x%lx  ", entry->COMP_FIELDS.TYPE4.PROTOCOL);
+	printf ("ETHERTYPE:0x%lx  ", entry->COMP_FIELDS.TYPE4.ETHERTYPE);
+
+
 	break;
       default:
 	printf ("action type not valid\n");
@@ -1259,7 +1258,7 @@ CT_EMH_add (struct arguments *arguments)
     if (entry != NULL) {
       if (arguments->autoaction) {
 	if (arguments->dohave_PQUEUE == 0) {
-	  arguments->ACTION_ID = INR_ActT_get_next_free_entry (arguments->ID, arguments->dohave_PQUEUE, arguments->PQUEUE,HAVE_OVERWRITE);
+	  arguments->ACTION_ID = INR_ActT_get_next_free_entry (arguments->ID, arguments->dohave_PQUEUE, arguments->PQUEUE, HAVE_OVERWRITE);
 	  AT_add (arguments);
 	}
 	else {
@@ -1437,7 +1436,7 @@ CT_EMH_add (struct arguments *arguments)
 #if EMH_hash_revision == 8
       switch (arguments->TYPE_ID) {
       case 1:
-	entry_shadow->COMP_FIELDS.TYPE1.INPORT =arguments->INPORT ;
+	entry_shadow->COMP_FIELDS.TYPE1.INPORT = arguments->INPORT;
 	verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments->TYPE_ID, entry, arguments->RULEPOINTER);
 	break;
       case 2:
@@ -1450,8 +1449,8 @@ CT_EMH_add (struct arguments *arguments)
 	verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments->TYPE_ID, entry, arguments->RULEPOINTER);
 	break;
       case 4:
-	entry_shadow->COMP_FIELDS.TYPE4.PORT_DST =arguments->PORT_DST ;
-	
+	entry_shadow->COMP_FIELDS.TYPE4.PORT_DST = arguments->PORT_DST;
+
 	verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments->TYPE_ID, entry, arguments->RULEPOINTER);
 	break;
       default:
@@ -1462,7 +1461,7 @@ CT_EMH_add (struct arguments *arguments)
 #if EMH_hash_revision == 9
       switch (arguments->TYPE_ID) {
       case 1:
-	entry_shadow->COMP_FIELDS.TYPE1.INPORT =arguments->INPORT ;
+	entry_shadow->COMP_FIELDS.TYPE1.INPORT = arguments->INPORT;
 	verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments->TYPE_ID, entry, arguments->RULEPOINTER);
 	break;
       case 2:
@@ -1475,11 +1474,11 @@ CT_EMH_add (struct arguments *arguments)
 	verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments->TYPE_ID, entry, arguments->RULEPOINTER);
 	break;
       case 4:
-	entry_shadow->COMP_FIELDS.TYPE4.PORT_DST =arguments->PORT_DST ;
-	entry_shadow->COMP_FIELDS.TYPE4.IPv4_DST =arguments->IPv4_DST ;
-	entry_shadow->COMP_FIELDS.TYPE4.PROTOCOL =arguments->PROTOCOL ;
-	entry_shadow->COMP_FIELDS.TYPE4.ETHERTYPE =arguments->ETHERTYPE ;
-	
+	entry_shadow->COMP_FIELDS.TYPE4.PORT_DST = arguments->PORT_DST;
+	entry_shadow->COMP_FIELDS.TYPE4.IPv4_DST = arguments->IPv4_DST;
+	entry_shadow->COMP_FIELDS.TYPE4.PROTOCOL = arguments->PROTOCOL;
+	entry_shadow->COMP_FIELDS.TYPE4.ETHERTYPE = arguments->ETHERTYPE;
+
 	verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments->TYPE_ID, entry, arguments->RULEPOINTER);
 	break;
       default:
@@ -1718,7 +1717,7 @@ CT_EMH_update (struct arguments arguments)
       entry_shadow->COMP_FIELDS.TYPE4.ETHERTYPE = arguments.ETHERTYPE;
       verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments.TYPE_ID, entry, arguments.RULEPOINTER);
       break;
-    
+
     default:
       verblog printf ("action type not valid\n");
       break;
@@ -1937,8 +1936,8 @@ CT_EMH_print (struct arguments arguments)
 	break;
 	break;
       case 4:
-	
-	
+
+
 	printf ("PORT_DST:0x%x  ", entry->COMP_FIELDS.TYPE4.PORT_DST);
 	break;
       default:
@@ -1961,8 +1960,8 @@ CT_EMH_print (struct arguments arguments)
 	break;
 	break;
       case 4:
-	
-	
+
+
 	printf ("PORT_DST:0x%x  ", entry->COMP_FIELDS.TYPE4.PORT_DST);
 	printf ("IPv4_DST:0x%x  ", entry->COMP_FIELDS.TYPE4.IPv4_DST);
 	printf ("PROTOCOL:0x%x  ", entry->COMP_FIELDS.TYPE4.PROTOCOL);
@@ -2075,7 +2074,7 @@ RT_EMA_add (struct arguments *arguments)
     if (entry != NULL) {
       if (arguments->autoaction) {
 	if (arguments->dohave_PQUEUE == 0) {
-	  arguments->ACTION_ID = INR_ActT_get_next_free_entry (arguments->ID, arguments->dohave_PQUEUE, arguments->PQUEUE,HAVE_OVERWRITE);
+	  arguments->ACTION_ID = INR_ActT_get_next_free_entry (arguments->ID, arguments->dohave_PQUEUE, arguments->PQUEUE, HAVE_OVERWRITE);
 	  AT_add (arguments);
 	}
 	else {
@@ -2325,17 +2324,18 @@ AT_add (struct arguments *arguments)
 {
   verblog printf ("__FUNCTION__ = %s\n", __FUNCTION__);
   verblog printf ("Adding rule to next free space up from ID:%i\n", arguments->ID);
-  if (INR_FC_ActT_valid_mask & INR_ActT_get_next_free_entry (arguments->ID, arguments->dohave_PQUEUE, arguments->PQUEUE,HAVE_OVERWRITE)) {
+  if (INR_FC_ActT_valid_mask & INR_ActT_get_next_free_entry (arguments->ID, arguments->dohave_PQUEUE, arguments->PQUEUE, HAVE_OVERWRITE)) {
     struct INR_FC_ActT_RULE *entry =
       (struct INR_FC_ActT_RULE *) INR_ActT_get_addr (INR_FC_ActT_valid_mask &
-						     INR_ActT_get_next_free_entry (arguments->ID, arguments->dohave_PQUEUE, arguments->PQUEUE,HAVE_OVERWRITE));
+						     INR_ActT_get_next_free_entry (arguments->ID, arguments->dohave_PQUEUE, arguments->PQUEUE,
+										   HAVE_OVERWRITE));
     struct INR_FC_ActT_RULE *entry_shadow =
       (struct INR_FC_ActT_RULE *) INR_ActT_shadow_get_addr (INR_FC_ActT_valid_mask &
 							    INR_ActT_get_next_free_entry (arguments->ID, arguments->dohave_PQUEUE,
-											  arguments->PQUEUE,HAVE_OVERWRITE));
-	
+											  arguments->PQUEUE, HAVE_OVERWRITE));
+
     if (entry != NULL) {
-      arguments->RULEPOINTER = (INR_FC_ActT_valid_mask) & INR_ActT_get_next_free_entry (arguments->ID, arguments->dohave_PQUEUE, arguments->PQUEUE,HAVE_OVERWRITE);	//save where rule is stored
+      arguments->RULEPOINTER = (INR_FC_ActT_valid_mask) & INR_ActT_get_next_free_entry (arguments->ID, arguments->dohave_PQUEUE, arguments->PQUEUE, HAVE_OVERWRITE);	//save where rule is stored
       arguments->TableID.ActT = arguments->RULEPOINTER;	//store table position in arguments structure
       arguments->ACTION_ID = arguments->RULEPOINTER;
 
