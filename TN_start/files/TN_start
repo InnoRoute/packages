@@ -46,13 +46,13 @@ start() {
 	
 	# Start WLAN, if available
 	wpa_supplicant -i wlan0 -D wext -c /etc/wpa_supplicant/wpa_supplicant.conf -B &
-	sysrepod -d &
-	sleep 10
-	netopeer2-server -d &
-	sleep 10
-	sysrepo-plugind
-	sleep 10
-	
+#	sysrepod -d &
+#	sleep 10
+#	netopeer2-server -d &
+#	sleep 10
+#	sysrepo-plugind
+#	sleep 10
+	/usr/share/InnoRoute/TN_sysrepo_watchdog.sh &
 	sysrepoctl --feature-enable=scheduled-traffic --module=ieee802-dot1q-sched
 	#TNrulestorage sysrepo &
 	/usr/share/InnoRoute/FlowCache_persistent.sh
