@@ -12,17 +12,22 @@ if [[ $# == 0 ]]; then
   echo "The parameter <verbosity> can be:"
   echo " 0 - all outputs, with waiting times"
   echo " 1 - all outputs, without waiting times"
-  echo " 2 - specific outputs only: PHY & MAC states"
+  if [[ __print_machinereadable -eq 0 ]]; then
+  	echo " 2 - specific outputs only: PHY & MAC states"
+  fi
   echo " 3 - specific outputs only: PHY counters (RX+TX)"
   echo " 4 - specific outputs only: inport-outport counts (RX+TX)"
   echo " 5 - specific outputs only: drop/bad reason counts (RX+TX)"
   echo " 6 - specific outputs only: port counts (RX+TX)"
   echo " 7 - specific outputs only: flow match counts (RX+TX)"
-  echo " 8 - specific outputs only: Ethernet Switch Statistics"
+  if [[ __print_machinereadable -eq 0 ]]; then
+  	echo " 8 - specific outputs only: Ethernet Switch Statistics"
+  fi
 #  echo "$0 <verbosity> [<port>] is used to read current system statistics."
 #TODO  echo "The parameter <port>, if given, limits the statistics to this specific port"
 else
   let __mac_phy=0
+  let __print_machinereadable=0
   let __rxphy=0
   let __inoutcnt=0
   let __dropcnt=0
@@ -31,7 +36,9 @@ else
   let __ethsw=0
   let __txphy=0
   let __wait=0
-
+	if [[ $2 == 1 ]]; then
+	let __print_machinereadable=1
+	fi
   case $1 in
     0)
       echo " 0 - all outputs, with waiting times"
@@ -58,7 +65,9 @@ else
       let __wait=0
       ;;
     2)
-      echo " 2 - specific outputs only: PHY & MAC states"
+    	if [[ __print_machinereadable -eq 0 ]]; then
+      		echo " 2 - specific outputs only: PHY & MAC states"
+      	fi
       let __mac_phy=1
       ;;
     3)
@@ -83,7 +92,9 @@ else
       let __flowcnt=1
       ;;
     8)
-      echo " 8 - specific outputs only: Ethernet Switch Statistics"
+    	if [[ __print_machinereadable -eq 0 ]]; then
+      	echo " 8 - specific outputs only: Ethernet Switch Statistics"
+      fi
       let __ethsw=1
       ;;
     *)
@@ -93,11 +104,17 @@ else
   esac
 
   if [[ __mac_phy -eq 1 ]]; then
+  if [[ __print_machinereadable -eq 0 ]]; then
     echo "### PHY Autonegotiation States: please check against manually set MAC speed/duplex"
+  fi
     let page=0x0
     let reg=0x18
     #echo "GPHY PAGE:$page, REG:$reg"
-    echo " - GPHY ports:"
+    if [[ __print_machinereadable -eq 0 ]]; then
+    	echo " - GPHY ports:"
+    else
+      	echo -n "{"
+    fi
     for phy in `seq 0 9`; do
       let reg=0x18
       tn_ll_read_phy $phy $page $reg;
@@ -117,7 +134,11 @@ else
       else
         let link=$((($read_data >> 2) & 1))
       fi
+      if [[ __print_machinereadable -eq 0 ]]; then
       echo "Port=$phy, LinkUp=$link, Speed=$speed, Duplex=$duplex"
+      else
+      echo -n '"LinkUp'$phy'":'$link', "Speed'$phy'":'$speed', "Duplex'$phy'":'$duplex','
+      fi
       phy_speed[$phy]=$speed
       phy_duplex[$phy]=$duplex
     done
@@ -125,7 +146,9 @@ else
     let page=0x0
     let reg=0x11
     #echo "Alaska PAGE:$page, REG:$reg"
-    echo " - Alaska ports:"
+    if [[ __print_machinereadable -eq 0 ]]; then
+    	echo " - Alaska ports:"
+    fi
     for phy in `seq 10 11`; do
       tn_ll_read_phy $phy $page $reg;
       ## check $read_data -> still busy?
@@ -138,12 +161,18 @@ else
       else
       let link=$((($read_data >> 10) & 1))
       fi
+      if [[ __print_machinereadable -eq 0 ]]; then
       echo "Port=$phy, Valid=$valid, LinkUp=$link, Speed=$speed, Duplex=$duplex"
+      else
+      echo -n '"LinkUp'$phy'":'$link', "Valid'$phy'":'$valid', "Speed'$phy'":'$speed', "Duplex'$phy'":'$duplex','
+      fi
       phy_speed[$phy]=$speed
       phy_duplex[$phy]=$duplex
     done
     
-    echo " - MACs:"
+    if [[ __print_machinereadable -eq 0 ]]; then
+    	echo " - MACs:"
+    fi
     tn_ll_mmi_read $C_BASE_ADDR_NET_LOWER $C_SUB_ADDR_NET_ENABLE
     let enable=$read_data
     tn_ll_mmi_read $C_BASE_ADDR_NET_LOWER $C_SUB_ADDR_NET_SPEED
@@ -154,12 +183,20 @@ else
       let mac_enable=$((($enable >> $mac) & 1))
       let mac_speed=$((($speed   >> 2*$mac) & 3))
       let mac_duplex=$((($duplex >> $mac) & 1))
-      if [[ ${phy_speed[$mac]} != $mac_speed || ${phy_duplex[$mac]} != $mac_duplex ]]; then
-        echo -e "Port=$mac, Enabled=$mac_enable, Speed=$mac_speed, Duplex=$mac_duplex [PHY-MAC MISMATCH]"
-      else                                         
-        echo -e "Port=$mac, Enabled=$mac_enable, Speed=$mac_speed, Duplex=$mac_duplex"
-      fi                                              
+      if [[ __print_machinereadable -eq 0 ]]; then
+      	if [[ ${phy_speed[$mac]} != $mac_speed || ${phy_duplex[$mac]} != $mac_duplex ]]; then
+        	echo -e "Port=$mac, Enabled=$mac_enable, Speed=$mac_speed, Duplex=$mac_duplex [PHY-MAC MISMATCH]"
+      	else                                         
+        	echo -e "Port=$mac, Enabled=$mac_enable, Speed=$mac_speed, Duplex=$mac_duplex"
+      	fi
+      else
+     	echo -n '"Enabledmac'$mac'":'$mac_enable', "Speedmac'$mac'":'$mac_speed', "Duplexmac'$mac'":'$mac_duplex',' 
+      fi                                           
     done
+        if [[ __print_machinereadable -eq 1 ]]; then
+      echo -n '"end":0'
+      echo -n "}"
+    fi
   fi # __mac_phy == 1
 
   if [[ __wait -eq 1 ]]; then
@@ -561,31 +598,32 @@ else
   fi # __inoutcnt == 1
 
   if [[ __flowcnt -eq 1 ]]; then
-    echo -e "\n### Displaying non-zero FlowID Match Statistics (RX, good packets only)"
-    let total=0
-    for i in `seq 0 1023`; do
-      tn_ll_mmi_read $C_BASE_ADDR_STATISTICS_RX_GOOD_FLOWID_LOWER_0 $(($i*4))
-      if [[ $read_data -ne 0 ]]; then
-        let total+=$read_data
-        if [[ $i -eq 0 ]]; then
-          echo "DP0 FlowID $i (default): $read_data"
-        else
-          echo "DP0 FlowID $i:           $read_data"
-        fi
-      fi
-    done
-    for i in `seq 0 1023`; do
-      tn_ll_mmi_read $C_BASE_ADDR_STATISTICS_RX_GOOD_FLOWID_LOWER_1 $(($i*4))
-      if [[ $read_data -ne 0 ]]; then
-        let total+=$read_data
-        if [[ $i -eq 0 ]]; then
-          echo "DP1 FlowID $i (default): $read_data"
-        else
-          echo "DP1 FlowID $i:           $read_data"
-        fi
-      fi
-    done
-    echo "Total Good FlowID: $total packets"
+  TNstatistics f
+#    echo -e "\n### Displaying non-zero FlowID Match Statistics (RX, good packets only)"
+#    let total=0
+#    for i in `seq 0 1023`; do
+#      tn_ll_mmi_read $C_BASE_ADDR_STATISTICS_RX_GOOD_FLOWID_LOWER_0 $(($i*4))
+#      if [[ $read_data -ne 0 ]]; then
+#        let total+=$read_data
+#        if [[ $i -eq 0 ]]; then
+#          echo "DP0 FlowID $i (default): $read_data"
+#        else
+#          echo "DP0 FlowID $i:           $read_data"
+#        fi
+#      fi
+#    done
+#    for i in `seq 0 1023`; do
+#      tn_ll_mmi_read $C_BASE_ADDR_STATISTICS_RX_GOOD_FLOWID_LOWER_1 $(($i*4))
+#      if [[ $read_data -ne 0 ]]; then
+#        let total+=$read_data
+#        if [[ $i -eq 0 ]]; then
+#          echo "DP1 FlowID $i (default): $read_data"
+#        else
+#          echo "DP1 FlowID $i:           $read_data"
+#        fi
+#      fi
+#    done
+#    echo "Total Good FlowID: $total packets"
   fi # __flowcnt == 1
 
   #echo "###############################################################"
@@ -594,6 +632,7 @@ else
   
   # 6tree, bridging/routing, flow-overrides, uc/mc/bc, volumes, packet rates, data rates, ...
 
+	if [[ __print_machinereadable -eq 0 ]]; then
   if [[ __ethsw -eq 1 ]]; then
     echo -e "\nDP0 Ethernet Switch:"
     tn_ll_mmi_read $C_BASE_ADDR_ETH_SW_0 $C_SUB_ADDR_ETH_SW_NUM_SOF          
@@ -629,7 +668,41 @@ else
     #tn_ll_mmi_read $C_BASE_ADDR_ETH_SW_1 $C_SUB_ADDR_ETH_SW_NUM_MATCH_SRC <- needs selection of address ahead in time   
     #tn_ll_mmi_read $C_BASE_ADDR_ETH_SW_1 $C_SUB_ADDR_ETH_SW_NUM_MATCH_DST <- needs selection of address ahead in time   
   fi # __ethsw == 1
-  
+  fi
+  if [[ __print_machinereadable -eq 1 ]]; then
+  if [[ __ethsw -eq 1 ]]; then
+  	#DP0
+    tn_ll_mmi_read $C_BASE_ADDR_ETH_SW_0 $C_SUB_ADDR_ETH_SW_NUM_SOF 
+    echo -n "{"         
+    echo -n '"sof0":'$read_data','
+    tn_ll_mmi_read $C_BASE_ADDR_ETH_SW_0 $C_SUB_ADDR_ETH_SW_NUM_LEARNED      
+    echo -n '"learnedadress0":'$read_data','
+    tn_ll_mmi_read $C_BASE_ADDR_ETH_SW_0 $C_SUB_ADDR_ETH_SW_NUM_FLOOD_UNKNOWN
+    echo -n '"unknowadress0":'$read_data','
+    # directly learned as opposed to sync-learned from other datapath's Eth Switch
+    tn_ll_mmi_read $C_BASE_ADDR_ETH_SW_0 $C_SUB_ADDR_ETH_SW_NUM_AGED_OUT     
+    echo -n '"agedout0":'$read_data','
+    tn_ll_mmi_read $C_BASE_ADDR_ETH_SW_0 $C_SUB_ADDR_ETH_SW_NUM_FLOOD_FULL   
+    echo -n '"saturatedcam0":'$read_data','
+    tn_ll_mmi_read $C_BASE_ADDR_ETH_SW_0 $C_SUB_ADDR_ETH_SW_NUM_PORT_ERROR   
+    echo -n '"portmissmatch0":'$read_data','
+    #DP1
+    tn_ll_mmi_read $C_BASE_ADDR_ETH_SW_1 $C_SUB_ADDR_ETH_SW_NUM_SOF
+    echo -n '"sof1":'$read_data','
+    tn_ll_mmi_read $C_BASE_ADDR_ETH_SW_1 $C_SUB_ADDR_ETH_SW_NUM_LEARNED
+    echo -n '"learnedadress1":'$read_data','
+    tn_ll_mmi_read $C_BASE_ADDR_ETH_SW_1 $C_SUB_ADDR_ETH_SW_NUM_FLOOD_UNKNOWN
+    echo -n '"unknowadress1":'$read_data','
+    tn_ll_mmi_read $C_BASE_ADDR_ETH_SW_1 $C_SUB_ADDR_ETH_SW_NUM_AGED_OUT
+    echo -n '"agedout1":'$read_data','
+    tn_ll_mmi_read $C_BASE_ADDR_ETH_SW_1 $C_SUB_ADDR_ETH_SW_NUM_FLOOD_FULL
+    echo -n '"saturatedcam1":'$read_data','
+    tn_ll_mmi_read $C_BASE_ADDR_ETH_SW_1 $C_SUB_ADDR_ETH_SW_NUM_PORT_ERROR
+    echo -n '"portmissmatch1":'$read_data','
+    echo -n '"end":0'
+    echo -n "}"
+	fi
+	fi
   # Free length, Queue valid
   #echo "###############################################################"
   #echo "## Missing: TM Drop Counters (Buffer Full, Queue Threshold)  ##"
@@ -733,33 +806,33 @@ else
 #    echo "Total Matrix: $total packets"
 #  fi # __inoutcnt == 1
 
-  if [[ __flowcnt -eq 1 ]]; then
-    echo -e "\n### Displaying non-zero FlowID Match Statistics (TX, good packets only)"
-    let total=0
-    for i in `seq 0 1023`; do
-      tn_ll_mmi_read $C_BASE_ADDR_STATISTICS_TX_GOOD_FLOWID_LOWER_0 $(($i*4))
-      if [[ $read_data -ne 0 ]]; then
-        let total+=$read_data
-        if [[ $i -eq 0 ]]; then
-          echo "DP0 FlowID $i (default): $read_data"
-        else
-          echo "DP0 FlowID $i:           $read_data"
-        fi
-      fi
-    done
-    for i in `seq 0 1023`; do
-      tn_ll_mmi_read $C_BASE_ADDR_STATISTICS_TX_GOOD_FLOWID_LOWER_1 $(($i*4))
-      if [[ $read_data -ne 0 ]]; then
-        let total+=$read_data
-        if [[ $i -eq 0 ]]; then
-          echo "DP1 FlowID $i (default): $read_data"
-        else
-          echo "DP1 FlowID $i:           $read_data"
-        fi
-      fi
-    done
-    echo "Total Good FlowID: $total packets"
-  fi # __flowcnt == 1
+#  if [[ __flowcnt -eq 1 ]]; then
+#    echo -e "\n### Displaying non-zero FlowID Match Statistics (TX, good packets only)"
+#    let total=0
+#    for i in `seq 0 1023`; do
+#      tn_ll_mmi_read $C_BASE_ADDR_STATISTICS_TX_GOOD_FLOWID_LOWER_0 $(($i*4))
+#      if [[ $read_data -ne 0 ]]; then
+#        let total+=$read_data
+#        if [[ $i -eq 0 ]]; then
+#          echo "DP0 FlowID $i (default): $read_data"
+#        else
+#          echo "DP0 FlowID $i:           $read_data"
+#        fi
+#      fi
+#    done
+#    for i in `seq 0 1023`; do
+#      tn_ll_mmi_read $C_BASE_ADDR_STATISTICS_TX_GOOD_FLOWID_LOWER_1 $(($i*4))
+#      if [[ $read_data -ne 0 ]]; then
+#        let total+=$read_data
+#        if [[ $i -eq 0 ]]; then
+#          echo "DP1 FlowID $i (default): $read_data"
+#        else
+#          echo "DP1 FlowID $i:           $read_data"
+#        fi
+#      fi
+#    done
+#    echo "Total Good FlowID: $total packets"
+#  fi # __flowcnt == 1
  
   # Missing: Total vs. bad per port, packets vs. volume
   
@@ -879,6 +952,7 @@ else
     echo "Total Collisions: $total packets"
     #echo "### No transmit counters for Alaskas"
   fi # __txphy == 1
-
-  echo "Done"
+if [[ __print_machinereadable -eq 0 ]]; then
+  echo "Done" 
+  fi
 fi  
