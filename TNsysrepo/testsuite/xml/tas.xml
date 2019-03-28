@@ -1,0 +1,11 @@
+<nc:config xmlns:nc="urn:ietf:params:xml:ns:netconf:base:1.0">
+    <TNtas xmlns="urn:sysrepo:TrustNode:TNsysrepo">
+  	<ports><id>0</id>
+  	<GCL><id>0</id><timeperiod>500000000</timeperiod><gatestates>1</gatestates></GCL>
+  	<GCL><id>1</id><timeperiod>500000000</timeperiod><gatestates>255</gatestates></GCL>
+  	<admin_base_time>0</admin_base_time>
+  	<admin_cycle_time_ext>0</admin_cycle_time_ext>
+  	<gate_enable>true</gate_enable>
+	</ports>    
+    </TNtas></nc:config>
+    

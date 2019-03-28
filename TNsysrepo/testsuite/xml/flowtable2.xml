@@ -1,0 +1,21 @@
+<nc:config xmlns:nc="urn:ietf:params:xml:ns:netconf:base:1.0">
+    <TNflowtable xmlns="urn:sysrepo:TrustNode:TNsysrepo">
+		<config_time>0</config_time>
+    <mastertable>
+      <id>0</id>
+      <match>
+      	<in-port>4</in-port>
+      </match>
+      <action>
+		    <action>
+		    	<order>0</order>
+		    	<output-action>
+		          <output-port>
+		         1
+		          </output-port>
+		      </output-action>
+		    </action>
+      </action>
+    </mastertable>  
+    </TNflowtable></nc:config>
+    
