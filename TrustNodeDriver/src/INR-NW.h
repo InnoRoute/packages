@@ -11,6 +11,7 @@
 #endif
 #define INR_NWDEV_features NETIF_F_SG | NETIF_F_FRAGLIST //| NETIF_F_MULTI_QUEUE
 #define INR_NWDEV_features_HW NETIF_F_SG | NETIF_F_FRAGLIST //| NETIF_F_MULTI_QUEUE
+#define INIT_ptp_prio 7
 
 //no, we dont support TCP-checsum.. NETIF_F_IP_CSUM
 
@@ -28,6 +29,7 @@ struct INR_NW_packet
 #define INR_NW_devcount 16
 #define INR_NW_repeatonbusy 0
 #define INR_NW_queue_count 32
+#define INR_NWDEV_MAX_MTU 5000
 //prototypes
 void INR_HW_tx (char *buf, int len);
 void INR_NW_rx (struct net_device *nwdev, struct INR_NW_packet *pkt);
@@ -55,6 +57,8 @@ void set_TSN_sock_opt (uint8_t flag);
 void INR_NW_carrier_update (uint8_t index,uint16_t status);
 int INR_NW_set_mac(struct net_device *nwdev, void *addr);
 void INR_NW_set_NO_TX (uint8_t tx_state);
+void INR_NW_set_PTP_prio (uint8_t prio);
+uint8_t INR_NW_get_PTP_prio (void);
 
 //*****************************************************************************************************************
 /**

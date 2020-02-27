@@ -18,7 +18,8 @@
 #define ID_INPORT 0
 #define ID_TOS 9
 
-#define HAVE_OVERWRITE 0
+#define HAVE_OVERWRITE (arguments->dohave_MAC_DST_OVERWRITE|arguments->dohave_MAC_SRC_OVERWRITE|arguments->dohave_IPv4_DST_OVERWRITE|arguments->dohave_IPv4_SRC_OVERWRITE|arguments->dohave_PORT_DST_OVERWRITE|arguments->dohave_PORT_SRC_OVERWRITE)
+
 
 /* Structure to store hashes */
 struct HASH
@@ -38,6 +39,7 @@ struct tabid
   uint64_t EMA_HT;		/**hashtable*/
   uint64_t ActT;	/**Action table*/
   uint64_t ACCDP;	/**ACCDP*/
+  uint64_t ActT_OVERWITE;
   
 } __attribute__ ((__packed__));
 
@@ -47,8 +49,14 @@ struct arguments
   uint8_t used;		/**<entry used */
   int verbose;
   uint8_t sysrepo;
+  uint8_t matchcount;
+  uint8_t machinereadable;
   uint8_t EMH_HASH_OVERLAY;
   uint8_t dohave_EMH_HASH_OVERLAY;
+  uint8_t QCI_enable;
+  uint8_t QCI_IPV_wildcard;
+  uint8_t QCI_gate_ID;
+  uint8_t dohave_QCI_gate_ID;
   uint16_t bulk;		/* The -v flag */
   uint8_t numberout;		/* print number of table after outosearch */
   uint8_t dohave_numberout;	/* print number of table after outosearch */
@@ -56,7 +64,18 @@ struct arguments
   uint8_t dohave_MAC_SRC;      /**<source MAC was set by user*/
   uint64_t MAC_DST;		/**<destination MAC*/
   uint8_t dohave_MAC_DST;      /**<destination MAC was set by user*/
-
+  uint32_t PORT_SRC_OVERWRITE;		/**<TCP/UDP source port*/
+  uint8_t dohave_PORT_SRC_OVERWRITE;	/**<TCP/UDP source port was set by user*/
+  uint32_t PORT_DST_OVERWRITE;		/**<TCP/UDP destination port*/
+  uint8_t dohave_PORT_DST_OVERWRITE;	/**<TCP/UDP destination port was set by user*/
+  uint32_t IPv4_SRC_OVERWRITE;		/**<IPv4 source address*/
+  uint8_t dohave_IPv4_SRC_OVERWRITE;	/**<IPv4 source address was set by user*/
+  uint32_t IPv4_DST_OVERWRITE;		/**<IPv4 destination address*/
+  uint8_t dohave_IPv4_DST_OVERWRITE;	/**<IPv4 destination address was set by user*/
+  uint64_t MAC_SRC_OVERWRITE;		/**<source MAC*/
+  uint8_t dohave_MAC_SRC_OVERWRITE;      /**<source MAC was set by user*/
+  uint64_t MAC_DST_OVERWRITE;		/**<destination MAC*/
+  uint8_t dohave_MAC_DST_OVERWRITE;      /**<destination MAC was set by user*/
   uint8_t PQUEUE;	/**<processor queue*/
   uint8_t dohave_PQUEUE;      /**<processor queue was set by user*/
   uint32_t VLAN_ID;		/**<VLAN_ID*/
@@ -161,4 +180,6 @@ void AT_del (struct arguments arguments);
 void AT_clear (struct arguments arguments);
 void AT_print (struct arguments arguments);
 void RT_EMA_TYPE_override (struct arguments *arguments);
+void AT_OVERWRITE_add (struct arguments *arguments);
+void AT_OVERWRITE_del (struct arguments *arguments);
 

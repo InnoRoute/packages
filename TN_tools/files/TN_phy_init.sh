@@ -7,6 +7,7 @@ if [[ $# == 0 ]]; then
   echo "$0 <ex> is used to (re-)initialize all Ethernet PHY chips and set the default values"
   echo "The parameter <ex> can have any value. Without it, this help is displayed"
 else
+  if [ -z "$(lspci -mm -d 10ee:0000)" ]; then echo "No PCIe connection to FPGA. Exiting."; exit 1; fi
 
   # TODO: Add busy checks at address: MSB at "C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+4" should be 0!
   

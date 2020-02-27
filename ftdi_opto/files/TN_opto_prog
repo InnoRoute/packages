@@ -13,13 +13,43 @@ if [ $# -eq 1 ]; then
 	INR_ftdi_opto_tool $1
 
 	# echo 4 > /proc/TN_LPC_ctl
-
+	sleep 1
 	i2cset -y 0 4 2 2
 
 	# Wait for SMBus accesses to be executed -> might be skipped
 	i2cget -y 0 4 2
 
 	i2cset -y 0 4 2 0
+	sleep 10
+	let biterr=`i2cget -y 0 4 0x02`
+  printf  " -  2: Bitstream Error (ID-ERR+ID & CONF-ERR (R); OPTO (W)) 0x%02x\n" $biterr
+  rewritecount=0
+  while [[ $(( $biterr & 140 )) -ne 0 ]]; do
+  	rewritecount=$((rewritecount + 1))
+  	if [ "$rewritecount" -gt "5" ]; then
+  	echo "error: exit programming loop"
+  	exit 1
+  	fi
+  	echo "Error, writing bitstream again...."
+    i2cset -y 0 4 2 1
+
+		# Wait for SMBus accesses to be executed -> might be skipped
+		i2cget -y 0 4 2
+
+		# Write Data using FTDI tool
+		INR_ftdi_opto_tool $1
+
+		# echo 4 > /proc/TN_LPC_ctl
+		sleep 1
+		i2cset -y 0 4 2 2
+
+		# Wait for SMBus accesses to be executed -> might be skipped
+		i2cget -y 0 4 2
+
+		i2cset -y 0 4 2 0
+    sleep 10
+    let biterr=`i2cget -y 0 4 0x02`
+  done
 	
 	sleep 2
 	

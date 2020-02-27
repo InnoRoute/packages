@@ -10,6 +10,8 @@ if [[ $# -ne 3 ]]; then
   echo " <enLS>:  Enable Linear Search-based FlowCache"
   echo " <enEMA>: Enable TCAM-based FlowCache"
 else
+  if [ -z "$(lspci -mm -d 10ee:0000)" ]; then echo "No PCIe connection to FPGA. Exiting."; exit 1; fi
+
   echo "Working on FlowCache"
   if [[ $1 -eq 1 ]]; then
     echo "Enabling EMH"

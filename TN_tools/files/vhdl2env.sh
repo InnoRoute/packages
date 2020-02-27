@@ -13,5 +13,3 @@ if [[ $# == 1 ]]; then
 else
   echo "provide vhdl-mmi input file!"
 fi
-
-

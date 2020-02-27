@@ -16,6 +16,8 @@ if [[ $# -lt 2 || $# -gt 4 ]]; then
 #  echo "           e.g., in case of 00:11:22:33:44:55 <addr> is 001122334455"
 #  echo "  <6tree>  TBD"
 else
+  if [ -z "$(lspci -mm -d 10ee:0000)" ]; then echo "No PCIe connection to FPGA. Exiting."; exit 1; fi
+
   let   port=$1
   let enable=$2
   if [[ $# -gt 2 ]]; then
@@ -37,14 +39,29 @@ else
         0)
           echo "Setting Speed 10 Mbps for all ports"
           tn_ll_mmi_write $C_BASE_ADDR_NET_LOWER $C_SUB_ADDR_NET_SPEED 0x00000000
+          tn_ll_mmi_read $C_BASE_ADDR_NET_LOWER $C_SUB_ADDR_NET_SPEED
+    			let physpeed=$read_data
+    			if [[ $physpeed -ne 0x00000000 ]]; then
+    				echo "error phy spped mismatch set:0x00000000 read:$physpeed" >> /var/log/TN_FPGA_fail.log
+    			fi
           ;;
         1)
           echo "Setting Speed 100 Mbps for all ports"
           tn_ll_mmi_write $C_BASE_ADDR_NET_LOWER $C_SUB_ADDR_NET_SPEED 0x55555555
+          tn_ll_mmi_read $C_BASE_ADDR_NET_LOWER $C_SUB_ADDR_NET_SPEED
+    			let physpeed=$read_data
+    			if [[ $physpeed -ne 0x55555555 ]]; then
+    				echo "error phy spped mismatch set:0x55555555 read:$physpeed" >> /var/log/TN_FPGA_fail.log
+    			fi
           ;;
         2)
           echo "Setting Speed 1000 Mbps for all ports"
           tn_ll_mmi_write $C_BASE_ADDR_NET_LOWER $C_SUB_ADDR_NET_SPEED 0xAAAAAAAA
+          tn_ll_mmi_read $C_BASE_ADDR_NET_LOWER $C_SUB_ADDR_NET_SPEED
+    			let physpeed=$read_data
+    			if [[ $physpeed -ne 0xAAAAAAAA ]]; then
+    				echo "error phy spped mismatch set:0xAAAAAAAA read:$physpeed" >> /var/log/TN_FPGA_fail.log
+    			fi
           ;;
         *)
           echo "$0: Parameter error"

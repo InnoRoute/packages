@@ -25,6 +25,42 @@ module TNflowtable-actions {
                     }                    
                     }
             }
+            case modify-action-case {
+            container modify-action {
+            		choice modfield{
+            			case MAC-DST{
+            				leaf MAC-DST-overwrite{
+            					type yang:mac-address;
+            				}
+            			}
+            			case MAC-SRC{
+            				leaf MAC-SRC-overwrite{
+            					type yang:mac-address;
+            				}
+            			}
+            			case IPv4-DST{
+            				leaf IPv4-DST-overwrite{
+            					type inet:ipv4-address;
+            				}
+            			}
+            			case IPv4-SRC{
+            				leaf IPv4-SRC-overwrite{
+            					type inet:ipv4-address;
+            				}
+            			}
+            			case L4-DST{
+            				leaf L4-DST-overwrite{
+            					type inet:port-number;
+            				}
+            			}
+            			case L4-SRC{
+            				leaf L4-SRC-overwrite{
+            					type inet:port-number;
+            				}
+            			}
+            		}
+            }
+            }
             case queue-action-case {
                 container queue-action {
                     leaf queue {

@@ -16,7 +16,99 @@ uint8_t verbose = 0;
 uint64_t BASE = 0;
 uint64_t BASE_shadow = 0;
 uint8_t MEMDUMP = 0;
+int delay=100000;
 
+void set_sleeptime(uint64_t zeit)
+{
+	delay=zeit;
+}
+//*****************************************************************************************************************
+/**
+*read from mmi addr
+*
+*/
+uint32_t INR_PCI_MMI_read(uint64_t addr) {
+		uint32_t *value;
+		value=BASE+addr;
+    return *value;
+}
+
+//*****************************************************************************************************************
+/**
+*read from mmi addr
+*
+*/
+void INR_PCI_MMI_write(uint32_t val, uint64_t addr) {
+    uint32_t *value;
+		value=BASE+addr;
+    *value=val;
+}
+
+//*****************************************************************************************************************
+/**
+*write data to mdio (baremetal)
+*@param PHY_addr address of ethernet PHY
+*@param REG_addr address of register
+*@param data data to write
+*/
+void INR_MDIO_write_b(uint8_t write, uint8_t PHY_addr, uint8_t REG_addr, uint16_t data) {
+    uint32_t value=0,i=0;
+    value=((1&write)<<26)|((PHY_addr&0x1f)<<21)|((REG_addr&0x1f)<<16)|(data);
+    INR_PCI_MMI_write(value,INR_MDIO_write_addr);
+    usleep(50);
+    while(INR_MDIO_read_b(NULL)) { //wait until ready
+        i++;
+        if(i>INR_MDIO_timeout)break;
+
+
+    }
+}
+//*****************************************************************************************************************
+/**
+*write data to mdio (baremetal)
+*@param PHY_addr address of ethernet PHY
+*@param REG_addr address of register
+*@param data data to write
+*/
+void INR_MDIO_write(uint8_t PHY_addr, uint8_t REG_addr, uint16_t data) {
+    INR_MDIO_write_b(1,PHY_addr,REG_addr,data);
+}
+
+//*****************************************************************************************************************
+/**
+*read data from mdio (baremtal))
+*@param PHY_addr address of ethernet PHY
+*@param REG_addr address of register
+*@param *data address of data to write
+*@return busy bit
+*/
+uint8_t INR_MDIO_read_b(uint16_t *data) {
+    uint8_t busy=0;
+    uint32_t value=0;
+    //uint16_t *rd_data=data;
+    value=INR_PCI_MMI_read(INR_MDIO_read_addr);
+    usleep(50);
+    if (value==0xeeeeeeee){printf("MMI read timeout\n");return 0;}
+    busy=1&(value>>31);
+    if(data)*data=value&0xffff;//check if nullpointer
+    //printk("value=0x%x\n",value);
+    return busy;
+}
+
+//*****************************************************************************************************************
+/**
+*write data to mdio
+*@param PHY_addr address of ethernet PHY
+*@param REG_addr address of register
+*@param data data to write
+*/
+uint16_t INR_MDIO_read(uint8_t PHY_addr, uint8_t REG_addr) {
+    uint16_t data;
+    INR_MDIO_write_b(0,PHY_addr,REG_addr,0);//send read request
+    INR_MDIO_read_b(&data);//read value
+    //printk("value=0x%x\n",data);
+    return data;
+}
 //********************************************************************************************************************
 /**
 *set default values to arguments structure
@@ -109,10 +201,280 @@ set_verbose (uint8_t i)
 };
 
 //************************************************************************************************************************************
+
+STAT_print_phy_counters(struct arguments *arguments)
+{
+	uint16_t write_data;
+	uint8_t REG_addr=0x15;
+	uint8_t data;
+	int total=0;
+	not_MACHINEREADABLE printf("\n### GPHY: RX Packet Counters (saturating at 255, non-zero only)");
+	MACHINEREADABLE printf("{");	
+	write_data=0x0100;
+	for (int phy=16; phy<26; phy++)
+	{
+		INR_MDIO_write(phy, REG_addr, write_data);
+		//usleep(1000);
+	}
+	usleep(delay);
+	for (int phy=16; phy<26; phy++)
+	{	
+		data=INR_MDIO_read(phy, REG_addr);
+		//usleep(1000);
+		if (data != 0)
+		{
+			not_MACHINEREADABLE printf("PHY %i: %i packets received\n", phy, data);
+			total=total+data;
+		}
+		MACHINEREADABLE printf("\"rxpacketsphy%i\":%i,", phy, data);
+	}
+	not_MACHINEREADABLE printf("\nTotal RX: %i packets\n\n", total);
+	MACHINEREADABLE printf("\"totalrx\":%i,", total);
+	
+	not_MACHINEREADABLE printf("\n### GPHY: RX Error Counters (saturating at 255, non-zero only)");
+	write_data=0x000;
+	total=0;
+	for (int phy=16; phy<26; phy++)
+	{
+		INR_MDIO_write(phy, REG_addr, write_data);
+		//usleep(1000);
+	}
+	usleep(delay);
+	for (int phy=16; phy<26; phy++)
+	{
+		data=INR_MDIO_read(phy, REG_addr);
+		//usleep(1000);
+		if (data != 0)
+		{
+			not_MACHINEREADABLE printf ("PHY %i: %i errors received\n", phy, data);
+			total=total+data;
+		}
+		MACHINEREADABLE printf("\"rxerrorphy%i\":%i,", phy, data);
+	}
+	not_MACHINEREADABLE printf("\nTotal RX Errors: %i packets\n\n", total);
+	MACHINEREADABLE printf("\"totalrxerror\":%i,", total);
+	
+	not_MACHINEREADABLE printf("\n### GPHY: RX ESD Error Counters (saturating at 255, non-zero only)");
+	write_data=0x0200;
+	total=0;
+	for (int phy=16; phy<26; phy++)
+	{
+		INR_MDIO_write(phy, REG_addr, write_data);
+		//usleep(1000);
+		
+	}
+	usleep(delay);
+	for (int phy=16; phy<26; phy++)
+	{
+		data=INR_MDIO_read(phy, REG_addr);
+		//usleep(1000);
+		if (data != 0)
+		{
+			not_MACHINEREADABLE printf ("PHY %i: %i ESD errors received\n", phy, data);
+			total=total+data;
+		}
+		MACHINEREADABLE printf("\"rxerroresdphy%i\":%i,", phy, data);
+	}
+	not_MACHINEREADABLE printf("\nTotal RX ESD Errors: %i packets\n\n", total);
+	MACHINEREADABLE printf("\"totalrxerroresd\":%i,", total);
+	
+	not_MACHINEREADABLE printf("\n### GPHY: RX SSD Error Counters (saturating at 255, non-zero only)");
+	write_data=0x0300;
+	total=0;
+	for (int phy=16; phy<26; phy++)
+	{
+		INR_MDIO_write(phy, REG_addr, write_data);
+		//usleep(1000);
+	}
+	usleep(delay);
+	for (int phy=16; phy<26; phy++)
+	{
+		data=INR_MDIO_read(phy, REG_addr);
+		//usleep(1000);
+		if (data != 0)
+		{
+			not_MACHINEREADABLE printf ("PHY %i: %i SSD errors received\n", phy, data);
+			total=total+data;
+		}
+		MACHINEREADABLE printf("\"rxerrorssdphy%i\":%i,", phy, data);
+	}
+	not_MACHINEREADABLE printf("\nTotal RX SSD Errors: %i packets\n\n", total);
+	MACHINEREADABLE printf("\"totalrxerrorssd\":%i,", total);
+	
+	not_MACHINEREADABLE printf("\n### GPHY: TX Packet Counters (saturating at 255, non-zero only)");
+	write_data=0x0500;
+	total=0;
+	for (int phy=16; phy<26; phy++)
+	{
+		INR_MDIO_write(phy, REG_addr, write_data);
+		//usleep(1000);
+	}
+	usleep(delay);
+	for (int phy=16; phy<26; phy++)
+	{
+		data=INR_MDIO_read(phy, REG_addr);
+		//usleep(1000);
+		if (data != 0)
+		{
+			not_MACHINEREADABLE printf ("PHY %i: %i packets transmitted\n", phy, data);
+			total=total+data;
+		}
+		MACHINEREADABLE printf("\"txpacketsphy%i\":%i,", phy, data);
+	}
+	not_MACHINEREADABLE printf("\nTotal TX: %i packets\n\n", total);
+	MACHINEREADABLE printf("\"totaltx\":%i,", total);	
+	
+	not_MACHINEREADABLE printf("\n### GPHY: TX Error Counters (saturating at 255, non-zero only)");
+	
+	write_data=0x0400;
+	for (int phy=16; phy <26; phy++)
+	{;
+		INR_MDIO_write(phy, REG_addr, write_data);
+		//usleep(1000);
+	}
+	usleep(delay);
+	total=0;
+	for (int phy=16; phy<26; phy++)
+	{
+		data=INR_MDIO_read(phy, REG_addr);
+		//usleep(1000);
+		if (data != 0)
+		{
+			not_MACHINEREADABLE printf("PHY %i: %i packets with errors transmitted\n", phy, data);
+			total=total+data;
+		}
+		MACHINEREADABLE printf("\"txerrorphy%i\":%i,", phy, data);
+	}
+	not_MACHINEREADABLE printf("\nTotal TX Errors: %i packets\n\n", total);
+	MACHINEREADABLE printf("\"totaltxerror\":%i,", total);
+	
+	not_MACHINEREADABLE printf("\n### GPHY: TX Collision Counters (saturating at 255, non-zero only)");
+	write_data=0x0600;
+	for (int phy=16; phy <26; phy++)
+	{
+		INR_MDIO_write(phy, REG_addr, write_data);
+		//usleep(1000);
+	}
+	usleep(delay);
+	total=0;
+	for (int phy=16; phy<26; phy++)
+	{
+		data=INR_MDIO_read(phy, REG_addr);
+		//usleep(1000);
+		if (data != 0)
+		{
+			not_MACHINEREADABLE printf("PHY %i: %i collisions\n", phy, data);
+			total=total+data;
+		}
+		MACHINEREADABLE printf("\"txcollisions%i\":%i,", phy, data);
+	}
+	not_MACHINEREADABLE printf("\nTotal Collisions: %i packets\n\n", total);
+	MACHINEREADABLE printf("\"totaltxcollision\":%i", total);
+	MACHINEREADABLE printf("}");
+}
+//************************************************************************************************************************************
+/**
+*print flow counters
+*@param arguments settings
+*/
+
+STAT_print_flow_counters(struct arguments *arguments)
+{
+	uint64_t total=0;
+	uint32_t *value,storeval;
+	
+	//RX
+	not_MACHINEREADABLE printf("Displaying non-zero FlowID Match Statistics (RX, good packets only)");
+	MACHINEREADABLE printf("{");
+	for (int i=0; i <= 1023; i++)
+	{
+		value=BASE+(C_BASE_ADDR_STATISTICS_RX_GOOD_FLOWID_LOWER_0*256)+(i * 4);
+		storeval=*value;// copy because clear on read
+		if (storeval != 0)
+		{
+			total=total+storeval;
+			if (i==0)
+			{
+				not_MACHINEREADABLE printf("\nDP0 FlowID %i (default):%lli \n",i,storeval);
+			}
+			else
+			{
+				not_MACHINEREADABLE printf("\nDP0 FlowID %i:%lli \n",i,storeval);
+			}
+		}
+		MACHINEREADABLE printf("\"rxdp0#flowid#%i\":%i,",i,storeval);
+	}
+	for (int i=0; i <= 1023; i++)
+	{
+		value=BASE+(C_BASE_ADDR_STATISTICS_RX_GOOD_FLOWID_LOWER_1*256)+(i * 4);
+		storeval=*value;// copy because clear on read
+		if (storeval != 0)
+		{
+			total=total+storeval;
+			if (i==0)
+			{
+				not_MACHINEREADABLE printf("\nDP1 FlowID %i (default):%lli \n",i,storeval);
+			}
+			else
+			{
+				not_MACHINEREADABLE printf("\nDP1 FlowID %i:%lli \n",i,storeval);
+			}
+			MACHINEREADABLE printf("\"rxdp1#flowid#%i\":%i,",i,storeval);
+		}
+	}
+	not_MACHINEREADABLE printf("Total Good FlowID:%lli\n",total);
+	MACHINEREADABLE printf("\"rxtotal\":%i,",total);
+
+	//TX
+	total=0;
+	not_MACHINEREADABLE printf("\nDisplaying non-zero FlowID Match Statistics (TX, good packets only)");
+	for (int i=0; i <= 1023; i++)
+	{
+		value=BASE+(C_BASE_ADDR_STATISTICS_TX_GOOD_FLOWID_LOWER_0*256)+(i * 4);
+		storeval=*value;// copy because clear on read
+		if (storeval != 0)
+		{
+			total=total+storeval;
+			if (i==0)
+			{
+				not_MACHINEREADABLE printf("\nDP0 FlowID %i (default):%lli \n",i,storeval);
+			}
+			else
+			{
+				not_MACHINEREADABLE printf("\nDP0 FlowID %i:%lli \n",i,storeval);
+			}
+			MACHINEREADABLE printf("\"txdp0#flowid#%i\":%i,",i,storeval);
+		}
+	}
+	for (int i=0; i <= 1023; i++)
+	{
+		value=BASE+(C_BASE_ADDR_STATISTICS_TX_GOOD_FLOWID_LOWER_1*256)+(i * 4);
+		storeval=*value;// copy because clear on read
+		if (storeval != 0)
+		{
+			total=total+storeval;
+			if (i==0)
+			{
+				not_MACHINEREADABLE printf("\nDP1 FlowID %i (default):%lli \n",i,storeval);
+			}
+			else
+			{
+				not_MACHINEREADABLE printf("\nDP1 FlowID %i:%lli \n",i,storeval);
+			}
+		}
+		MACHINEREADABLE printf("\"txdp1#flowid#%i\":%i,",i,storeval);
+	}
+	not_MACHINEREADABLE printf("Total Good FlowID:%lli\n",total);
+	MACHINEREADABLE printf("\"txtotal\":%i",total);
+	MACHINEREADABLE printf("}");
+}
+
+//************************************************************************************************************************************
 /**
 *print in-out port counters
 *@param arguments settings
 */
+
 STAT_print_inout_counters(struct arguments *arguments)
 {
 	uint8_t inport,outport;
@@ -140,10 +502,10 @@ STAT_print_inout_counters(struct arguments *arguments)
 			printf("\"dp0#tx#%i#%i\":%i,", inport, outport, storeval_tx);
 		} else {
 			if (storeval)
-				printf("-  RX%i (buffered, towards port %i):%i", inport, outport, storeval);
+				printf("-  RX%i (buffered, towards port %i):%i\n", inport, outport, storeval);
 			if (storeval_tx)
-				printf("-> TX%i (sent, RX from port %i):%i", outport, inport, storeval_tx);
-			printf("\n");
+				printf("-> TX%i (sent, RX from port %i):%i\n", outport, inport, storeval_tx);
+			//printf("\n");
 		}
 	}
 	not_MACHINEREADABLE printf("Total packets:%i received and buffered, %i forwarded from buffer\n\n",allrxcounters,alltxcounters);allrxcounters=0;alltxcounters=0;
@@ -168,10 +530,10 @@ STAT_print_inout_counters(struct arguments *arguments)
 			printf("\"dp1#tx#%i#%i\":%i,", inport, outport, storeval_tx);
 		} else {
 			if (storeval)
-				printf("-  RX%i (buffered, towards port %i):%i", inport, outport, storeval);
+				printf("-  RX%i (buffered, towards port %i):%i\n", inport, outport, storeval);
 			if (storeval_tx)
-				printf("-> TX%i (sent, RX from port %i):%i", outport, inport, storeval_tx);
-			printf("\n");
+				printf("-> TX%i (sent, RX from port %i):%i\n", outport, inport, storeval_tx);
+			//printf("\n");
 		}
 	}
 	not_MACHINEREADABLE printf("Total packets:%i received and buffered, %i forwarded from buffer\n\n",allrxcounters,alltxcounters);allrxcounters=0;alltxcounters=0;

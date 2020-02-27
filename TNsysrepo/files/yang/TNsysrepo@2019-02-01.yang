@@ -4,6 +4,7 @@ module TNsysrepo {
   	prefix "tn";
 	import TNflowtable-types {prefix flowtabletypes;revision-date "2019-02-01";}
 	import TNtas-port {prefix tasport;revision-date "2019-02-01";}
+	import TNconfig {prefix TNconfig;revision-date "2019-05-06";}
   	description  "Data model for TrustNode";
 
   	revision 2019-02-01 {
@@ -41,6 +42,9 @@ module TNsysrepo {
 				uses tasport:port;
 				}
 
+    }
+    container TNconfig {
+    uses TNconfig:TrustNode;
     }
    
 }

@@ -19,6 +19,7 @@
 #include <linux/skbuff.h>
 #include <linux/unistd.h>
 #include <linux/ptp_classify.h>
+
 #include "INR.h"
 #include "INR-NW.h"
 #include "INR-PCI.h"
@@ -27,6 +28,7 @@
 #include <asm/signal.h>
 #include <linux/semaphore.h>
 #include <asm/cacheflush.h>
+
 #include "INR-MMI.h"
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4,14,50)
 	#include <linux/sched/signal.h>
@@ -93,6 +95,9 @@ DEFINE_SEMAPHORE (INR_PCI_rx_pageallocator_sem);
 EXPORT_SYMBOL(gBaseVirt1); //export for use in MMI module
 uint32_t HW_addr_map_revision=0;
 uint32_t HW_features_user=0;
+static void __free_pages_ok(struct page *page, unsigned int order);
+
+
 /**
 *setts all global variables to zero
 */
@@ -292,6 +297,7 @@ INR_PCI_rx_descriptor_pool_refill (uint8_t index)
     {
         if (down_trylock (&INR_PCI_rx_pageallocator_sem)) {//ry to get a preallocated page, if not, try self
             INR_PCI_rx_descriptor_pool_root[index] = alloc_page (GFP_ATOMIC);
+            if (RX_DBG_mod) INR_LOG_debug("alloc new page1: %llx\n",page_address (INR_PCI_rx_descriptor_pool_root[index]));
             if (unlikely (INR_PCI_rx_descriptor_pool_root[index] == NULL)) {
                 INR_LOG_debug (loglevel_err"RX Page alloc faild\n");
                 INR_PCI_enable_error_LED
@@ -307,12 +313,14 @@ INR_PCI_rx_descriptor_pool_refill (uint8_t index)
     }
     else
         INR_PCI_rx_descriptor_pool_root[index] = alloc_page (GFP_ATOMIC);
+        //if (RX_DBG_mod) INR_LOG_debug("alloc new page2: %llx\n",page_address (INR_PCI_rx_descriptor_pool_root[index]));
     if (!INR_PCI_rx_descriptor_pool_root[index]) {
         INR_LOG_debug (loglevel_err"RX Page alloc faild(noprealloc)\n");
         INR_PCI_enable_error_LED
         return 1;
     }
     INR_PCI_rx_descriptor_pool_dma_root[index] = dma_map_page (&globdev->dev, INR_PCI_rx_descriptor_pool_root[index], 0, pagesize, DMA_FROM_DEVICE);	//gen new root dma
+    //if (RX_DBG_mod) INR_LOG_debug("mapped new page: %llx\n",INR_PCI_rx_descriptor_pool_dma_root[index]);
     if (dma_mapping_error (&globdev->dev, INR_PCI_rx_descriptor_pool_dma_root[index])) {
         INR_PCI_enable_error_LED
         INR_LOG_debug (loglevel_err"RX page mappng error! \n");
@@ -405,7 +413,7 @@ INR_PCI_process_rx_descriptor_ring (uint8_t index)
         if (RX_DBG_mod)
             INR_LOG_debug (loglevel_warn"RX-Descriptor-dump RX_Current:%i DescrBase:0x%x Status:%x Length:%i Index:%i FirstPKG:%i Buffer:%llx DMA:%llx MEM:%llx offset:0x%i page:%llx, fragmentindex:%i HW_TS:%i\n", INR_PCI_rx_descriptor_current[index], INR_PCI_rx_descriptor_ring[INR_PCI_rx_descriptor_current[index]][index], RX_descriptor->Status, RX_descriptor->length, index, firstpkg[index], RX_descriptor->buffer, data_rx[INR_PCI_rx_descriptor_current[index]][index]->dma, data_rx[INR_PCI_rx_descriptor_current[index]][index]->data, data_rx[INR_PCI_rx_descriptor_current[index]][index]->offset, page_address (data_rx[INR_PCI_rx_descriptor_current[index]][index]->page), data_rx[INR_PCI_rx_descriptor_current[index]][index]->fragmentindex,INR_PCI_HW_timestamp);	//long debug print
         IfNotRuss if ((RX_descriptor->Errors & (0x1))) {	//handle descriptor error flag
-            INR_LOG_debug (loglevel_err"error received fragment with error flag\n");
+            if (RX_DBG_mod)INR_LOG_debug (loglevel_err"error received fragment with error flag\n");
             INR_PCI_enable_error_LED
             dropmode[index] = 1;
         }
@@ -501,7 +509,9 @@ INR_PCI_process_rx_descriptor_ring (uint8_t index)
 			struct INR_TIME_timestamps ts;							
                     INR_TIME_correct_HW_timestamp(hw_timestamp[index],&ts);
                     skbtimestamp->hwtstamp=ns_to_ktime((u64)ts.controlled); //0: insert timestamp here...
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5,0,0)                      
                     skbtimestamp->hwtstamp2=ns_to_ktime((u64)ts.bridge); //provide second timestamp
+#endif
                     //skb_tstamp_rx(rx_skb[index],&skbtimestamp);
                     __net_timestamp(rx_skb[index]);
 
@@ -588,7 +598,7 @@ INR_PCI_process_rx_descriptor_ring (uint8_t index)
             for (tmp = 0; (tmp < RX_descriptor->length); tmp++) {//dump packet data
                 if (tmp % 32 == 0)
                     printk ("\n");
-                printk ("%x ", tmpdata[tmp]);
+                printk (KERN_CONT "%x ", tmpdata[tmp]);
             }
             printk ("\n\n");
         }
@@ -596,12 +606,15 @@ INR_PCI_process_rx_descriptor_ring (uint8_t index)
         if(RX_descriptor->Status&(1<<2))if (zerocopy_rx)kfree(data_rx[INR_PCI_rx_descriptor_current[index]]
                         [index]->data); //if zerocop free data buffer
 #endif
-        if (data_rx[INR_PCI_rx_descriptor_current[index]][index]->fragmentindex == (rx_descriptor_pool_length - 1)) {
+       if(zerocopy_rx){ if (data_rx[INR_PCI_rx_descriptor_current[index]][index]->fragmentindex == (rx_descriptor_pool_length - 1)) {
             dma_unmap_page (&globdev->dev, data_rx[INR_PCI_rx_descriptor_current[index]][index]->dma_root, pagesize, DMA_FROM_DEVICE);	//if last fragment of page is used unmap page
-            if (!zerocopy_rx)		//if not zerocopy free the memeory page because date is copied already
-                __free_page (data_rx[INR_PCI_rx_descriptor_current[index]]
-                             [index]->page);
-        }
+            if (zerocopy_rx==0){		//if not zerocopy free the memeory page because date is copied already
+                
+               if (RX_DBG_mod) INR_LOG_debug("page %llx unmapped, freeing page\n",page_address (data_rx[INR_PCI_rx_descriptor_current[index]][index]->page));
+               __free_page (data_rx[INR_PCI_rx_descriptor_current[index]][index]->page);
+               //__free_pages_ok(data_rx[INR_PCI_rx_descriptor_current[index]][index]->page,0);
+               }
+        }}
 //########################LAST FRAGMENT handling
         if (RX_descriptor->Status & 0x2)	//end of paket or not?
         {
@@ -614,6 +627,8 @@ INR_PCI_process_rx_descriptor_ring (uint8_t index)
             }
             else if (rx_skb[index])
                 if (rx_skb[index]->dev->flags & IFF_UP)	//check if interface is up
+                
+                
                     if (NET_RX_DROP == netif_receive_skb (rx_skb[index])) {
                         if (RX_DBG_mod)
                             INR_LOG_debug (loglevel_err"PKT dropped RX :/\n");
@@ -624,12 +639,17 @@ INR_PCI_process_rx_descriptor_ring (uint8_t index)
                         priv->stats.rx_packets++;
                         priv->stats.rx_bytes += RX_descriptor->length;
                     }
+                  
+
+                    
             dropmode[index] = 0;	//reset dropmode
         }
 release_descriptor:
+				if(zerocopy_rx){
         if (data_rx[INR_PCI_rx_descriptor_current[index]][index])
             kfree (data_rx[INR_PCI_rx_descriptor_current[index]][index]);	//free descriptor
         INR_PCI_alloc_new_rx_skb (INR_PCI_rx_descriptor_current[index], index);	//alloc new skb
+        }
         if (!data_rx[INR_PCI_rx_descriptor_current[index]][index]) {
             INR_LOG_debug (loglevel_err"error pci alloc zeropointer, rxprocess ring:%i\n", index);
             INR_PCI_enable_error_LED
@@ -839,10 +859,11 @@ INR_PCI_rx_pageallocator (void *nix)// contains empirical thesholds..but it work
             down (&INR_PCI_rx_pageallocator_sem);
             //INR_LOG_debug("Pageallocator\n");
             if (page_prealloc_current < (INR_PCI_page_prealloc_count / 4)) {
-                INR_LOG_debug (loglevel_info"Refill all pages\n");
+                //INR_LOG_debug (loglevel_info"Refill all pages\n");
                 while (page_prealloc_current < (INR_PCI_page_prealloc_count - 1)) {
                     set_current_state (TASK_UNINTERRUPTIBLE);
                     INR_PCI_rx_preallocated_page[page_prealloc_current++] = alloc_page (GFP_ATOMIC);	//if less then half fill whole buffer
+                    if (RX_DBG_mod) INR_LOG_debug("pre-alloc new page: %llx\n",INR_PCI_rx_preallocated_page[page_prealloc_current-1]);
                     set_current_state (TASK_INTERRUPTIBLE);
                 }
             }
@@ -1022,7 +1043,7 @@ INR_TX_push (struct net_device *nwdev,struct sk_buff *skb, uint8_t * data, uint1
     uint8_t error = 0;
     uint64_t head, tail;
     //if (TX_DBG_mod)INR_LOG_debug("time_queue:%i\n",time_queue);
-    if(get_HW_user_feature(HW_feature_frame_injection)==0)time_queue=0;
+    //if(get_HW_user_feature(HW_feature_frame_injection)==0)time_queue=0;
     if (INR_STATUS_get (INR_STATUS_DRV_INIT_done) == 0) { //check if device ready after startup
         return 1;
         if (TX_DBG_mod)INR_LOG_debug("drop tx pkg, driver not init\n");
@@ -1090,9 +1111,9 @@ INR_TX_push (struct net_device *nwdev,struct sk_buff *skb, uint8_t * data, uint1
         for (tmp = 0; tmp < datalength; tmp++) {
             if ((tmp % 40) == 0)
                 printk ("\n");
-            printk ("%x ", data[tmp]);
+            printk (KERN_CONT"%02x ", data[tmp]);
         }
-        printk ("\n\n");
+        printk ("\n");
     }
     if (TX_descriptor->buffer)	//if buffer was used before
     {
@@ -1101,11 +1122,17 @@ INR_TX_push (struct net_device *nwdev,struct sk_buff *skb, uint8_t * data, uint1
         if (data_tx[INR_PCI_tx_descriptor_current].eop)
             if (data_tx[INR_PCI_tx_descriptor_current].skb)
 
-                if(data_tx[INR_PCI_tx_descriptor_current].wait_for_timestamp==0) kfree_skb (data_tx[INR_PCI_tx_descriptor_current].skb);	//if last fragment of skb->free skb
+                if(data_tx[INR_PCI_tx_descriptor_current].wait_for_timestamp==0) 
+                kfree_skb (data_tx[INR_PCI_tx_descriptor_current].skb);	//if last fragment of skb->free skb
 
-        if (!data_tx[INR_PCI_tx_descriptor_current].paged)
+        if ((!data_tx[INR_PCI_tx_descriptor_current].paged))
             if (data_tx[INR_PCI_tx_descriptor_current].data)
-                kfree (data_tx[INR_PCI_tx_descriptor_current].data);	//if not paged free kmalloc mem
+                kfree (data_tx[INR_PCI_tx_descriptor_current].data);	//if not paged or nozerocopy free kmalloc mem
+    
+    /* if ((zerocopy_tx==0))
+            if (data_tx[INR_PCI_tx_descriptor_current].data)
+                kfree (data_tx[INR_PCI_tx_descriptor_current].data);	//if not paged or nozerocopy free kmalloc mem
+                */
     }
 
     TX_descriptor->buffer = cpu_to_le64 (dma_addr);	//store address of packet in descriptor-ring
@@ -1115,10 +1142,19 @@ INR_TX_push (struct net_device *nwdev,struct sk_buff *skb, uint8_t * data, uint1
     TX_descriptor->STA = 0xf & 0x0;
     TX_descriptor->Rsvd = 0xf & port;	//triger output-port
     TX_descriptor->CSS = 0xff & 0x00;
-    TX_descriptor->VLAN = 0xffff & time_queue;//maping of TAS processoer queue feature to vlan field
+    TX_descriptor->VLAN = 0xffff & ((time_queue<<1)|0x1);//maping of TAS processoer queue feature to vlan field
+    if (TX_DBG_mod) {//dump descriptor_current_lastwritten
+    	uint64_t *tmp666=(uint64_t *)TX_descriptor;
+    	 printk (loglevel_info"descriptor:\n");
+    	 printk (KERN_CONT"%llx ", tmp666[1]);
+    	 printk ("%llx \n", tmp666[0]);
+    
+    
+    
+    }
     data_tx[INR_PCI_tx_descriptor_current].nwdev = nwdev;
     data_tx[INR_PCI_tx_descriptor_current].skb = skb;
-    if (skb_shinfo(skb)->tx_flags& SKBTX_IN_PROGRESS) data_tx[INR_PCI_tx_descriptor_current].wait_for_timestamp=1;
+    if(skb)if (skb_shinfo(skb)->tx_flags& SKBTX_IN_PROGRESS) data_tx[INR_PCI_tx_descriptor_current].wait_for_timestamp=1;
     else data_tx[INR_PCI_tx_descriptor_current].wait_for_timestamp=0;
     data_tx[INR_PCI_tx_descriptor_current].length = datalength;
     data_tx[INR_PCI_tx_descriptor_current].paged = 1 & paged;
@@ -1206,8 +1242,11 @@ INR_remove_drv (struct pci_dev *dev)
         free_irq (gIrq, dev);	//release interrupt
     if (INR_STATUS_get (INR_STATUS_MSI))
         pci_disable_msi (dev);
+    //fnic_iounmap(gBaseHdwr1);
+
+    pci_release_regions(dev);
     if (INR_STATUS_get (INR_STATUS_DEVICE))
-        pci_disable_device (dev);	//disable device
+           pci_disable_device (dev);	//disable device
     INR_LOG_debug (loglevel_info"device disabled\n\n");
 }
 
@@ -1220,6 +1259,7 @@ int
 INR_init_drv (struct pci_dev *dev)
 {
     globdev = dev;
+    
     pagesize = PAGE_SIZE;		//getpagesize();//get pagesze
     INR_LOG_debug (loglevel_info"Pagesize:%lli\n", pagesize);
     INR_LOG_debug (loglevel_info"Zerocopy: TX:%i RX:%i\n", zerocopy_tx, zerocopy_rx);
@@ -1229,6 +1269,7 @@ INR_init_drv (struct pci_dev *dev)
     INR_LOG_debug (loglevel_info"AutorepeatonTXdrop: %i\n", INR_NW_repeatonbusy);
     INR_LOG_debug (loglevel_info"HW_revision: ");
     printk("%i\n",HW_revision);
+    INR_TIME_reset();// reset TX_conf watchdog
     rx_descriptor_pool_length = (pagesize / data_size_rx);	//count of descriptor in one page , pool is empty at start
     uint64_t i = 0;
     for (i = 0; i < INR_PCI_rx_descriptor_ring_count; i++)
@@ -1291,6 +1332,7 @@ INR_init_drv (struct pci_dev *dev)
         return 1;
     else
         INR_STATUS_set (INR_STATUS_INT1);
+    set_rx_dbg(1);
     kthread_run (&INR_PCI_rx_pageallocator, NULL, "INR_rx_pageallocator");
     wake_up_interruptible (&INR_PCI_rx_pageallocator_waittingqueu);	//wakeop preallocator
     INR_LOG_debug (loglevel_info"Page preallocator is running.\n");
@@ -1314,6 +1356,7 @@ INR_init_drv (struct pci_dev *dev)
     INR_NW_carrier_update (i,1);//set carrier on (will be disabled via MDIO module later)
     }
 #endif
+set_rx_dbg(0);
 return 0;
 }
 //*****************************************************************************************************************

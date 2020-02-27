@@ -26,6 +26,9 @@ if [[ $# == 0 ]]; then
 #  echo "$0 <verbosity> [<port>] is used to read current system statistics."
 #TODO  echo "The parameter <port>, if given, limits the statistics to this specific port"
 else
+  if [ -z "$(lspci -mm -d 10ee:0000)" ]; then echo "No PCIe connection to FPGA. Exiting."; exit 1; fi
+
+
   let __mac_phy=0
   let __print_machinereadable=0
   let __rxphy=0

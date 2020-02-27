@@ -35,8 +35,8 @@ struct INR_TIME_TX_entry INR_TIME_vortex[INR_TIME_vortex_length]; //no, its not 
 uint16_t INR_TIME_TX_vortex_current=1;
 
 volatile uint16_t INR_TIME_TX_vortex_lastread=1;
-#define CTRLD_rate 0x5000000
-uint64_t CTRLD_offset=15;
+uint64_t CTRLD_rate=0x5000000;
+uint64_t CTRLD_offset=24;
 uint8_t TIME_DBG_mod=0;
 uint8_t INR_TIME_enable=0;
 uint8_t pollcount=0;
@@ -45,7 +45,27 @@ unsigned long flags;
 volatile uint8_t clock_registred=0;
 uint8_t USE_ctrl_bridge_clock_offset=1;
 void (*MMI_common_interrupt_handler)(uint32_t status);
+uint64_t timediff=1;
+uint8_t clockjump=0;
+DEFINE_SEMAPHORE (INR_TIME_TX_transmit_interrupt_sem);
 
+//*****************************************************************************************************************
+/**
+*clear on read function to get information about clock inconsistency
+*
+*/
+uint8_t get_clockjump(){
+	if(clockjump){
+		clockjump=0;
+		return 1;
+	} else return 0;
+
+
+}
+void set_timedif(uint64_t diff){// currently not used
+
+timediff=diff;
+}
 //void *gBaseVirt1 = NULL;
 
 //*****************************************************************************************************************
@@ -65,6 +85,17 @@ void INR_TIME_set_enable(uint8_t enable) {
 }
 void INR_TIME_set_debug(uint8_t enable) {
     TIME_DBG_mod=enable;
+}
+//*****************************************************************************************************************
+/**
+*resets all variables in case of driver reload
+*@brief prevents TX_conf_error interrupt to be calles instantly after driver reload
+*/
+void INR_TIME_reset(){
+	INR_TIME_TX_vortex_current=1;
+	INR_TIME_TX_vortex_lastread=1;
+
+
 }
 //*****************************************************************************************************************
 /**
@@ -138,7 +169,9 @@ if(MMI_common_interrupt_handler){
 */
 
 void INR_TIME_TX_transmit_interrupt() {
-    uint32_t entry_current=1;
+
+		while(down_trylock(&INR_TIME_TX_transmit_interrupt_sem)); // prevent raceconditions
+    uint32_t entry_current=1, tmp=0;
     uint32_t portmap=0;
     u64 timestamp=0;
     u64 timestamp2=0;
@@ -168,7 +201,8 @@ void INR_TIME_TX_transmit_interrupt() {
                             INR_LOG_debug(loglevel_warn"time interrupt max pollcount reached, entry_current:%x\n",entry_current);
                             break;
                         }
-                        entry_current=0xffff&INR_PCI_BAR1_read_ext((C_BASE_ADDR_NET_LOWER<<8)+C_SUB_ADDR_NET_TX_CONF_L+(i*2*4));
+                        tmp=INR_PCI_BAR1_read_ext((C_BASE_ADDR_NET_LOWER<<8)+C_SUB_ADDR_NET_TX_CONF_L+(i*2*4));
+                        if(tmp!=0xeeeeeeee)entry_current=0xffff&tmp;else entry_current=0; 
                         timestamp=INR_PCI_BAR1_read_ext((C_BASE_ADDR_NET_LOWER<<8)+C_SUB_ADDR_NET_TX_CONF_L+((i*2)+1)*4);
                         if(entry_current) {
                         
@@ -181,7 +215,9 @@ void INR_TIME_TX_transmit_interrupt() {
                                 timestamp=ts.controlled;
                                 timestamp2=ts.bridge;
                                 skbtimestamp->hwtstamp=ns_to_ktime(timestamp); //0: insert timestamp here...
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5,0,0) 
                                 skbtimestamp->hwtstamp2=ns_to_ktime(timestamp2);
+#endif
                                 if (TIME_DBG_mod)INR_LOG_debug(loglevel_warn"Write timestamp to skb ns:%lli, ktime:%lli\n",timestamp,skbtimestamp->hwtstamp);
                                 skb_tstamp_tx(INR_TIME_vortex[entry_current].skb, skbtimestamp);
                                 dev_kfree_skb_any(INR_TIME_vortex[entry_current].skb);
@@ -199,6 +235,8 @@ void INR_TIME_TX_transmit_interrupt() {
 
 
     }
+
+up(&INR_TIME_TX_transmit_interrupt_sem);
 }
 
 //*****************************************************************************************************************
@@ -268,7 +306,20 @@ if(clock_registred==0){
     //cc.mult = 1;
     //timecounter_init(&tc,&cc,CTRLD_clock_value);
     INR_TIME_ptp_adjtime(NULL,0);//synchonize controlled and freeruning clock
-}}
+}
+
+uint64_t time_granularity=5;
+#ifdef C_SUB_ADDR_TM_SCHED_TAS_TICK_GRANULARITY
+	time_granularity=INR_PCI_BAR1_read_ext((C_BASE_ADDR_TM_SCHED_LOWER<<8)+C_SUB_ADDR_TM_SCHED_TAS_TICK_GRANULARITY);
+#endif
+	if(time_granularity>100){
+		INR_LOG_debug("error: Strange value %i for TAS time granularity, will be reset to 5ns",time_granularity);
+		time_granularity=5; //plausicheck		
+	}
+CTRLD_rate=(time_granularity<<24);
+INR_LOG_debug("Set Clock CTRL rate to 0x%llx",CTRLD_rate);
+
+}
 static int INR_TIME_ptp_adjfreq(struct ptp_clock_info *ptp, s32 ppb) {
 //ppb is from base frequency
     uint64_t freq=1;
@@ -284,8 +335,10 @@ static int INR_TIME_ptp_adjfreq(struct ptp_clock_info *ptp, s32 ppb) {
 #ifdef C_BASE_ADDR_RTC
     //CTRLD_rate+=ppb;
     freq*=ppb;
-    diff=(div_u64(freq, 1000000000ULL)<<24)|((freq%1000000000ULL)>>3);
+    freq=freq<<1;
+    diff=(div_u64(freq, 1000000000ULL)<<24)|((freq%1000000000ULL)>>3);       
     incval = neg_adj ? (incval - diff) : (incval + diff);
+    //incval+=3656;
     INR_PCI_BAR1_write_ext(incval,(C_BASE_ADDR_RTC<<8)+C_SUB_ADDR_RTC_CTRLD_RATE);
     if (TIME_DBG_mod)
         INR_LOG_debug("PTP adjfreq called new rate:0x%llx, diff:%lli ppb:%lli neg:%i\n",incval,diff, ppb,neg_adj);
@@ -297,6 +350,7 @@ static int INR_TIME_ptp_adjtime(struct ptp_clock_info *ptp, s64 delta) {
 //this is maybe not neccesarry...
 #ifdef C_BASE_ADDR_RTC
     CTRLD_offset+=delta;
+    clockjump=1;
     spin_lock_irqsave(&hardwareLock, flags);
     INR_PCI_BAR1_write_ext(CTRLD_offset&0xffffffff,(C_BASE_ADDR_RTC<<8)+C_SUB_ADDR_RTC_CTRLD_OFFSET_LOW);
     INR_PCI_BAR1_write_ext((CTRLD_offset>>32)&0xffffffff,(C_BASE_ADDR_RTC<<8)+C_SUB_ADDR_RTC_CTRLD_OFFSET_HIGH);

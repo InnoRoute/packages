@@ -55,6 +55,13 @@ define Package/tn-luci-plugin/config
 	default y
 	help
 	  "Upload FPGA bitstreams from WEB-UI"
+	  
+	config LUCI_APP_TNUPLOAD
+	bool "luci-app-fpga-status"
+	depends on PACKAGE_tn-luci-plugin
+	default y
+	help
+	  "FPGA stauts from WEB-UI"
 endef
 
 
@@ -92,6 +99,8 @@ define Package/tn-luci-plugin/install
 	$(call Package/common/install,$(1),luci-app-TNstatistics)
 	$(call Package/common/install,$(1),luci-app-TNdoku)
 	$(call Package/common/install,$(1),luci-app-TNupload)
+	$(call Package/common/install,$(1),luci-app-netconf)
+	$(call Package/common/install,$(1),luci-app-fpga-status)
 endef
 
 

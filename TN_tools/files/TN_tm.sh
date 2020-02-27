@@ -7,7 +7,10 @@ if [[ $# -ne 1 ]]; then
   echo "$0 <ex> is used to output information on the Traffic Manager"
   echo "The parameter <ex> can have any value. Without it, this help is displayed"
 else
-  tn_ll_mmi_read $C_BASE_ADDR_TM $C_SUB_ADDR_TM_QUEUE_THRES_FULL
+  if [ -z "$(lspci -mm -d 10ee:0000)" ]; then echo "No PCIe connection to FPGA. Exiting."; exit 1; fi
+
+
+  tn_ll_mmi_read $C_BASE_ADDR_TM_LOWER $C_SUB_ADDR_TM_QUEUE_THRES_FULL
   printf "Packet Buffer Queue Threshold: %d\n" $read_data
 
   tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_PARAM_BUF_CNT
@@ -17,7 +20,7 @@ else
   let buf_in_use=0
   for buf in `seq 0 $buf_max`; do
     echo -n "."
-	tn_ll_mmi_read $C_BASE_TM_DEBUG_LOWER $(($buf * 4))
+	tn_ll_mmi_read $C_BASE_ADDR_TM_DEBUG_LOWER $(($buf * 4))
     # 5 bits dbg_pkt_buf_qm.flow_id_rx_s(0) - from pkt_buf_in.qm_msg_s
     let dbg_queue=$(( $read_data & 0x01F ))
     # 5 bits dbg_pkt_buf_qm.oport_id_rx_s(0) - from pkt_buf_in.qm_msg_s
@@ -96,7 +99,7 @@ else
 	fi
   done
  
-  tn_ll_mmi_read $C_BASE_ADDR_TM $C_SUB_ADDR_TM_PTR_CNT
+  tn_ll_mmi_read $C_BASE_ADDR_TM_LOWER $C_SUB_ADDR_TM_PTR_CNT
   echo   "Packet Buffers in use: $read_data (free list state)"
   if [[ $read_data -gt $buf_total ]]; then
     echo " - ### Packet Buffer Underrun - System crashed ###"
@@ -108,27 +111,27 @@ else
   tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_BUFFER_FULL
   printf "Packet Buffer Full: %d\n" $(($read_data & 1))
 
-#  tn_ll_mmi_read $C_BASE_ADDR_TM $C_SUB_ADDR_TM_DEBUG_CNT_BUF0
+#  tn_ll_mmi_read $C_BASE_ADDR_TM_LOWER $C_SUB_ADDR_TM_DEBUG_CNT_BUF0
 #  if [[ $status -eq 0 ]]; then
 #    echo   "TM Drop Count (Buffer Full, DP0): $read_data"
 #  fi;
-#  tn_ll_mmi_read $C_BASE_ADDR_TM $C_SUB_ADDR_TM_DEBUG_CNT_BUF1
+#  tn_ll_mmi_read $C_BASE_ADDR_TM_LOWER $C_SUB_ADDR_TM_DEBUG_CNT_BUF1
 #  if [[ $status -eq 0 ]]; then
 #    echo   "TM Drop Count (Buffer Full, DP1): $read_data"
 #  fi;
-#  tn_ll_mmi_read $C_BASE_ADDR_TM $C_SUB_ADDR_TM_DEBUG_CNT_BAD0
+#  tn_ll_mmi_read $C_BASE_ADDR_TM_LOWER $C_SUB_ADDR_TM_DEBUG_CNT_BAD0
 #  if [[ $status -eq 0 ]]; then
 #    echo   "TM Drop Count (Bad Frame, DP0):   $read_data"
 #  fi;
-#  tn_ll_mmi_read $C_BASE_ADDR_TM $C_SUB_ADDR_TM_DEBUG_CNT_BAD1
+#  tn_ll_mmi_read $C_BASE_ADDR_TM_LOWER $C_SUB_ADDR_TM_DEBUG_CNT_BAD1
 #  if [[ $status -eq 0 ]]; then
 #    echo   "TM Drop Count (Bad Frame, DP1):   $read_data"
 #  fi;
-#  tn_ll_mmi_read $C_BASE_ADDR_TM $C_SUB_ADDR_TM_DEBUG_CNT_QUE0
+#  tn_ll_mmi_read $C_BASE_ADDR_TM_LOWER $C_SUB_ADDR_TM_DEBUG_CNT_QUE0
 #  if [[ $status -eq 0 ]]; then
 #    echo   "TM Drop Count (Queue Full, DP0):  $read_data"
 #  fi;
-#  tn_ll_mmi_read $C_BASE_ADDR_TM $C_SUB_ADDR_TM_DEBUG_CNT_QUE1
+#  tn_ll_mmi_read $C_BASE_ADDR_TM_LOWER $C_SUB_ADDR_TM_DEBUG_CNT_QUE1
 #  if [[ $status -eq 0 ]]; then
 #    echo   "TM Drop Count (Queue Full, DP1):  $read_data"
 #  fi;

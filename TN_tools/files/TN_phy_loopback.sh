@@ -9,7 +9,8 @@ if [[ $# == 0 ]]; then
   echo "  0: no loopback (default)"
   echo "  1: loopback"
 else
-  
+  if [ -z "$(lspci -mm -d 10ee:0000)" ]; then echo "No PCIe connection to FPGA. Exiting."; exit 1; fi
+
   # TODO: Add busy checks at address: MSB at "C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+4" should be 0!
   
   # If a parameter is given, it is assumed that this select between loopback (1) and normal operation (0)

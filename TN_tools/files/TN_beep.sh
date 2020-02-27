@@ -8,6 +8,9 @@ if [[ $# == 0 ]]; then
   echo "Parameter <beep> can have any value"
   echo "If <beep> is given, the SystemController is unmuted and a single beep is issued."
 else
+
+  if [ -z "$(lspci -mm -d 10ee:0000)" ]; then echo "No PCIe connection to FPGA. Exiting."; exit 1; fi
+
   echo "Unmuting"
   i2cset -y 0 0x04 0x03 0
   echo "Beeping ..."

@@ -7,7 +7,8 @@ OBJ = tnsysrepo_main.o \
 	Flowcache/flowtableactions.o \
 	Flowcache/tnlibflowtable.o \
 	Flowcache/tnlibaccdp.o \
-	Flowcache/accdpactions.o 
+	Flowcache/accdpactions.o \
+	tnsysrepo_config.o
 
 
 tnsysrepo_main: $(OBJ)

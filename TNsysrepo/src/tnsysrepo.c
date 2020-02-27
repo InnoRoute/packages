@@ -37,8 +37,9 @@
 #include "tnsysrepo.h"
 #include "tnsysrepo_flowcache.h"
 #include "tnsysrepo_tas.h"
+#include "tnsysrepo_config.h"
 
-uint8_t TN_sr_verbose = 0;
+uint8_t TN_sr_verbose = 1;
 
 volatile int exit_application = 0;
 int clkid;
@@ -100,6 +101,13 @@ TN_sysrepo_init (uint8_t verb)
 				    0, SR_SUBSCR_DEFAULT | SR_SUBSCR_APPLY_ONLY, &subscription);
   if (SR_ERR_OK != rc) {
     fprintf (stderr, "Error by sr_module_change_subscribe TNtas: %s\n", sr_strerror (rc));
+    goto cleanup;
+  }
+  
+    rc = sr_subtree_change_subscribe (session, "/TNsysrepo:TNconfig", TN_sysrepo_config_change_cb, &sync,
+				    0, SR_SUBSCR_DEFAULT | SR_SUBSCR_APPLY_ONLY, &subscription);
+  if (SR_ERR_OK != rc) {
+    fprintf (stderr, "Error by sr_module_change_subscribe TNconfig: %s\n", sr_strerror (rc));
     goto cleanup;
   }
 

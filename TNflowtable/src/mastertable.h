@@ -6,73 +6,91 @@
 //#include "flowtableactions.h"
 #define MASTERTABLE_length 65536
 #if EMH_hash_revision == 1
-	#define entry_is_EMH1(arg) ((arg)->dohave_MAC_DST&&(arg)->dohave_MAC_SRC&&(arg)->dohave_ETHERTYPE&&(arg)->dohave_VLAN_ID)
-	#define entry_is_EMH2(arg) ((arg)->dohave_IPv4_DST&&(arg)->dohave_IPv4_SRC&&(arg)->dohave_PROTOCOL&&(arg)->dohave_PORT_DST&&(arg)->dohave_PORT_SRC)
+	#define entry_is_EMH1(arg) (((arg)->dohave_MAC_DST&&(arg)->dohave_MAC_SRC&&(arg)->dohave_ETHERTYPE&&(arg)->dohave_VLAN_ID)&&((arg)->matchcount==4))
+	#define entry_is_EMH2(arg) (((arg)->dohave_IPv4_DST&&(arg)->dohave_IPv4_SRC&&(arg)->dohave_PROTOCOL&&(arg)->dohave_PORT_DST&&(arg)->dohave_PORT_SRC)&&((arg)->matchcount==5))
 	#define entry_is_EMH3(arg) 0
 	#define entry_is_EMH4(arg) 0
 #endif
 #if EMH_hash_revision == 2
-	#define entry_is_EMH1(arg) ((arg)->dohave_PROTOCOL&&(arg)->dohave_IPv4_SRC&&(arg)->dohave_IPv4_DST&&(arg)->dohave_MAC_DST&&(arg)->dohave_ETHERTYPE)
-	#define entry_is_EMH2(arg) ((arg)->dohave_PROTOCOL&&(arg)->dohave_IPv4_DST&&(arg)->dohave_PORT_DST&&(arg)->dohave_MAC_DST&&(arg)->dohave_ETHERTYPE)
-	#define entry_is_EMH3(arg) ((arg)->dohave_IPv4_DST&&(arg)->dohave_IPv4_SRC&&(arg)->dohave_MAC_DST)
-	#define entry_is_EMH4(arg) ((arg)->dohave_MAC_DST)
+	#define entry_is_EMH1(arg) (((arg)->dohave_PROTOCOL&&(arg)->dohave_IPv4_SRC&&(arg)->dohave_IPv4_DST&&(arg)->dohave_MAC_DST&&(arg)->dohave_ETHERTYPE)&&((arg)->matchcount==5))
+	#define entry_is_EMH2(arg) (((arg)->dohave_PROTOCOL&&(arg)->dohave_IPv4_DST&&(arg)->dohave_PORT_DST&&(arg)->dohave_MAC_DST&&(arg)->dohave_ETHERTYPE)&&((arg)->matchcount==5))
+	#define entry_is_EMH3(arg) (((arg)->dohave_IPv4_DST&&(arg)->dohave_IPv4_SRC&&(arg)->dohave_MAC_DST)&&((arg)->matchcount==3))
+	#define entry_is_EMH4(arg) (((arg)->dohave_MAC_DST)&&((arg)->matchcount==1))
 #endif
 #if EMH_hash_revision == 3
-	#define entry_is_EMH1(arg) ((arg)->dohave_INPORT)&&(!(arg)->dohave_ETHERTYPE)
-	#define entry_is_EMH2(arg) ((arg)->dohave_VLAN_PRIO)
-	#define entry_is_EMH3(arg) ((arg)->dohave_VLAN_ID&&(arg)->dohave_MAC_DST)
-	#define entry_is_EMH4(arg) ((arg)->dohave_VLAN_ID&&(arg)->dohave_MAC_DST&&(arg)->dohave_VLAN_PRIO)
+	#define entry_is_EMH1(arg) (((arg)->dohave_INPORT)&&((arg)->matchcount=1))
+	#define entry_is_EMH2(arg) (((arg)->dohave_VLAN_PRIO)&&((arg)->matchcount==1))
+	#define entry_is_EMH3(arg) (((arg)->dohave_VLAN_ID&&(arg)->dohave_MAC_DST)&&((arg)->matchcount==2))
+	#define entry_is_EMH4(arg) (((arg)->dohave_VLAN_ID&&(arg)->dohave_MAC_DST&&(arg)->dohave_VLAN_PRIO)&&((arg)->matchcount==3))
 #endif
 #if EMH_hash_revision == 4
-	#define entry_is_EMH1(arg) ((arg)->dohave_INPORT)&&(!(arg)->dohave_ETHERTYPE)
-	#define entry_is_EMH2(arg) ((arg)->dohave_VLAN_PRIO)
-	#define entry_is_EMH3(arg) ((arg)->dohave_VLAN_ID&&(arg)->dohave_MAC_DST)
-	#define entry_is_EMH4(arg) ((arg)->dohave_VLAN_ID&&(arg)->dohave_MAC_DST&&(arg)->dohave_VLAN_PRIO)
+	#define entry_is_EMH1(arg) (((arg)->dohave_INPORT)&&(!(arg)->dohave_ETHERTYPE)&&((arg)->matchcount==2))
+	#define entry_is_EMH2(arg) (((arg)->dohave_VLAN_PRIO)&&((arg)->matchcount==1))
+	#define entry_is_EMH3(arg) (((arg)->dohave_VLAN_ID&&(arg)->dohave_MAC_DST)&&((arg)->matchcount==2))
+	#define entry_is_EMH4(arg) (((arg)->dohave_VLAN_ID&&(arg)->dohave_MAC_DST&&(arg)->dohave_VLAN_PRIO)&&((arg)->matchcount==3))
 #endif
 #if EMH_hash_revision == 5
-	#define entry_is_EMH1(arg) ((arg)->dohave_INPORT)&&(!(arg)->dohave_ETHERTYPE)
-	#define entry_is_EMH2(arg) ((arg)->dohave_VLAN_PRIO)&&(!(arg)->dohave_MAC_DST))
-	#define entry_is_EMH3(arg) ((arg)->dohave_VLAN_ID&&(arg)->dohave_MAC_DST)
-	#define entry_is_EMH4(arg) ((arg)->dohave_INPORT)&&((arg)->dohave_ETHERTYPE)
+	#define entry_is_EMH1(arg) (((arg)->dohave_INPORT)&&(!(arg)->dohave_ETHERTYPE)&&((arg)->matchcount==2))
+	#define entry_is_EMH2(arg) (((arg)->dohave_VLAN_PRIO)&&(!(arg)->dohave_MAC_DST))&&((arg)->matchcount==2))
+	#define entry_is_EMH3(arg) (((arg)->dohave_VLAN_ID&&(arg)->dohave_MAC_DST)&&((arg)->matchcount==2))
+	#define entry_is_EMH4(arg) (((arg)->dohave_INPORT)&&((arg)->dohave_ETHERTYPE)&&((arg)->matchcount==2))
 #endif
 #if EMH_hash_revision == 4
-#define entry_is_EMH1(arg) ((arg)->dohave_INPORT)&&(!(arg)->dohave_ETHERTYPE)
-#define entry_is_EMH2(arg) ((arg)->dohave_VLAN_PRIO)
-#define entry_is_EMH3(arg) ((arg)->dohave_VLAN_ID&&(arg)->dohave_MAC_DST)
-#define entry_is_EMH4(arg) ((arg)->dohave_VLAN_ID&&(arg)->dohave_MAC_DST&&(arg)->dohave_VLAN_PRIO)
+#define entry_is_EMH1(arg) (((arg)->dohave_INPORT)&&(!(arg)->dohave_ETHERTYPE)&&((arg)->matchcount==2))
+#define entry_is_EMH2(arg) (((arg)->dohave_VLAN_PRIO)&&((arg)->matchcount==1))
+#define entry_is_EMH3(arg) (((arg)->dohave_VLAN_ID&&(arg)->dohave_MAC_DST)&&((arg)->matchcount==2))
+#define entry_is_EMH4(arg) (((arg)->dohave_VLAN_ID&&(arg)->dohave_MAC_DST&&(arg)->dohave_VLAN_PRIO)&&((arg)->matchcount==3))
 #endif
 #if EMH_hash_revision == 5
-#define entry_is_EMH1(arg) ((arg)->dohave_INPORT)&&(!(arg)->dohave_ETHERTYPE)
-#define entry_is_EMH2(arg) ((arg)->dohave_VLAN_PRIO)
-#define entry_is_EMH3(arg) ((arg)->dohave_VLAN_ID&&(arg)->dohave_MAC_DST)
-#define entry_is_EMH4(arg) (((arg)->dohave_INPORT)&&((arg)->dohave_ETHERTYPE))
+#define entry_is_EMH1(arg) (((arg)->dohave_INPORT)&&(!(arg)->dohave_ETHERTYPE)&&((arg)->matchcount==2))
+#define entry_is_EMH2(arg) (((arg)->dohave_VLAN_PRIO)&&((arg)->matchcount==1))
+#define entry_is_EMH3(arg) (((arg)->dohave_VLAN_ID&&(arg)->dohave_MAC_DST)&&((arg)->matchcount==2))
+#define entry_is_EMH4(arg) ((((arg)->dohave_INPORT)&&((arg)->dohave_ETHERTYPE))&&((arg)->matchcount==2))
 #endif
 #if EMH_hash_revision == 6
-#define entry_is_EMH1(arg) ((arg)->dohave_PORT_DST)
-#define entry_is_EMH2(arg) ((arg)->dohave_VLAN_PRIO)
-#define entry_is_EMH3(arg) ((arg)->dohave_VLAN_ID&&(arg)->dohave_MAC_DST)
-#define entry_is_EMH4(arg) (((arg)->dohave_INPORT)&&((arg)->dohave_ETHERTYPE))
+#define entry_is_EMH1(arg) (((arg)->dohave_PORT_DST)&&((arg)->matchcount==1))
+#define entry_is_EMH2(arg) (((arg)->dohave_VLAN_PRIO)&&((arg)->matchcount==1))
+#define entry_is_EMH3(arg) (((arg)->dohave_VLAN_ID&&(arg)->dohave_MAC_DST)&&((arg)->matchcount==2))
+#define entry_is_EMH4(arg) ((((arg)->dohave_INPORT)&&((arg)->dohave_ETHERTYPE))&&((arg)->matchcount==2))
 #endif
 #if EMH_hash_revision == 7
-	#define entry_is_EMH4(arg) ((arg)->dohave_PORT_DST)
-	#define entry_is_EMH2(arg) ((arg)->dohave_VLAN_PRIO)
-	#define entry_is_EMH3(arg) ((arg)->dohave_VLAN_ID&&(arg)->dohave_MAC_DST)
-	#define entry_is_EMH1(arg) (((arg)->dohave_INPORT)&&((arg)->dohave_ETHERTYPE))
+	#define entry_is_EMH4(arg) (((arg)->dohave_PORT_DST)&&((arg)->matchcount==1))
+	#define entry_is_EMH2(arg) (((arg)->dohave_VLAN_PRIO)&&((arg)->matchcount==1))
+	#define entry_is_EMH3(arg) (((arg)->dohave_VLAN_ID&&(arg)->dohave_MAC_DST)&&((arg)->matchcount==2))
+	#define entry_is_EMH1(arg) ((((arg)->dohave_INPORT)&&((arg)->dohave_ETHERTYPE))&&((arg)->matchcount==2))
 #endif
 #if EMH_hash_revision == 8
-	#define entry_is_EMH1(arg) ((arg)->dohave_INPORT)
-	#define entry_is_EMH2(arg) ((arg)->dohave_ETHERTYPE)
-	#define entry_is_EMH3(arg) ((arg)->dohave_VLAN_ID&&(arg)->dohave_MAC_DST)
-	#define entry_is_EMH4(arg) ((arg)->dohave_PORT_DST)
+	#define entry_is_EMH1(arg) (((arg)->dohave_INPORT)&&((arg)->matchcount==1))
+	#define entry_is_EMH2(arg) (((arg)->dohave_ETHERTYPE)&&((arg)->matchcount==1))
+	#define entry_is_EMH3(arg) (((arg)->dohave_VLAN_ID&&(arg)->dohave_MAC_DST)&&((arg)->matchcount==2))
+	#define entry_is_EMH4(arg) (((arg)->dohave_PORT_DST)&&((arg)->matchcount==1))
 #endif
 #if EMH_hash_revision == 9
-	#define entry_is_EMH1(arg) ((arg)->dohave_INPORT)
-	#define entry_is_EMH2(arg) ((arg)->dohave_ETHERTYPE)
-	#define entry_is_EMH3(arg) ((arg)->dohave_VLAN_ID&&(arg)->dohave_MAC_DST)
-	#define entry_is_EMH4(arg) ((arg)->dohave_PORT_DST&&(arg)->dohave_IPv4_DST&&(arg)->dohave_PROTOCOL&&(arg)->dohave_ETHERTYPE)
+	#define entry_is_EMH1(arg) (((arg)->dohave_INPORT)&&((arg)->matchcount==1))
+	#define entry_is_EMH2(arg) (((arg)->dohave_VLAN_PRIO)&&((arg)->matchcount==1))
+	#define entry_is_EMH3(arg) (((arg)->dohave_VLAN_ID&&(arg)->dohave_MAC_DST)&&((arg)->matchcount==2))
+	#define entry_is_EMH4(arg) (((arg)->dohave_PORT_DST&&(arg)->dohave_IPv4_DST&&(arg)->dohave_PROTOCOL&&(arg)->dohave_ETHERTYPE)&&((arg)->matchcount==4))
+#endif
+#if EMH_hash_revision == 10
+	#define entry_is_EMH1(arg) (((arg)->dohave_INPORT)&&((arg)->matchcount==1))
+	#define entry_is_EMH2(arg) (((arg)->dohave_VLAN_PRIO)&&((arg)->matchcount==1))
+	#define entry_is_EMH3(arg) (((arg)->dohave_MAC_DST)&&((arg)->matchcount==1))
+	#define entry_is_EMH4(arg) (((arg)->dohave_PORT_DST&&(arg)->dohave_IPv4_DST&&(arg)->dohave_PROTOCOL&&(arg)->dohave_ETHERTYPE)&&((arg)->matchcount==4))
+#endif
+#if EMH_hash_revision == 11
+	#define entry_is_EMH1(arg) (((arg)->dohave_INPORT)&&((arg)->dohave_VLAN_ID)&&((arg)->matchcount==2))
+	#define entry_is_EMH2(arg) (((arg)->dohave_INPORT)&&((arg)->dohave_MAC_DST)&&((arg)->matchcount==2))
+	#define entry_is_EMH3(arg) (((arg)->dohave_INPORT)&&((arg)->dohave_ETHERTYPE)&&(arg)->dohave_IPv4_DST&&((arg)->matchcount==3))
+	#define entry_is_EMH4(arg) (((arg)->dohave_INPORT)&&((arg)->dohave_ETHERTYPE)&&(arg)->dohave_PORT_DST&&(arg)->dohave_IPv4_DST&&((arg)->matchcount==4))
+#endif
+#if EMH_hash_revision == 12
+	#define entry_is_EMH1(arg) (((arg)->dohave_VLAN_ID)&&((arg)->matchcount==1))
+	#define entry_is_EMH2(arg) (((arg)->dohave_MAC_DST)&&((arg)->matchcount==1))
+	#define entry_is_EMH3(arg) (((arg)->dohave_MAC_DST)&&((arg)->dohave_VLAN_ID)&&((arg)->matchcount==2))
+	#define entry_is_EMH4(arg) (((arg)->dohave_VLAN_PRIO)&&((arg)->dohave_MAC_DST)&&((arg)->dohave_VLAN_ID)&&((arg)->matchcount==3))
 #endif
 #define MT_matchfiled(entry, arguments, match, type) {if( (entry)-> type != (arguments)->type ) (match) =0;}
-#define MT_dohaveprint(entry, type) {if( entry ->dohave_ ## type )printf(#type":0x%lx ", entry -> type);}
+#define MT_dohaveprint(entry, type) {if(! arguments ->machinereadable )if( entry ->dohave_ ## type )printf(#type":0x%lx ", entry -> type);if( arguments ->machinereadable ){printf("\""#type"\":%lli,", entry -> type);printf("\"dohave_"#type"\":%i", entry ->dohave_ ## type );}}
 #define MAXprio 255
 
 void FCinit_MasterTable (uint64_t * baseaddr_master);

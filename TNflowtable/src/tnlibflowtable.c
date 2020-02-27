@@ -164,7 +164,61 @@ INR_HashTable_EMH_clear_entry (uint64_t id)
   }
   return 0;
 }
+//************************************************************************************************************************************
+/**
+*read Hashtable entry
+*@param id if of entry
+*/
+uint64_t
+INR_HashTable_EMA_read_entry (uint16_t ID)
+{
+  uint64_t addr = FCbase_EMA_shadow + INR_FC_EMA_TCAM_base + ID * INR_FC_EMA_TCAM_entry_length;
+  return addr;
+}
+uint64_t INR_ActT_OVERWRITE_get_base_addr(uint8_t dp){
 
+if(dp==0)return INR_FC_ActT_OVERWRITE_base_0;
+if(dp==1)return INR_FC_ActT_OVERWRITE_base_1;
+}
+//************************************************************************************************************************************
+/**
+*returns address of ActT entry
+*@param id if of requested entry
+*/
+uint64_t
+INR_ActT_OVERWRITE_get_addr (uint64_t id,uint8_t dp)
+{
+  if (id >= INR_FC_ActT_OVERWRITE_length) {
+    verblog printf ("index out of range\n");
+    return NULL;
+  }
+  if (!FCbase_EMH) {
+    return NULL;		//not initalized
+  }
+  
+  uint64_t addr = (INR_ActT_OVERWRITE_get_base_addr(dp) + id * INR_FC_ActT_OVERWRITE_entry_length);
+  verblog printf ("AT overwrite addr request for id:%i addr:0x%lx, dp:%i\n", id, addr,dp);
+  return FCbase_EMA + (addr);
+}
+
+//************************************************************************************************************************************
+/**
+*returns address of ActT entry
+*@param id if of requested entry
+*/
+uint64_t
+INR_ActT_OVERWRITE_shadow_get_addr (uint64_t id,uint8_t dp)
+{
+  if (id >= INR_FC_ActT_OVERWRITE_length) {
+    verblog printf ("index out of range\n");
+    return NULL;
+  }
+  if (!FCbase_EMA_shadow) {
+    return NULL;		//not initalized
+  }
+  uint64_t addr = INR_ActT_OVERWRITE_get_base_addr(dp) + id * INR_FC_ActT_OVERWRITE_entry_length;
+  return FCbase_EMA_shadow + (addr);
+}
 //************************************************************************************************************************************
 /**
 *returns address of RuleTable entry
@@ -636,12 +690,12 @@ INR_HashTable_EMA_clear_entry (uint64_t id)
 *read Hashtable entry
 *@param id if of entry
 */
-uint64_t
-INR_HashTable_EMA_read_entry (uint16_t ID)
-{
-  uint64_t addr = FCbase_EMA_shadow + INR_FC_EMA_TCAM_base + ID * INR_FC_EMA_TCAM_entry_length;
-  return addr;
-}
+/*uint64_t*/
+/*INR_HashTable_EMA_read_entry (uint16_t ID)*/
+/*{*/
+/*  uint64_t addr = FCbase_EMA_shadow + INR_FC_EMA_TCAM_base + ID * INR_FC_EMA_TCAM_entry_length;*/
+/*  return addr;*/
+/*}*/
 
 
 //************************************************************************************************************************************
@@ -709,7 +763,29 @@ INR_ActT_clear_entry (uint64_t id)
   }				//copy shadow to mmi (wordwise)
   return 0;
 }
+//************************************************************************************************************************************
+/**
+*returns address of next free ActT entry
+*@param start of search
+*/
+uint64_t
+INR_ActT_OVERWRITE_get_next_free_entry (uint64_t id){
+uint16_t i = id;
+if(i==0)i++;
+struct INR_FC_ActT_OVERWRITE_RULE *entry = NULL;
+    if (id >= INR_FC_ActT_OVERWRITE_length) {
+      return NULL;		//error id not valid
+    }
+    do {
+      entry = (struct INR_FC_ActT_OVERWRITE_RULE *) INR_ActT_OVERWRITE_shadow_get_addr (i,0);
+      i++;
+    } while ((i < INR_FC_ActT_OVERWRITE_length)&&(entry->valid));
+    if (i == INR_FC_ActT_OVERWRITE_length) {
+      return 0;
+    }
+    return i - 1;
 
+}
 
 
 //************************************************************************************************************************************
@@ -718,14 +794,14 @@ INR_ActT_clear_entry (uint64_t id)
 *@param start of search
 */
 uint64_t
-INR_ActT_get_next_free_entry (uint64_t id, uint8_t have_PQUEUE, uint8_t PQUEUE, uint8_t overwrite_action)
+INR_ActT_get_next_free_entry (uint64_t id, uint8_t have_PQUEUE, uint8_t PQUEUE, uint8_t overwrite_action,uint8_t QCI)
 {
   uint16_t i = id;
   uint64_t overwrite_offset=0;
   if (i == 0) {
     i++;
   }
- 
+ if(overwrite_action){overwrite_offset=INR_ActT_OVERWRITE_get_next_free_entry(0);}
   
   if (have_PQUEUE == 0) {
 
@@ -741,8 +817,8 @@ INR_ActT_get_next_free_entry (uint64_t id, uint8_t have_PQUEUE, uint8_t PQUEUE, 
     if (i == INR_FC_ActT_length) {
       return 0;
     }
-    verblog printf ("Found free ActT entry %i  overwrite_offset:0x%x\n", i - 1 +((overwrite_offset&0x7f)<<16),overwrite_offset);
-    return (i - 1)|((overwrite_offset&0x7f)<<16);
+    verblog printf ("Found free ActT entry %i  overwrite_offset:0x%x QCI:0x%x\n", i - 1 +((overwrite_offset&0x7f)<<16)|(((uint64_t)QCI&0x3F)<<12),overwrite_offset,QCI);
+    return (i - 1)|((overwrite_offset&0x7f)<<16)|(((uint64_t)QCI&0x3F)<<12);
   }
   else {
     PQUEUE &= 0x1f;		//limit length
@@ -761,9 +837,9 @@ INR_ActT_get_next_free_entry (uint64_t id, uint8_t have_PQUEUE, uint8_t PQUEUE, 
 
 
     }
-    verblog printf ("Found free ActT entry %i pqueue:0x%x, overwrite_offset:0x%x\n", i - 1 + ((uint64_t) PQUEUE << 7)+((overwrite_offset&0x7f)<<16), ((uint64_t) PQUEUE << 7),overwrite_offset);
+    verblog printf ("Found free ActT entry %i pqueue:0x%x, overwrite_offset:0x%x QCI:0x%x\n", i - 1 + ((uint64_t) PQUEUE << 7)+((overwrite_offset&0x7f)<<16)|(((uint64_t)QCI&0x3F)<<12), ((uint64_t) PQUEUE << 7),overwrite_offset,QCI);
 
-    return ((i - 1) + ((uint64_t) PQUEUE << 7))+((overwrite_offset&0x7f)<<16); //returns the flow_id
+    return ((i - 1) + ((uint64_t) PQUEUE << 7))+((overwrite_offset&0x7f)<<16)|(((uint64_t)QCI&0x3F)<<12); //returns the flow_id
   }
 }
 

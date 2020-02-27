@@ -11,6 +11,8 @@ if [[ $# == 0 ]]; then
   echo "If parameter <wrdata> is given, a write access is performed, with <wrdata> as"
   echo "the write data, otherwise a read access is performed"
 else
+  if [ -z "$(lspci -mm -d 10ee:0000)" ]; then echo "No PCIe connection to FPGA. Exiting."; exit 1; fi
+
   # TODO: Add busy checks at address: MSB at "C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_READ" should be 0!
   
   if [[ $# == 3 ]]; then

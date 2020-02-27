@@ -40,6 +40,7 @@ static struct argp_option options[] = {	//user interface
   {"machine", 'M', 0, 0, "Output in machine readable notation."},
   {"ID", 'i', "", 0, "ID of entry"},
   {"COUNT", 'c', "", 0, "number of entrys to do something"},
+  {"sleeptime", 's',"", 0, "sleeptime for counter"},
   {0, 0, 0, 0, "General TSN config:", 1},
   {0}
 };
@@ -72,6 +73,9 @@ parse_opt (int key, char *arg, struct argp_state *state)
     arguments->COUNT = strtoull (arg, 0, 0);
     arguments->dohave_COUNT = 1;
     break;
+  case 's':
+  	set_sleeptime(strtoull (arg, 0, 0));
+  	break;
   case ARGP_KEY_ARG:
     if (state->arg_num >= 2) {
       argp_usage (state);
@@ -99,7 +103,7 @@ parse_opt (int key, char *arg, struct argp_state *state)
      that we accept.
 */
 //static char args_doc[] = "[AdminCTL_list_|OperCTL_list_|config_][add|del|print|change]"; //old doku
-static char args_doc[] = "[all|io_counters|port_counters|bad_counters]";
+static char args_doc[] = "[all|io_counters|port_counters|bad_counters|flow_counters|phy_counters]";
 
 /*
   DOC.  Field 4 in ARGP.
@@ -190,6 +194,12 @@ main (int argc, char **argv)
   case 'b':
     STAT_print_bad_counters(&arguments);
     break;
+	case 'f':
+		STAT_print_flow_counters(&arguments);
+		break;
+	case 'y':
+		STAT_print_phy_counters(&arguments);
+		break;
   
   default:
     printf ("unknown action\n");

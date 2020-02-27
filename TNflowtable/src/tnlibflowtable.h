@@ -6,7 +6,8 @@
 #include "tn_env.h"
 
 void nibbletwist(uint8_t *data, uint8_t length);
-
+uint64_t INR_ActT_OVERWRITE_shadow_get_addr (uint64_t id,uint8_t dp);
+uint64_t INR_ActT_OVERWRITE_get_addr (uint64_t id,uint8_t dp);
 
 
 void FCinit_EMH (uint64_t * baseaddr, uint64_t * baseaddr_shadow);
@@ -30,7 +31,7 @@ uint64_t INR_RuleTable_EMA_get_addr (uint64_t id);
 uint8_t INR_RuleTable_EMA_clear_entry (uint64_t id);
 
 uint64_t INR_ActT_shadow_get_addr (uint64_t id);
-uint64_t INR_ActT_get_next_free_entry (uint64_t id, uint8_t have_PQUEUE, uint8_t PQUEUE,uint8_t overwrite_action);
+uint64_t INR_ActT_get_next_free_entry (uint64_t id, uint8_t have_PQUEUE, uint8_t PQUEUE,uint8_t overwrite_action,uint8_t QCI);
 uint64_t INR_ActT_get_addr (uint64_t id);
 uint8_t INR_ActT_clear_entry (uint64_t id);
 void FCmemcpy (void *dst, const void *src, size_t len);
@@ -63,7 +64,15 @@ uint32_t parseIPV4string (char *ipAddress);
 #endif
 //base addresses:
 
+//field manipulation table
+#define INR_FC_ActT_OVERWRITE_base_0 (C_BASE_ADDR_TX_ROUTER_LOWER_0<<8)
+#define INR_FC_ActT_OVERWRITE_base_1 (C_BASE_ADDR_TX_ROUTER_LOWER_1<<8)
+#define INR_FC_ActT_OVERWRITE_entry_length 32
+#define INR_FC_ActT_OVERWRITE_entry_length_memcpy 32
+#define INR_FC_ActT_OVERWRITE_length ((((C_BASE_ADDR_TX_ROUTER_UPPER_0+1)<<8)-(C_BASE_ADDR_TX_ROUTER_LOWER_0<<8))/INR_FC_ActT_OVERWRITE_entry_length)
 
+#define	INR_FC_ActT_OVERWRITE_valid_mask (0x7f<<16)
+#define	INR_FC_ActT_QCI_valid_mask (0x3F<<12)
 //hashtable with hardcoded fields
 #define  INR_FC_ActT_valid_mask	0x3ff
 #define  INR_FC_ActT_entry_length 4	//length of entry in byte
@@ -360,7 +369,7 @@ uint32_t parseIPV4string (char *ipAddress);
 
 	struct INR_FC_EMH_RULE_TYPE2
 	{
-		uint16_t ETHERTYPE:16;
+		uint16_t VLAN_PRIO:16;
 		uint8_t filling[30];
 
 	} __attribute__ ((__packed__));
@@ -381,6 +390,121 @@ uint32_t parseIPV4string (char *ipAddress);
 		uint8_t PROTOCOL:8;	/**<layer 3 protocol*/
 		uint16_t ETHERTYPE:16;  /**<ETHERTYPE*/
 		uint8_t filling[23];
+	} __attribute__ ((__packed__));
+#endif
+
+#if EMH_hash_revision == 10
+
+	struct INR_FC_EMH_RULE_TYPE1
+	{
+		
+		uint8_t INPORT:5;	/**<input port*/
+		uint8_t unused:3;
+		uint8_t filling[31];
+	} __attribute__ ((__packed__));
+
+	struct INR_FC_EMH_RULE_TYPE2
+	{
+		uint16_t VLAN_PRIO:16;
+		uint8_t filling[30];
+
+	} __attribute__ ((__packed__));
+
+	struct INR_FC_EMH_RULE_TYPE3
+	{
+		uint64_t MAC_DST:48;		/**<destination MAC*/
+		uint16_t padding:16;
+		uint8_t filling[24];
+
+	} __attribute__ ((__packed__));
+
+	struct INR_FC_EMH_RULE_TYPE4
+	{
+		uint16_t PORT_DST:16;	/**<input port*/
+		uint32_t IPv4_DST:32;	  /**<IPv4 destination address*/
+		uint8_t PROTOCOL:8;	/**<layer 3 protocol*/
+		uint16_t ETHERTYPE:16;  /**<ETHERTYPE*/
+		uint8_t filling[23];
+	} __attribute__ ((__packed__));
+#endif
+
+#if EMH_hash_revision == 11
+
+	struct INR_FC_EMH_RULE_TYPE1
+	{
+		
+		uint8_t INPORT:5;	/**<input port*/
+		uint16_t VLAN_ID:12;		  /**<VLAN ID*/
+		uint8_t unused:7;
+		uint8_t filling[29];
+	} __attribute__ ((__packed__));
+
+	struct INR_FC_EMH_RULE_TYPE2
+	{
+		uint8_t INPORT:5;	/**<input port*/
+		uint64_t MAC_DST:48;		/**<destination MAC*/
+		uint16_t fill:11;	/**<input port*/
+		uint8_t filling[24];
+
+	} __attribute__ ((__packed__));
+
+	struct INR_FC_EMH_RULE_TYPE3
+	{
+		uint8_t INPORT:5;	/**<input port*/
+		uint16_t ETHERTYPE:16;  /**<ETHERTYPE*/
+		uint32_t IPv4_DST:32;	  /**<IPv4 destination address*/
+		uint8_t unused:3;
+		uint8_t filling[25];
+
+	} __attribute__ ((__packed__));
+
+	struct INR_FC_EMH_RULE_TYPE4
+	{
+		uint8_t INPORT:5;	/**<input port*/
+		uint16_t ETHERTYPE:16;  /**<ETHERTYPE*/
+		uint32_t IPv4_DST:32;	  /**<IPv4 destination address*/
+		uint16_t PORT_DST:16;	/**<input port*/
+		uint8_t unused:3;
+		uint8_t filling[23];
+	} __attribute__ ((__packed__));
+#endif
+#if EMH_hash_revision == 12
+
+	struct INR_FC_EMH_RULE_TYPE1
+	{
+		
+		uint16_t VLAN_ID:12;		  /**<VLAN ID*/
+		uint8_t unused:7;
+		uint8_t unused2:5;	
+		uint8_t filling[29];
+	} __attribute__ ((__packed__));
+
+	struct INR_FC_EMH_RULE_TYPE2
+	{
+		
+		uint64_t MAC_DST:48;		/**<destination MAC*/
+		uint16_t fill:11;	/**<input port*/
+		uint8_t unused2:5;	
+		uint8_t filling[24];
+
+	} __attribute__ ((__packed__));
+
+	struct INR_FC_EMH_RULE_TYPE3
+	{
+		uint64_t MAC_DST:48;		/**<destination MAC*/
+		uint16_t VLAN_ID:12;		  /**<VLAN ID*/
+		uint8_t unused:4;
+		uint8_t filling[24];
+
+	} __attribute__ ((__packed__));
+
+	struct INR_FC_EMH_RULE_TYPE4
+	{
+		uint64_t MAC_DST:48;		/**<destination MAC*/
+		uint16_t VLAN_ID:12;		  /**<VLAN ID*/
+		uint16_t VLAN_PRIO:16;	/**<VLAN Prio*/
+		uint8_t unused:4;
+		uint8_t filling[22];
 	} __attribute__ ((__packed__));
 #endif
 
@@ -502,7 +626,18 @@ union INR_FC_EMA_HashTable_entry
 uint8_t INR_HashT_EMA_write (union INR_FC_EMA_HashTable_entry entry, uint16_t ID);	//TCAM
 uint8_t INR_HashTable_EMA_clear_entry (uint64_t id);
 uint64_t INR_HashTable_EMA_read_entry (uint16_t ID);
-
+struct INR_FC_ActT_OVERWRITE_RULE
+{
+	uint8_t valid:6;
+	uint32_t unused1:26;
+	uint32_t unused2:32;
+	uint64_t MAC_DST:48;
+	uint64_t MAC_SRC:48;
+	uint32_t IP_DST:32;
+	uint32_t IP_SRC:32;
+	uint16_t PORT_DST:16;
+	uint16_t PORT_SRC:16;
+} __attribute__ ((__packed__));
 
 struct INR_FC_ActT_RULE
 {

@@ -24,10 +24,15 @@
 #include "INR-PCI.h"
 #include "INR-NW.h"
 #include "INR-ctl.h"
+#include "INR-MMI.h"
 #include "INR-TIME.h"
+
+
 
 EXPORT_SYMBOL(INR_TIME_TX_transmit_interrupt);
 EXPORT_SYMBOL(INR_NW_carrier_update);
+
+static struct uio_info *can_userspace_interrupt;
 volatile uint8_t probed=0;
 static void remove (struct pci_dev *dev);
 
@@ -114,6 +119,7 @@ probe (struct pci_dev *dev, const struct pci_device_id *id)
     if(get_RING0_dummy_loop()==0)if (0 == INR_NWDEV_init ()) {
         INR_STATUS_set (INR_STATUS_NW_enabled);
     }
+    //mdelay(1000);
     if(get_RING0_dummy_loop()==0){INR_init_drv (dev);		//INIT pci and network
     }else{
     	INR_init_drv_dummy (dev);
@@ -121,6 +127,8 @@ probe (struct pci_dev *dev, const struct pci_device_id *id)
     INR_CTL_init_proc (dev);	//init proc fs
     if (get_HW_user_feature(HW_feature_RTC))INR_TIME_init_ptp_clock(dev);//init ptp
     INR_STATUS_set (INR_STATUS_DRV_INIT_done);
+    //INR_NW_set_PTP_prio(INIT_ptp_prio);
+    INR_MMI_set_interrupt_allowed(1);
     return 0;
 }
 
@@ -140,6 +148,7 @@ static struct pci_driver pci_driver = {
 static void
 remove (struct pci_dev *dev)
 {
+    INR_MMI_set_interrupt_allowed(0);
     INR_NWDEV_destroi();
     INR_CTL_remove_proc (dev);
     INR_LOG_debug (loglevel_info"remove Module\n");

@@ -18,6 +18,7 @@ if [[ $# == 0 ]]; then
   echo "  9:  Alaska0 LED test (blinking)"
   echo "  10: Soft-resetting all PHYs"
 else
+  if [ -z "$(lspci -mm -d 10ee:0000)" ]; then echo "No PCIe connection to FPGA. Exiting."; exit 1; fi
 
   # TODO: Add busy checks at address: MSB at "C_BASE_ADDR_MDIO*$C_BASE_ADDR_FACTOR+$C_SUB_ADDR_MDIO_READ" should be 0!
   

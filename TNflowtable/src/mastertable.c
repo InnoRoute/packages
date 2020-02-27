@@ -77,7 +77,24 @@ FC_MT_have_action (struct arguments *arguments)
       match = 0;
     }
     
-
+    if (entry->MAC_DST_OVERWRITE != arguments->MAC_DST_OVERWRITE) {
+      match = 0;
+    }
+    if (entry->MAC_SRC_OVERWRITE != arguments->MAC_SRC_OVERWRITE) {
+      match = 0;
+    }
+    if (entry->IPv4_DST_OVERWRITE != arguments->IPv4_DST_OVERWRITE) {
+      match = 0;
+    }
+    if (entry->IPv4_SRC_OVERWRITE != arguments->IPv4_SRC_OVERWRITE) {
+      match = 0;
+    }
+    if (entry->PORT_DST_OVERWRITE != arguments->PORT_DST_OVERWRITE) {
+      match = 0;
+    }
+    if (entry->PORT_SRC_OVERWRITE != arguments->PORT_SRC_OVERWRITE) {
+      match = 0;
+    }
     
     
     if (entry->Cut_enable != arguments->Cut_enable) {
@@ -90,7 +107,7 @@ FC_MT_have_action (struct arguments *arguments)
       match = 0;
     }
     if (match) {
-      
+      arguments->TableID.ActT_OVERWITE=entry->TableID.ActT_OVERWITE; // if match store also match for overwrite table
       return entry->TableID.ActT;	//match found, return entry in action table
     }
   } while ((i < MASTERTABLE_length));
@@ -247,6 +264,7 @@ FC_MT_autotable (struct arguments * arguments)
   //arguments->ACTION_ID = 0; removed to pass actionselection to mastertable
   arguments->HASH.gauto = 0;
   arguments->TYPE_ID = 0;	//reset type for self finding
+  verblog printf("matchcount=%i\n",arguments->matchcount);
   if (INR_EMH_check) {
     if (entry_is_EMH1 (arguments)) {
       arguments->TYPE_ID = 1;	//set type
@@ -405,6 +423,7 @@ FC_MasterT_del (uint64_t ID)
       verblog printf ("EMA_RT:%li ", entry->TableID.EMA_RT);
       verblog printf ("EMA_HT:%li ", entry->TableID.EMA_HT);
       verblog printf ("ActT:%li\n ", entry->TableID.ActT);
+      verblog printf ("ActT_OVERWITE:%li\n ", entry->TableID.ActT_OVERWITE);
       
       //remove entry from tables where stored
       if (entry->TableID.EMH_RT) {
@@ -424,7 +443,7 @@ FC_MasterT_del (uint64_t ID)
       }
       if ((entry->TableID.ActT) && (FC_MT_count_action (entry->TableID.ActT) == 1)) {
 	INR_ActT_clear_entry (entry->TableID.ActT);	//can't remove because multible entrys could have the same action, first check
-      
+       AT_OVERWRITE_del(entry);  
       }
     }
     entry->used = 0;
@@ -572,75 +591,153 @@ FC_MasterT_get_entry (struct arguments * entry, uint32_t id)
 void
 FC_MasterT_print (struct arguments *arguments)
 {
-  printf ("__FUNCTION__ = %s\n", __FUNCTION__);
+  if(!arguments->machinereadable)printf ("__FUNCTION__ = %s\n", __FUNCTION__);
   uint32_t i = 0;
   if (arguments->COUNT == 0) {
     arguments->COUNT = MASTERTABLE_length;
   }
-  printf ("Print MasterTable from %i to %i.\n", arguments->ID, arguments->ID + arguments->COUNT - 1);
+  
+      	if(arguments->machinereadable){
+    	printf("{\"FT\":[");
+    	}else{
+    	printf ("Print MasterTable from %i to %i.\n", arguments->ID, arguments->ID + arguments->COUNT - 1); 	
+  	
+    	}
   for (i = arguments->ID; ((i < MASTERTABLE_length) && (i < arguments->ID + arguments->COUNT)); i++) {
     struct arguments *entry = (struct arguments *) INR_MasterT_get_addr (0xffff & i);
     if (entry != NULL) {
-      printf ("ID:%li  ", i);
-      printf ("VALID_BIT:0x%x  ", entry->used);
+    	if(arguments->machinereadable){
+    	printf("{\"ID\":%li,\"VALID_BIT\":%lli",i,entry->used);
+    	}    	
+    	else{
+		    printf ("ID:%li  ", i);
+		    printf ("VALID_BIT:0x%x  ", entry->used);
+      }
       if (entry->used) {
+      if(arguments->machinereadable)printf(",");
 	MT_dohaveprint (entry, MAC_SRC);	//print if filed is available
+	if(arguments->machinereadable)printf(",");
 	MT_dohaveprint (entry, MAC_DST);
+	if(arguments->machinereadable)printf(",");
 	MT_dohaveprint (entry, VLAN_ID);
+	if(arguments->machinereadable)printf(",");
 	MT_dohaveprint (entry, VLAN_PRIO);
+	if(arguments->machinereadable)printf(",");
 	MT_dohaveprint (entry, IPv4_SRC);
+	if(arguments->machinereadable)printf(",");
 	MT_dohaveprint (entry, IPv4_DST);
+	if(arguments->machinereadable)printf(",");
 	MT_dohaveprint (entry, PROTOCOL);
+	if(arguments->machinereadable)printf(",");
 	MT_dohaveprint (entry, PORT_SRC);
+	if(arguments->machinereadable)printf(",");
 	MT_dohaveprint (entry, PORT_DST);
+	if(arguments->machinereadable)printf(",");
 	MT_dohaveprint (entry, ETHERTYPE);
+	if(arguments->machinereadable)printf(",");
 	MT_dohaveprint (entry, TOS);
+	if(arguments->machinereadable)printf(",");
 	MT_dohaveprint (entry, INPORT);
+	if(arguments->machinereadable)printf(",");
 	MT_dohaveprint (entry, MASK_MAC_SRC);
+	if(arguments->machinereadable)printf(",");
 	MT_dohaveprint (entry, MASK_MAC_DST);
+	if(arguments->machinereadable)printf(",");
 	MT_dohaveprint (entry, MASK_VLAN_ID);
+	if(arguments->machinereadable)printf(",");
 	MT_dohaveprint (entry, MASK_VLAN_PRIO);
+	if(arguments->machinereadable)printf(",");
 	MT_dohaveprint (entry, MASK_IPv4_SRC);
+	if(arguments->machinereadable)printf(",");
 	MT_dohaveprint (entry, MASK_IPv4_DST);
+	if(arguments->machinereadable)printf(",");
 	MT_dohaveprint (entry, MASK_PROTOCOL);
+	if(arguments->machinereadable)printf(",");
 	MT_dohaveprint (entry, MASK_PORT_SRC);
+	if(arguments->machinereadable)printf(",");
 	MT_dohaveprint (entry, MASK_PORT_DST);
+	if(arguments->machinereadable)printf(",");
 	MT_dohaveprint (entry, MASK_ETHERTYPE);
+	if(arguments->machinereadable)printf(",");
 	MT_dohaveprint (entry, MASK_TOS);
+	if(arguments->machinereadable)printf(",");
 	MT_dohaveprint (entry, MASK_INPORT);
+	if(arguments->machinereadable)printf(",");
+	MT_dohaveprint (entry, PQUEUE);
+	if(arguments->machinereadable)printf(",");
 	MT_dohaveprint (entry, OutPort_enable);
+	if(arguments->machinereadable)printf(",");
 	MT_dohaveprint (entry, OutPort);
+	if(arguments->machinereadable)printf(",");
 	MT_dohaveprint (entry, Bad_enable);
+	if(arguments->machinereadable)printf(",");
 	MT_dohaveprint (entry, BadValue);
+	if(arguments->machinereadable)printf(",");
 	MT_dohaveprint (entry, BadReason);
+	if(arguments->machinereadable)printf(",");
 	MT_dohaveprint (entry, Cut_enable);
+	if(arguments->machinereadable)printf(",");
 	MT_dohaveprint (entry, CutValue);
+	if(arguments->machinereadable)printf(",");
 	
+		MT_dohaveprint (entry, MAC_DST_OVERWRITE);
+		if(arguments->machinereadable)printf(",");
+	MT_dohaveprint (entry, MAC_SRC_OVERWRITE);
+	if(arguments->machinereadable)printf(",");
+	MT_dohaveprint (entry, IPv4_DST_OVERWRITE);
+	if(arguments->machinereadable)printf(",");
+	MT_dohaveprint (entry, IPv4_SRC_OVERWRITE);
+	if(arguments->machinereadable)printf(",");
+	MT_dohaveprint (entry, PORT_DST_OVERWRITE);
+	if(arguments->machinereadable)printf(",");
+	MT_dohaveprint (entry, PORT_SRC_OVERWRITE);
+if(arguments->machinereadable)printf(",");
+	if(arguments->machinereadable){
+	printf ("\"prio\":%li,", entry->PRIORITY);
+			printf ("\"EMH_RT\":%li,", entry->TableID.EMH_RT);
+			printf ("\"EMH_HT\":%li,", entry->TableID.EMH_HT);
+			printf ("\"EMH_CT\":%li,", entry->TableID.EMH_CT);
+			printf ("\"EMA_RT\":%li,", entry->TableID.EMA_RT);
+			printf ("\"EMA_HT\":%li,", entry->TableID.EMA_HT);
+			printf ("\"ActT\":%li ", entry->TableID.ActT);
 
 	
-	printf ("\n");
-	printf ("prio:%li ", entry->PRIORITY);
-	if (entry->TableID.EMH_RT)
-	  printf ("EMH_RT:%li ", entry->TableID.EMH_RT);
-	if (entry->TableID.EMH_HT)
-	  printf ("EMH_HT:%li ", entry->TableID.EMH_HT);
-	if (entry->TableID.EMH_CT)
-	  printf ("EMH_CT:%li ", entry->TableID.EMH_CT);
-	if (entry->TableID.EMA_RT)
-	  printf ("EMA_RT:%li ", entry->TableID.EMA_RT);
-	if (entry->TableID.EMA_HT)
-	  printf ("EMA_HT:%li ", entry->TableID.EMA_HT);
-	if (entry->TableID.ActT) {
-	  printf ("ActT:%li ", entry->TableID.ActT);
+	}else{
+		printf ("\n");
+		printf ("prio:%li ", entry->PRIORITY);
+		if (entry->TableID.EMH_RT)
+			printf ("EMH_RT:%li ", entry->TableID.EMH_RT);
+		if (entry->TableID.EMH_HT)
+			printf ("EMH_HT:%li ", entry->TableID.EMH_HT);
+		if (entry->TableID.EMH_CT)
+			printf ("EMH_CT:%li ", entry->TableID.EMH_CT);
+		if (entry->TableID.EMA_RT)
+			printf ("EMA_RT:%li ", entry->TableID.EMA_RT);
+		if (entry->TableID.EMA_HT)
+			printf ("EMA_HT:%li ", entry->TableID.EMA_HT);
+		if (entry->TableID.ActT) {
+			printf ("ActT:%li ", entry->TableID.ActT);
+		}
+		if (entry->TableID.ActT_OVERWITE) {
+	  printf ("ActT_OVERWITE:%li ", entry->TableID.ActT_OVERWITE);
+	}
 	}
 
       }
+      if(arguments->machinereadable){
+    	if(i<(arguments->ID + arguments->COUNT-1)){printf("},");}else{printf("}");}
+    	}else
       printf ("\n");
+      
+      
     }
     else {
       printf ("ID not valid\n");
     }
   }
+  if(arguments->machinereadable){
+    	printf("]}");
+    	}
 }
 
 //************************************************************************************************************************************

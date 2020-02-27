@@ -5,38 +5,65 @@ START=95
 start() {
 	source /usr/share/InnoRoute/TNmod.conf
 	source /usr/share/InnoRoute/tn_env.sh
+	source /usr/share/InnoRoute/tn_func_ll.sh
 	
 	mustreboot=${C_IMPLICIT_PCIE_RESET:-0}
+	if cat /proc/cpuinfo | grep -q "E3940 "; then
+		mustreboot=0
+	fi #must reboot on new atom
+	
+	echo "reset sysrepo config"
+  touch /tmp/TNsysrepostorage_tmp.xml
+	sysrepocfg --import=/tmp/TNsysrepostorage_tmp.xml --format=xml TNsysrepo #reset config
+	mkdir /boot
 	mount /dev/sda1 /boot/ 2>/dev/null
 	sleep 0.5
+	killall -9 netopeer2-server
 	echo "flashing FPGA and reboot if necessary"
-
 	case $TNmod in
 		0) echo "automatic FPGA-image load disabled";;
 	#	1) xc3sprog  -c ftdi -p0 -v  /usr/share/InnoRoute/trustnode_top_6t_4ports_2.bit > /usr/share/InnoRoute/imageloader.log 2>&1 && echo "done";;
 	#	2) xc3sprog  -c ftdi -p0 -v  /usr/share/InnoRoute/tn_accdp_1.bit > /usr/share/InnoRoute/imageloader.log 2>&1 && /etc/init.d/TN_imageloader disable&& reboot&& echo "done";;
 	#	3) xc3sprog  -c ftdi -p0 -v  /usr/share/InnoRoute/trustnode_top_ethsw.bit > /usr/share/InnoRoute/imageloader.log 2>&1 && echo "done";;
-		1) TN_opto_prog  /usr/share/InnoRoute/trustnode_top_6t_4ports_2.bit > /usr/share/InnoRoute/imageloader.log 2>&1 && echo "done";;
-		2) TN_opto_prog  /usr/share/InnoRoute/tn_accdp.bit > /usr/share/InnoRoute/imageloader.log 2>&1 && echo "done";;
+	#	1) TN_opto_prog  /usr/share/InnoRoute/trustnode_top_6t_4ports_2.bit > /usr/share/InnoRoute/imageloader.log 2>&1 && echo "done";;
+	#	2) TN_opto_prog  /usr/share/InnoRoute/tn_accdp.bit > /usr/share/InnoRoute/imageloader.log 2>&1 && echo "done";;
 	#	3) TN_opto_prog  /usr/share/InnoRoute/trustnode_top_ethsw.bit > /usr/share/InnoRoute/imageloader.log 2>&1 && echo "done";;
-		4) TN_opto_prog  /usr/share/InnoRoute/tn_display_loopback.bin > /usr/share/InnoRoute/imageloader.log 2>&1 && echo "done";;
-		5) TN_opto_prog  /usr/share/InnoRoute/tn_atom_ctrl.bin > /usr/share/InnoRoute/imageloader.log 2>&1 && echo "done";;
-		6) TN_opto_prog  /usr/share/InnoRoute/tn_fc.bit > /usr/share/InnoRoute/imageloader.log 2>&1 && echo "done";;
-		7) TN_opto_prog  /usr/share/InnoRoute/tn_combined.bit > /usr/share/InnoRoute/imageloader.log 2>&1 && echo "done";;
+	#	4) TN_opto_prog  /usr/share/InnoRoute/tn_display_loopback.bin > /usr/share/InnoRoute/imageloader.log 2>&1 && echo "done";;
+	#	5) TN_opto_prog  /usr/share/InnoRoute/tn_atom_ctrl.bin > /usr/share/InnoRoute/imageloader.log 2>&1 && echo "done";;
+	#	6) TN_opto_prog  /usr/share/InnoRoute/tn_fc.bit > /usr/share/InnoRoute/imageloader.log 2>&1 && echo "done";;
+	#	7) TN_opto_prog  /usr/share/InnoRoute/tn_combined.bit > /usr/share/InnoRoute/imageloader.log 2>&1 && echo "done";;
 	8) TN_opto_prog  /boot/trustnode_top.bit > /usr/share/InnoRoute/imageloader.log 2>&1 && echo "done";;
-		9) TN_opto_prog  /usr/share/InnoRoute/trustnode_top_TSN.bit > /usr/share/InnoRoute/imageloader.log 2>&1 && echo "done";;
-		10) TN_opto_prog  /usr/share/InnoRoute/trustnode_top_110.bit > /usr/share/InnoRoute/imageloader.log 2>&1 && echo "done";;
-		11) TN_opto_prog  /usr/share/InnoRoute/tn_default.bit > /usr/share/InnoRoute/imageloader.log 2>&1 && echo "done";;
+	#	9) TN_opto_prog  /usr/share/InnoRoute/trustnode_top_TSN.bit > /usr/share/InnoRoute/imageloader.log 2>&1 && echo "done";;
+	#	10) TN_opto_prog  /usr/share/InnoRoute/trustnode_top_110.bit > /usr/share/InnoRoute/imageloader.log 2>&1 && echo "done";;
+	#	11) TN_opto_prog  /usr/share/InnoRoute/tn_default.bit > /usr/share/InnoRoute/imageloader.log 2>&1 && echo "done";;
 		
 		*) echo "Invalid TrustNode modus or module deactivated" ;;
 	esac
+	 
 	if [ "$mustreboot" = "0" ]
 	then
 			echo "have to reboot"
 			/etc/init.d/TN_imageloader disable&& reboot
 	fi
+	cat /proc/cpuinfo | grep E3940 && echo 1 > /sys/bus/pci/devices/0000\:01\:00.0/remove
+	sleep 1
+	cat /proc/cpuinfo | grep E3940 && echo 1 > /sys/bus/pci/rescan
+	sleep 1
+	TN_text2display.sh "FPgA ready"
 	TN_eth_switch.sh 0
-	TN_phy_force_linkspeed.sh 1
+	tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_FEATURES_NET
+	#let multispeed=0 #disable
+	$(( $read_data & 0x2 ))
+	if [ "$multispeed" -gt "0" ];then
+		TN_phy_init.sh 1 #don't force linkseed if multispeedd is allowed
+	else
+		TN_phy_init.sh 1
+		TN_phy_force_linkspeed.sh 1
+	fi
+	TN_phy_interrupts.sh 1
+	echo "load sysrepo config"
+	TN_config.sh load
+
 }
 
 stop() {

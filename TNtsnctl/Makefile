@@ -1,6 +1,6 @@
 include	$(TOPDIR)/rules.mk
 PKG_NAME :=tntsnctl
-PKG_RELEASE := 0.2
+PKG_RELEASE := 0.3
 PKG_BUILD_DIR:=	$(BUILD_DIR)/$(PKG_NAME)
 PKG_BUILD_DEPENDS:= TN_tools
 include	$(INCLUDE_DIR)/package.mk

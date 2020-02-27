@@ -9,6 +9,8 @@ if [[ $# == 0 ]]; then
   echo "The default values are defined in the bitstream constraints"
   echo "In total 12 parameters are expected"
 elif [[ $# == 12 ]]; then
+  if [ -z "$(lspci -mm -d 10ee:0000)" ]; then echo "No PCIe connection to FPGA. Exiting."; exit 1; fi
+
   # write data range: 0-31
   for i in `seq 1 12`; do
     let phase=$1

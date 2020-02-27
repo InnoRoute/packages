@@ -6,6 +6,7 @@ source /usr/share/InnoRoute/tn_func_ll.sh
 # derived from tn_lib/sim/mmi_stim.txt
 
 # Addresses should be converted to base and sub addresses
+if [ -z "$(lspci -mm -d 10ee:0000)" ]; then echo "No PCIe connection to FPGA. Exiting."; exit 1; fi
 
 echo "C_SUB_ADDR_BM_MMI_STATUS"
 tn_ll_mmi_read 0x000000
@@ -958,7 +959,7 @@ tn_ll_mmi_read 0xC30000
 echo "C_SUB_ADDR_TM_QUEUE_THRES_FULL"
 tn_ll_mmi_read 0xD00000
 
-echo "C_TM_SCHED_TAS_GATE_ENABLE: TAS disable"
+echo "C_SUB_ADDR_TM_SCHED_TAS_GATE_ENABLE: TAS disable"
 tn_ll_mmi_write 0xD20418 0x00000000
 tn_ll_mmi_write 0xD20C18 0x00000000
 tn_ll_mmi_write 0xD21418 0x00000000
@@ -976,7 +977,7 @@ tn_ll_mmi_write 0xD26C18 0x00000000
 tn_ll_mmi_write 0xD27418 0x00000000
 tn_ll_mmi_write 0xD27C18 0x00000000
 
-echo "C_TM_SCHED_TAS_ADMIN_GATE_STATES: TAS default output xFF"
+echo "C_SUB_ADDR_TM_SCHED_TAS_ADMIN_GATE_STATES: TAS default output xFF"
 tn_ll_mmi_write 0xD20438 0x000000FF
 tn_ll_mmi_write 0xD20C38 0x000000FF
 tn_ll_mmi_write 0xD21438 0x000000FF
@@ -994,23 +995,23 @@ tn_ll_mmi_write 0xD26C38 0x000000FF
 tn_ll_mmi_write 0xD27438 0x000000FF
 tn_ll_mmi_write 0xD27C38 0x000000FF
 
-echo "C_TM_SCHED_TAS_CUR_TIME"
+echo "C_SUB_ADDR_TM_SCHED_TAS_CUR_TIME"
 tn_ll_mmi_read 0xD20544
 
 echo "TAS output port 0 for 4 entries"
-echo "C_TM_SCHED_GCL_LOWER: the gcl entries"
+echo "C_SUB_ADDR_TM_SCHED_GCL_LOWER: the gcl entries"
 tn_ll_mmi_write 0xD20000 0x00000055
 tn_ll_mmi_write 0xD20004 0x000000AA
 tn_ll_mmi_write 0xD20008 0x00000055
 tn_ll_mmi_write 0xD2000C 0x000000AA
 tn_ll_mmi_write 0xD20010 0x00000055
-echo "C_TM_SCHED_GCL_TIME_LOWER"
+echo "C_SUB_ADDR_TM_SCHED_GCL_TIME_LOWER"
 tn_ll_mmi_write 0xD20200 0x00005000
 tn_ll_mmi_write 0xD20204 0x00005010
 tn_ll_mmi_write 0xD20208 0x00005020
 tn_ll_mmi_write 0xD2020C 0x00005030
 tn_ll_mmi_write 0xD20210 0x00005040
-echo "C_TM_SCHED_TAS_CONFIG_REG_LOWER"
+echo "C_SUB_ADDR_TM_SCHED_TAS_CONFIG_REG_LOWER"
 tn_ll_mmi_write 0xD20400 0x00000004
 tn_ll_mmi_write 0xD20404 0x00005000
 tn_ll_mmi_write 0xD20408 0x00014000
@@ -1022,19 +1023,19 @@ tn_ll_mmi_write 0xD2041C 0x00000001
 tn_ll_mmi_write 0xD2041C 0x00000000
 
 echo "TAS output port 1 for 4 entries"
-echo "C_TM_SCHED_GCL_LOWER: the gcl entries"
+echo "C_SUB_ADDR_TM_SCHED_GCL_LOWER: the gcl entries"
 tn_ll_mmi_write 0xD20800 0x00000055
 tn_ll_mmi_write 0xD20804 0x000000AA
 tn_ll_mmi_write 0xD20808 0x00000055
 tn_ll_mmi_write 0xD2080C 0x000000AA
 tn_ll_mmi_write 0xD20810 0x00000055
-echo "C_TM_SCHED_GCL_TIME_LOWER"
+echo "C_SUB_ADDR_TM_SCHED_GCL_TIME_LOWER"
 tn_ll_mmi_write 0xD20A00 0x00005000
 tn_ll_mmi_write 0xD20A04 0x00005010
 tn_ll_mmi_write 0xD20A08 0x00005020
 tn_ll_mmi_write 0xD20A0C 0x00005030
 tn_ll_mmi_write 0xD20A10 0x00005040
-echo "C_TM_SCHED_TAS_CONFIG_REG_LOWER"
+echo "C_SUB_ADDR_TM_SCHED_TAS_CONFIG_REG_LOWER"
 tn_ll_mmi_write 0xD20C00 0x00000004
 tn_ll_mmi_write 0xD20C04 0x00005000
 tn_ll_mmi_write 0xD20C08 0x00014000
@@ -1045,42 +1046,42 @@ tn_ll_mmi_write 0xD20C18 0x00000001
 tn_ll_mmi_write 0xD20C1C 0x00000001
 tn_ll_mmi_write 0xD20C1C 0x00000000
 
-echo "C_TM_SCHED_TAS_ADMIN_GCL_LEN: read TAS 0"
+echo "C_SUB_ADDR_TM_SCHED_TAS_ADMIN_GCL_LEN: read TAS 0"
 tn_ll_mmi_read 0xD20400
-echo "C_TM_SCHED_TAS_ADMIN_BASE_TIME"
+echo "C_SUB_ADDR_TM_SCHED_TAS_ADMIN_BASE_TIME"
 tn_ll_mmi_read 0xD20404
-echo "C_TM_SCHED_TAS_ADMIN_CYCLE_TIME"
+echo "C_SUB_ADDR_TM_SCHED_TAS_ADMIN_CYCLE_TIME"
 tn_ll_mmi_read 0xD20408
-echo "C_TM_SCHED_TAS_ADMIN_CYCLE_TIME_EXT"
+echo "C_SUB_ADDR_TM_SCHED_TAS_ADMIN_CYCLE_TIME_EXT"
 tn_ll_mmi_read 0xD2040C
-echo "C_TM_SCHED_TAS_CONFIG_CHANGE_TIME"
+echo "C_SUB_ADDR_TM_SCHED_TAS_CONFIG_CHANGE_TIME"
 tn_ll_mmi_read 0xD20410
-echo "C_TM_SCHED_TAS_CYCLE_START_TIME"
+echo "C_SUB_ADDR_TM_SCHED_TAS_CYCLE_START_TIME"
 tn_ll_mmi_read 0xD20414
-echo "C_TM_SCHED_TAS_GATE_ENABLE"
+echo "C_SUB_ADDR_TM_SCHED_TAS_GATE_ENABLE"
 tn_ll_mmi_read 0xD20418
-echo "C_TM_SCHED_TAS_CONFIG_CHANGE"
+echo "C_SUB_ADDR_TM_SCHED_TAS_CONFIG_CHANGE"
 tn_ll_mmi_read 0xD2041C
-echo "C_TM_SCHED_TAS_CONFIG_CHANGE_PENDING"
+echo "C_SUB_ADDR_TM_SCHED_TAS_CONFIG_CHANGE_PENDING"
 tn_ll_mmi_read 0xD20420
-echo "C_TM_SCHED_TAS_CONFIG_CHANGE_ACK"
+echo "C_SUB_ADDR_TM_SCHED_TAS_CONFIG_CHANGE_ACK"
 tn_ll_mmi_read 0xD20424
-echo "C_TM_SCHED_TAS_OPER_GCL_LEN"
+echo "C_SUB_ADDR_TM_SCHED_TAS_OPER_GCL_LEN"
 tn_ll_mmi_read 0xD20428
-echo "C_TM_SCHED_TAS_OPER_BASE_TIME"
+echo "C_SUB_ADDR_TM_SCHED_TAS_OPER_BASE_TIME"
 tn_ll_mmi_read 0xD2042C
-echo "C_TM_SCHED_TAS_OPER_CYCLE_TIME"
+echo "C_SUB_ADDR_TM_SCHED_TAS_OPER_CYCLE_TIME"
 tn_ll_mmi_read 0xD20430
-echo "C_TM_SCHED_TAS_OPER_CYCLE_TIME_EXT"
+echo "C_SUB_ADDR_TM_SCHED_TAS_OPER_CYCLE_TIME_EXT"
 tn_ll_mmi_read 0xD20434
-echo "C_TM_SCHED_TAS_ADMIN_GATE_STATES"
+echo "C_SUB_ADDR_TM_SCHED_TAS_ADMIN_GATE_STATES"
 tn_ll_mmi_read 0xD20438
-echo "C_TM_SCHED_TAS_OPER_GATE_STATES"
+echo "C_SUB_ADDR_TM_SCHED_TAS_OPER_GATE_STATES"
 tn_ll_mmi_read 0xD2043C
 
-echo "C_TM_SCHED_PROC_QUEUE_PRIO_LOWER"
+echo "C_SUB_ADDR_TM_SCHED_PROC_QUEUE_PRIO_LOWER"
 tn_ll_mmi_write 0xD20500 0x00000000
-echo "C_TM_SCHED_PROC_QUEUE_PRIO_HIGH"
+echo "C_SUB_ADDR_TM_SCHED_PROC_QUEUE_PRIO_HIGH"
 tn_ll_mmi_write 0xD20540 0x00000000
 
 echo "C_BASE_ADDR_STATISTICS_TX_BADRSN_LOWER DP0 Word0"

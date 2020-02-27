@@ -26,12 +26,13 @@
 #include "INR-NW.h"
 #include "INR-ctl.h"
 #include "INR-TIME.h"
+#include "INR-MMI.h"
 
 #define PROCFS_MAX_SIZE		1024
 
 static char procfs_buffer[PROCFS_MAX_SIZE];
 static size_t procfs_buffer_size = 0;
-static struct proc_dir_entry *reg1, *reg2,*reg3,*reg4, *INR_proc_dir, *INR_proc_dir2,*reg5,*reg6,*reg7,*reg8,*reg9,*reg10,*reg11;
+static struct proc_dir_entry *reg1, *reg2,*reg3,*reg4, *INR_proc_dir, *INR_proc_dir2,*reg5,*reg6,*reg7,*reg8,*reg9,*reg10,*reg11,*reg12,*reg13,*reg14;
 uint8_t ring0_dummy_loop=0; //disables all RX and TX handling, just reserver memory , where the memory pointers of RX0 and TX will be the same
 
 //*****************************************************************************************************************
@@ -43,6 +44,153 @@ uint8_t ring0_dummy_loop=0; //disables all RX and TX handling, just reserver mem
 uint8_t get_RING0_dummy_loop(){
 	return ring0_dummy_loop;
 }
+
+//*****************************************************************************************************************
+/**
+*  proc write function
+*
+*/
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,14,50)
+ssize_t
+PTP_clockjump_write (struct file *file, const char *buffer, size_t count, loff_t *data)
+#else
+int
+PTP_clockjump_write (struct file *file, const char *buffer, size_t count, void *data)
+#endif
+{
+    procfs_buffer_size = count;
+    if (procfs_buffer_size > PROCFS_MAX_SIZE) {
+        procfs_buffer_size = PROCFS_MAX_SIZE;
+    }
+    if (copy_from_user (procfs_buffer, buffer, procfs_buffer_size)) {
+        return -EFAULT;
+    }
+    uint32_t tmp = 0;
+    sscanf (procfs_buffer, "%d", &tmp);
+    return procfs_buffer_size;
+}
+//*****************************************************************************************************************
+/**
+*  proc print function
+*
+*/
+static int
+PTP_clockjump_proc_show (struct seq_file *m, void *v)
+{
+    seq_printf (m, "%i\n",get_clockjump());
+    
+    return 0;
+}
+
+//*****************************************************************************************************************
+/**
+*  proc open function
+*
+*/
+static int
+PTP_clockjump_proc_open (struct inode *inode, struct file *file)
+{
+    return single_open (file, PTP_clockjump_proc_show, NULL);
+}
+//*****************************************************************************************************************
+/**
+*  proc write function
+*
+*/
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,14,50)
+ssize_t
+PTP_prio_write (struct file *file, const char *buffer, size_t count, loff_t *data)
+#else
+int
+PTP_prio_write (struct file *file, const char *buffer, size_t count, void *data)
+#endif
+{
+    procfs_buffer_size = count;
+    if (procfs_buffer_size > PROCFS_MAX_SIZE) {
+        procfs_buffer_size = PROCFS_MAX_SIZE;
+    }
+    if (copy_from_user (procfs_buffer, buffer, procfs_buffer_size)) {
+        return -EFAULT;
+    }
+    uint32_t tmp = 0;
+    sscanf (procfs_buffer, "%d", &tmp);
+    INR_LOG_debug (loglevel_info"write %d to PTP_prio\n", tmp);
+    INR_NW_set_PTP_prio(tmp);
+    return procfs_buffer_size;
+}
+//*****************************************************************************************************************
+/**
+*  proc print function
+*
+*/
+static int
+PTP_prio_proc_show (struct seq_file *m, void *v)
+{
+    seq_printf (m, "%i\n",INR_NW_get_PTP_prio());
+    
+    return 0;
+}
+
+//*****************************************************************************************************************
+/**
+*  proc open function
+*
+*/
+static int
+PTP_prio_proc_open (struct inode *inode, struct file *file)
+{
+    return single_open (file, PTP_prio_proc_show, NULL);
+}
+
+
+//*****************************************************************************************************************
+/**
+*  proc write function
+*
+*/
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,14,50)
+ssize_t
+trigger_MMI_int_write (struct file *file, const char *buffer, size_t count, loff_t *data)
+#else
+int
+trigger_MMI_int_write (struct file *file, const char *buffer, size_t count, void *data)
+#endif
+{
+    procfs_buffer_size = count;
+    if (procfs_buffer_size > PROCFS_MAX_SIZE) {
+        procfs_buffer_size = PROCFS_MAX_SIZE;
+    }
+    if (copy_from_user (procfs_buffer, buffer, procfs_buffer_size)) {
+        return -EFAULT;
+    }
+
+
+    return procfs_buffer_size;
+}
+//*****************************************************************************************************************
+/**
+*  proc print function
+*
+*/
+static int
+trigger_MMI_int_proc_show (struct seq_file *m, void *v)
+{
+    seq_printf (m, "0\n");
+    INR_MMI_interrupt_watchd_wakeup();//wakeup and poll interrupt
+    return 0;
+}
+
+//*****************************************************************************************************************
+/**
+*  proc open function
+*
+*/
+static int
+trigger_MMI_int_proc_open (struct inode *inode, struct file *file)
+{
+    return single_open (file, trigger_MMI_int_proc_show, NULL);
+}
+
 //*****************************************************************************************************************
 /**
 *  proc write function
@@ -213,7 +361,8 @@ set_TSN_debug_write (struct file *file, const char *buffer, size_t count, void *
     uint32_t tmp = 0;
     sscanf (procfs_buffer, "%d", &tmp);
     INR_LOG_debug (loglevel_info"write %d to set_TSN_queue\n", tmp);
-    INR_TIME_set_debug(tmp);
+    INR_TIME_set_debug(1);
+    set_timedif(tmp);
     return procfs_buffer_size;
 }
 
@@ -596,6 +745,30 @@ int
 INR_CTL_init_proc (struct pci_dev *dev)
 {
 
+    static const struct file_operations PTP_clockjump = {
+        .owner = THIS_MODULE,
+        .open = PTP_clockjump_proc_open,
+        .write = PTP_clockjump_write,
+        .read = seq_read,
+        .llseek = seq_lseek,
+        .release = single_release,
+    };
+    static const struct file_operations PTP_prio = {
+        .owner = THIS_MODULE,
+        .open = PTP_prio_proc_open,
+        .write = PTP_prio_write,
+        .read = seq_read,
+        .llseek = seq_lseek,
+        .release = single_release,
+    };
+    static const struct file_operations trigger_MMI_int = {
+        .owner = THIS_MODULE,
+        .open = trigger_MMI_int_proc_open,
+        .write = trigger_MMI_int_write,
+        .read = seq_read,
+        .llseek = seq_lseek,
+        .release = single_release,
+    };
     static const struct file_operations TNsend2cpu = {
         .owner = THIS_MODULE,
         .open = TNsend2cpu_proc_open,
@@ -736,6 +909,21 @@ INR_CTL_init_proc (struct pci_dev *dev)
         printk (KERN_ALERT "Error: Could not initialize /proc/TrustNode/TSN/%s\n", "set_TSN_ts");
         return -ENOMEM;
     }
+    
+    reg13 = proc_create ("PTP_prio", 0644, INR_proc_dir2, &PTP_prio);
+    if (reg13 == NULL) {
+        remove_proc_entry ("PTP_prio", INR_proc_dir2);
+        printk (KERN_ALERT "Error: Could not initialize /proc/TrustNode/TSN/%s\n", "PTP_prio");
+        return -ENOMEM;
+    }
+    reg14 = proc_create ("PTP_clockjump", 0644, INR_proc_dir2, &PTP_clockjump);
+    if (reg14 == NULL) {
+        remove_proc_entry ("PTP_clockjump", INR_proc_dir2);
+        printk (KERN_ALERT "Error: Could not initialize /proc/TrustNode/TSN/%s\n", "PTP_clockjump");
+        return -ENOMEM;
+    }
+    
+    
     reg7 = proc_create ("set_TSN_queue", 0644, INR_proc_dir2, &set_TSN_queue);
     if (reg7 == NULL) {
         remove_proc_entry ("set_TSN_queue", INR_proc_dir2);
@@ -766,6 +954,13 @@ INR_CTL_init_proc (struct pci_dev *dev)
         printk (KERN_ALERT "Error: Could not initialize /proc/%s\n", "ring0_dummy");
         return -ENOMEM;
     }
+    reg12 = proc_create ("trigger_MMI_int", 0644, INR_proc_dir, &trigger_MMI_int);
+    if (reg12 == NULL) {
+        remove_proc_entry ("trigger_MMI_int", INR_proc_dir);
+        printk (KERN_ALERT "Error: Could not initialize /proc/%s\n", "trigger_MMI_int");
+        return -ENOMEM;
+    }
+    
     printk (KERN_INFO "/proc/%s created\n", "TN_RXdbg");
     printk (KERN_INFO "/proc/%s created\n", "TN_russian");
 
@@ -785,6 +980,8 @@ INR_CTL_remove_proc (struct pci_dev *dev)
     remove_proc_entry ("TN_TXdbg", INR_proc_dir);
     printk (KERN_INFO "/proc/TrustNode/%s removed\n", "TN_TXdbg");
     remove_proc_entry ("ring0_dummy", INR_proc_dir);
+    printk (KERN_INFO "/proc/TrustNode/%s removed\n", "trigger_MMI_int");
+    remove_proc_entry ("trigger_MMI_int", INR_proc_dir);
     printk (KERN_INFO "/proc/TrustNode/%s removed\n", "ring0_dummy");
     remove_proc_entry ("TN_RXdbg", INR_proc_dir);
     printk (KERN_INFO "/proc/TrustNode/%s removed\n", "TN_RXdbg");
@@ -796,6 +993,10 @@ INR_CTL_remove_proc (struct pci_dev *dev)
     printk (KERN_INFO "/proc/TrustNode/TSN/%s removed\n", "set_TSN_sock_opt");
     remove_proc_entry ("set_TSN_ts", INR_proc_dir2);
     printk (KERN_INFO "/proc/TrustNode/TSN/%s removed\n", "set_TSN_ts");
+    remove_proc_entry ("PTP_prio", INR_proc_dir2);
+    printk (KERN_INFO "/proc/TrustNode/TSN/%s removed\n", "PTP_prio"); 
+    remove_proc_entry ("PTP_clockjump", INR_proc_dir2);
+    printk (KERN_INFO "/proc/TrustNode/TSN/%s removed\n", "PTP_clockjump");
     remove_proc_entry ("set_TSN_queue", INR_proc_dir2);
     printk (KERN_INFO "/proc/TrustNode/TSN/%s removed\n", "set_TSN_queue");
     remove_proc_entry ("set_TSN_debug", INR_proc_dir2);

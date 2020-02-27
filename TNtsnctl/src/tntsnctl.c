@@ -56,7 +56,7 @@ static struct argp_option options[] = {	//user interface
   {"ADMIN_CYCLE_TIME_EXT", 'd', "", 0, "The admin cycle time extension constant for the gate list to be programmed."},
   {"CONFIG_CHANGE_TIME", 'e', "", 0, "The calculated config change time. Assumption is that calculations done in software."},
   {"CYCLE_START_TIME", 'f', "", 0, "The cycle start time for the control list. When the list pointer is set to zero."},
-  {"GATE_ENABLE", 'g', "", 0, "The gate enable bit. The gate control list is only active if enabled, otherwise all traffic goes through."},
+  {"GATE_ENABLE", 'g', "", 0, "The gate enable bit. The gate control list is only active if enabled, otherwise queues are filtered by AdminGateStates."},
   {"CONFIG_CHANGE", 'h', "", 0, "The config change command. Issued after configuring the gate control list and admin registers."},
   {"ADMIN_GATE_STATES", 'A', "", 0, "Sets the state of the gate output when the gate is disabled."},
 /*  {"CONFIG_CHANGE_PENDING", 'j', "", 0, "If 1 indicates a config is pending. Read only"}, //readonly
@@ -85,14 +85,14 @@ parse_opt (int key, char *arg, struct argp_state *state)
   switch (key) {
   case 'v':
     arguments->verbose = 1;
-    set_verbose (1);
-    printallconst ();
+    TN_tsn_set_verbose (1);
+    TN_tsn_printallconst ();
     break;
   case 'M':
     arguments->machinereadable = 1;
     break;
   case 'm':
-    memdump_en ();
+    TN_tsn_memdump_en ();
     MEMDUMP2=1;
     break;
   case 'H':
@@ -198,7 +198,7 @@ parse_opt (int key, char *arg, struct argp_state *state)
   case 'P':
     arguments->PORT = strtoull (arg, 0, 0);
     arguments->dohave_PORT = 1;
-    if (arguments->PORT >= PORT_count) {
+    if (arguments->PORT >= get_TSN_PORT_count()) {
       printf ("Invalid port number!\n");
       return ARGP_ERR_UNKNOWN;
     }
@@ -231,7 +231,7 @@ parse_opt (int key, char *arg, struct argp_state *state)
      that we accept.
 */
 //static char args_doc[] = "[AdminCTL_list_|OperCTL_list_|config_][add|del|print|change]"; //old doku
-static char args_doc[] = "Commands: oldapply|newapply|apply|Change_entry|QueuePrio_list_{print|change}|GateControl_list_{print|change}|TGateControl_list_{print|change}|config_{print|change}";
+static char args_doc[] = "Commands: refresh|oldapply|newapply|apply|Change_entry|QueuePrio_list_{print|change}|GateControl_list_{print|change}|TGateControl_list_{print|change}|config_{print|change}";
 
 /*
   DOC.  Field 4 in ARGP.
@@ -257,12 +257,12 @@ static struct argp argp = { options, parse_opt, args_doc, doc };
 int
 main (int argc, char **argv)
 {
-  int fd, fd_shadow, fd_master;
-  uint64_t *map_base, *map_base_shadow, *map_base_master;
+  int fd, fd_shadow, fd_master,fd_shadow2;
+  uint64_t *map_base, *map_base_shadow,*map_base_shadow2, *map_base_master;
   off_t target;
   struct arguments arguments;	//create structure for passing comandlinearguments and settings
-  clear_arguments (&arguments);
-  argp_parse (&argp, argc, argv, 0, 0, &arguments);
+  TN_tsn_clear_arguments (&arguments);
+  
 
   if ((fd = open (filename, O_RDWR | O_SYNC)) == -1) {
     printf ("error opening file\n");
@@ -277,14 +277,19 @@ main (int argc, char **argv)
   if ((fd_shadow = open ("/tmp/INR_TSN_shadow.mem", O_CREAT | O_RDWR | O_SYNC, 0600)) == -1) {	//shadowmemory, because FPGA-mmi is write only
     printf ("error opening shadowmem file\n");
   }
+  if ((fd_shadow2 = open ("/tmp/INR_TSN_shadow2.mem", O_CREAT | O_RDWR | O_SYNC, 0600)) == -1) {	//shadowmemory, storing GCL correcture information
+    printf ("error opening shadowmem file\n");
+  }
 
   ftruncate (fd_shadow, MAP_SIZE);	//if new files created, expand them
+  ftruncate (fd_shadow2, MAP_SIZE);	//if new files created, expand them
 
 
   map_base = mmap (0, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);	//map files and mmi to memory
   map_base_shadow = mmap (0, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd_shadow, 0);
-  TSN_init (map_base, map_base_shadow);
-
+  map_base_shadow2 = mmap (0, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd_shadow2, 0);
+  TSN_init (map_base, map_base_shadow,map_base_shadow2);
+  argp_parse (&argp, argc, argv, 0, 0, &arguments);
   if (!map_base) {
     printf ("error mapping memory\n");
   }
@@ -316,7 +321,7 @@ uint16_t i=0;
   timespec_get(&ts1, TIME_UTC);
   arguments.ADMIN_GCL_LEN = arguments.bulk;
     arguments.dohave_ADMIN_GCL_LEN = 1;
-   config_change (&arguments);
+   TN_tsn_config_change (&arguments);
    arguments.dohave_GATE_STATE_VECTOR = 1;
    arguments.dohave_INTERVAL = 1;
    arguments.dohave_ID = 1;
@@ -330,8 +335,8 @@ uint16_t i=0;
     arguments.ID = i;
     
     
-  GateControl_list_change (&arguments);
-  GateControl_TIME_list_change (&arguments);
+  TN_tsn_GateControl_list_change (&arguments);
+  TN_tsn_GateControl_TIME_list_change (&arguments);
   }
   TSN_apply (&arguments);
   timespec_get(&ts2, TIME_UTC);
@@ -340,20 +345,26 @@ uint16_t i=0;
   case 'o':
     TSN_apply (&arguments);
     break;
+  case 'r':
+    TSN_refresh ();
+    break;
   case 'a':
   arguments.hilscher_mode2=1;// set hilscher2 mode standardt 
   case 'n':
   	if(arguments.dohave_PORT)new_TSN_apply(&arguments);else{
-  		for (arguments.PORT=0; arguments.PORT < PORT_count; arguments.PORT++)new_TSN_apply(&arguments);
+  		for (arguments.PORT=0; arguments.PORT < get_TSN_PORT_count(); arguments.PORT++)new_TSN_apply(&arguments);
   	}
     break;
   case 'C':
-    GCL_entry (&arguments);
+  	if(arguments.dohave_PORT)GCL_entry (&arguments);else{
+  		for (arguments.PORT=0; arguments.PORT < get_TSN_PORT_count(); arguments.PORT++)GCL_entry (&arguments);
+  	}
+    
     break;
   case 'G':
     switch (arguments.args[0][17]) {
     case 'c':
-      GateControl_list_change (&arguments);
+      TN_tsn_GateControl_list_change (&arguments);
       break;
     case 'p':
       GateControl_list_print (&arguments);
@@ -379,7 +390,7 @@ uint16_t i=0;
   case 'T':
     switch (arguments.args[0][18]) {
     case 'c':
-      GateControl_TIME_list_change (&arguments);
+      TN_tsn_GateControl_TIME_list_change (&arguments);
       break;
     case 'p':
       GateControl_TIME_list_print (&arguments);
@@ -392,7 +403,7 @@ uint16_t i=0;
   case 'c':
     switch (arguments.args[0][7]) {
     case 'c':
-      config_change (&arguments);
+      TN_tsn_config_change (&arguments);
       break;
     case 'p':
       config_print (&arguments);
@@ -406,13 +417,14 @@ uint16_t i=0;
     printf ("unknown action\n");
     break;
   }
-  if (TSN_enable == 0)
-    printf ("This program was compiled without TSN address map information, nothing will happen!\nMissing TSN-capable FPGA design, please contact InnoRoute GmbH.\n");
+  if (get_TSN_enable() == 0)
+    printf ("Missing TSN-capable FPGA design, please contact InnoRoute GmbH.\n");
   munmap (map_base, MAP_SIZE);	//unmap files and mmi from memory
   munmap (map_base_shadow, MAP_SIZE);
+  munmap (map_base_shadow2, MAP_SIZE);
 
   close (fd_shadow);		//close shadow files
-
+	close (fd_shadow2);
   lock.l_type = F_UNLCK;	//free semaphor
   fcntl (fd, F_SETLK, &lock);	//release filelock
   close (fd);

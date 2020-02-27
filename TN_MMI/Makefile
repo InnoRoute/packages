@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 include $(INCLUDE_DIR)/kernel.mk
 
 PKG_NAME:=INR_TN_MMI
-PKG_VERSION:=0.4
+PKG_VERSION:=0.5
 PKG_RELEASE:=1
 PKG_BUILD_DEPENDS:= TN_tools
 

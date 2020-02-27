@@ -19,9 +19,10 @@
 #include "tnsysrepo_tas.h"
 #define XPATH_MAX_LEN 100
 #define MAP_SIZE 16384000UL
-int fd, fd_shadow;
+int fd, fd_shadow,fd_shadow2;
 uint8_t status;
-uint64_t *map_base, *map_base_shadow;
+#define TAS_timelog 1
+uint64_t *map_base, *map_base_shadow,*map_base_shadow2;
 volatile int8_t last_port_change = -1;
 const char filename[] = "/sys/bus/pci/devices/0000:01:00.0/resource1";
 typedef struct changes_s
@@ -34,8 +35,11 @@ void
 TN_sysrepo_tas_exit ()
 {
   munmap (map_base, MAP_SIZE);
+  munmap (map_base_shadow, MAP_SIZE);
+  munmap (map_base_shadow2, MAP_SIZE);
 
   close (fd_shadow);
+  close (fd_shadow2);
 
   close (fd);
 }
@@ -54,8 +58,12 @@ TN_sysrepo_tas_init ()
     status = SR_ERR_IO;
 
   }
+  if ((fd_shadow2 = open ("/tmp/INR_TSN_shadow2.mem", O_CREAT | O_RDWR | O_SYNC, 0600)) == -1) {	//shadowmemory, storing GCL correcture information
+    printf ("error opening shadowmem file\n");
+  }
 
   ftruncate (fd_shadow, MAP_SIZE);
+  ftruncate (fd_shadow2, MAP_SIZE);	//if new files created, expand them
 
   map_base = mmap (0, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
   if (!map_base) {
@@ -68,8 +76,8 @@ TN_sysrepo_tas_init ()
     status = SR_ERR_IO;
 
   }
-
-  TSN_init (map_base, map_base_shadow);
+	map_base_shadow2 = mmap (0, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd_shadow2, 0);
+  TSN_init (map_base, map_base_shadow,map_base_shadow2);
 
 
 
@@ -98,7 +106,8 @@ TN_sysrepo_tas_update (sr_session_ctx_t * session, uint8_t id)
   int16_t last_gcl_id = -1;
   uint8_t gcl_id = 0;
   struct arguments arguments;	//create structure for passing comandlinearguments and settings
-  memset (&arguments, 0, sizeof (arguments));	// clear structure
+  memset (&arguments, 0, sizeof (struct arguments));	// clear structure
+  TN_tsn_clear_arguments(&arguments);
   arguments.verbose = 0;
   TN_tsn_set_verbose (0);
   snprintf (xpath, XPATH_MAX_LEN, "/TNsysrepo:TNtas/ports[id='%i']/gate_enable", id);
@@ -112,7 +121,7 @@ TN_sysrepo_tas_update (sr_session_ctx_t * session, uint8_t id)
       //arguments.GATE_ENABLE=1;
       //arguments.dohave_GATE_ENABLE=1;
       arguments.PORT = id;
-      if (TSN_get_config (C_TM_SCHED_TAS_CONFIG_CHANGE_PENDING, id, 0) == 0xeeeeeeee)
+      if (TSN_get_config (C_SUB_ADDR_TM_SCHED_TAS_CONFIG_CHANGE_PENDING, id, 0) == 0xeeeeeeee)
 	return;			//port cant be configured
       arguments.dohave_PORT = 1;
 
@@ -261,11 +270,27 @@ TN_sysrepo_tas_handle_change (sr_session_ctx_t * session, sr_change_oper_t op, s
 
 
 }
-
+/*uint32_t
+INR_TAS_PCI_BAR1_read (uint64_t reg)
+{
+  if(map_base){
+    uint32_t *val = map_base + reg;
+		return *val;}else return 0;
+  }*/
 int
 TN_sysrepo_tas_change_cb (sr_session_ctx_t * session, const char *module_name, sr_notif_event_t ev, void *private_ctx)
 {
   printf ("__FUNCTION__ = %s\n", __FUNCTION__);
+  if(TAS_timelog){
+  	uint64_t BRIDGE_clock_value=0,CTRLD_clock_value=0;
+    uint32_t BRIDGE_clock_value_L=0,CTRLD_clock_value_L=0,BRIDGE_clock_value_H=0,CTRLD_clock_value_H=0;
+    BRIDGE_clock_value_L=INR_PCI_BAR1_read((C_BASE_ADDR_RTC<<8)+C_SUB_ADDR_RTC_BRIDGE_LOW);
+    BRIDGE_clock_value_H=INR_PCI_BAR1_read((C_BASE_ADDR_RTC<<8)+C_SUB_ADDR_RTC_BRIDGE_HIGH);
+    CTRLD_clock_value_L=INR_PCI_BAR1_read((C_BASE_ADDR_RTC<<8)+C_SUB_ADDR_RTC_CTRLD_LOW);
+    CTRLD_clock_value_H=INR_PCI_BAR1_read((C_BASE_ADDR_RTC<<8)+C_SUB_ADDR_RTC_CTRLD_HIGH);
+    CTRLD_clock_value=CTRLD_clock_value_L|((uint64_t)CTRLD_clock_value_H<<32);
+    printf("CTL_CLK: %lli\n",CTRLD_clock_value);
+  }
   changes_t *ch = (changes_t *) private_ctx;
   sr_change_iter_t *it = NULL;
   int rc = SR_ERR_OK;

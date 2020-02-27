@@ -25,5 +25,10 @@ void INR_MMI_phy_state_watch_wakeup(void);
 void INR_MMI_common_interrupt_handler(uint32_t status);
 void INR_MMI_common_interrupt_reset(void);
 uint32_t INR_MMI_common_interrupt_get(void);
+void INR_MMI_can_interrupt_handler(uint32_t mask);
+static int can_int_init(void);
+static void  can_int_exit(void);
+static void can_int_release(struct device *dev);
 
-#define INR_MAX_POLL 50
+
+#define INR_MAX_POLL 200

@@ -49,6 +49,7 @@ static struct argp_option options[] = {	//user interface
   {"COUNT", 'c', "", 0, "number of entrys to do something"},
   {"PQUEUE", 'q', "", 0, "select a processor queue"},
   {"memdump", 'm', 0, 0, "print out TNbar1 accesses"},
+  {"memdump", 'M', 0, 0, "print out TNbar1 accesses"},
   {0, 0, 0, 0, "Rule options:", 1},
   {"AUTOHASH", 'a', 0, 0, "automatic generate and write hash to hashtable"},
   {"AUTOACT", 'z', 0, 0, "automatic write action to Actiontable"},
@@ -91,6 +92,13 @@ static struct argp_option options[] = {	//user interface
 #if EMH_hash_revision == 9
   {"RC_EMA_INPORT", 'I', "", 0, "Ingressport of packet"},
 #endif
+#if EMH_hash_revision == 11
+  {"RC_EMA_INPORT", 'I', "", 0, "Ingressport of packet"},
+  {"RC_VLAN", 'V', "", 0, "ID of VLAN"},
+#endif
+#if EMH_hash_revision == 12
+  {"RC_VLAN", 'V', "", 0, "ID of VLAN"},
+#endif
   {0, 0, 0, 0, "Rule Type 2 options:", 3},
 #if EMH_hash_revision == 1
   {"RC_IPv4_SRC", 'C', "", 0, "IPv4 source address"},
@@ -124,6 +132,13 @@ static struct argp_option options[] = {	//user interface
 #if EMH_hash_revision == 9
   {"RC_EMA_VLAN_PRIO", 'U', "", 0, "Priority of VLAN"},
 #endif
+#if EMH_hash_revision == 11
+  {"RC_EMA_INPORT", 'I', "", 0, "Ingressport of packet"},
+  {"RC_MAC_DST", 'D', "", 0, "destination Mac address (hex Format)"},
+#endif
+#if EMH_hash_revision == 12
+  {"RC_MAC_DST", 'D', "", 0, "destination Mac address (hex Format)"},
+#endif
   {0, 0, 0, 0, "Rule Type 3 options:", 4},
 #if EMH_hash_revision == 2
   {"RC_IPv4_SRC", 'C', "", 0, "IPv4 source address"},
@@ -154,6 +169,19 @@ static struct argp_option options[] = {	//user interface
   {"RC_VLAN", 'V', "", 0, "ID of VLAN"},
   {"RC_MAC_DST", 'D', "", 0, "destination Mac address (hex Format)"},
 #endif
+#if EMH_hash_revision == 10
+  {"RC_MAC_DST", 'D', "", 0, "destination Mac address (hex Format)"},
+#endif
+#if EMH_hash_revision == 11
+  {"RC_EMA_INPORT", 'I', "", 0, "Ingressport of packet"},
+  {"RC_ETHERTYPE", 'E', "", 0, "ETHERTYPE"},
+  {"RC_IPv4_DST", 'T', "", 0, "IPv4 destination address"},
+#endif
+#if EMH_hash_revision == 12
+  {"RC_MAC_DST", 'D', "", 0, "destination Mac address (hex Format)"},
+  {"RC_VLAN", 'V', "", 0, "ID of VLAN"},
+  
+#endif
   {0, 0, 0, 0, "Rule Type 4 options:", 5},
 #if EMH_hash_revision == 2
   {"RC_MAC_DST", 'D', "", 0, "destination Mac address (hex Format)"},
@@ -177,6 +205,18 @@ static struct argp_option options[] = {	//user interface
   {"RC_PROTO", 'P', "", 0, "Protocol type of packet"},
   {"RC_ETHERTYPE", 'E', "", 0, "ETHERTYPE"},
 #endif
+#if EMH_hash_revision == 11
+  {"RC_EMA_INPORT", 'I', "", 0, "Ingressport of packet"},
+  {"RC_ETHERTYPE", 'E', "", 0, "ETHERTYPE"},
+  {"RC_IPv4_DST", 'T', "", 0, "IPv4 destination address"},
+  {"RC_PORT_DST", 'A', "", 0, "UDP/TCP destination port"},
+#endif
+#if EMH_hash_revision == 12
+  {"RC_MAC_DST", 'D', "", 0, "destination Mac address (hex Format)"},
+  {"RC_VLAN", 'V', "", 0, "ID of VLAN"},
+  {"RC_EMA_VLAN_PRIO", 'U', "", 0, "Priority of VLAN"},
+  
+#endif
   {0, 0, 0, 0, "EMA_Rule Type options:", 6},
   {"RC_IPv4_SRC", 'C', "", 0, "IPv4 source address"},
   {"RC_IPv4_DST", 'T', "", 0, "IPv4 destination address"},
@@ -197,6 +237,16 @@ static struct argp_option options[] = {	//user interface
   {"AT_Cut", 'X', "", 0, "Cut through assingment"},
   {0, 0, 0, 0, "Acceleration Datapath specific:", 8},
   {"NAL_ID", 'N', "", 0, "H265 video layer NAL_ID"},
+    {0, 0, 0, 0, "Field overwriting:", 9},
+  {"OVERWRITE_IPv4_SRC", 'd', "", 0, "Overwrite IPv4 source address"},
+  {"OVERWRITE_IPv4_DST", 'e', "", 0, "Overwrite IPv4 destination address"},
+  {"OVERWRITE_PORT_SRC", 'f', "", 0, "Overwrite UDP/TCP source port"},
+  {"OVERWRITE_PORT_DST", 'g', "", 0, "Overwrite UDP/TCP destination port"},
+  {"OVERWRITE_MAC_SRC", 'j', "", 0, "Overwrite source Mac address (hex Format)"},
+  {"OVERWRITE_MAC_DST", 'k', "", 0, "Overwrite destination Mac address (hex Format)"},
+  
+  {"IPV_wildcard", 'l', "", 0, "IPV_wildcard"},
+  {"QCI_gate_ID", 'x', "", 0, "QCI_gate_ID"},
 
   {0}
 };
@@ -218,14 +268,69 @@ parse_opt (int key, char *arg, struct argp_state *state)
   case 'o':
   	arguments->EMH_HASH_OVERLAY=strtoul (arg, 0, 0);
   	break;
+  case 'l':
+  	arguments->QCI_IPV_wildcard=strtoul (arg, 0, 0);
+  	arguments->QCI_enable=1;
+  	break;
+  case 'x':
+  	arguments->QCI_gate_ID=strtoul (arg, 0, 0);
+  	arguments->QCI_enable=1;
+  	arguments->dohave_QCI_gate_ID=1;
+  	break;  
   case 'a':
     arguments->HASH.gauto = 1;
+    break;
+  case 'd':
+    arguments->IPv4_SRC_OVERWRITE = htobe32 (inet_addr (arg));
+    nibbletwist(&arguments->IPv4_SRC_OVERWRITE, 4);
+    arguments->dohave_IPv4_SRC_OVERWRITE = 1;
+    arguments->OPTION_COUNT++;
+    break;
+  case 'e':
+    arguments->IPv4_DST_OVERWRITE = htobe32 (inet_addr (arg));
+    nibbletwist(&arguments->IPv4_DST_OVERWRITE, 4);
+    arguments->dohave_IPv4_DST_OVERWRITE = 1;
+    arguments->OPTION_COUNT++;
+    break;
+  case 'f':
+    arguments->PORT_SRC_OVERWRITE = strtoul (arg, 0, 0);
+    nibbletwist(&arguments->PORT_SRC_OVERWRITE, 2);
+    arguments->dohave_PORT_SRC_OVERWRITE = 1;
+    arguments->OPTION_COUNT++;
+    
+    break;
+  case 'g':
+    arguments->PORT_DST_OVERWRITE = strtoul (arg, 0, 0);
+    nibbletwist(&arguments->PORT_DST_OVERWRITE, 2);
+    arguments->dohave_PORT_DST_OVERWRITE = 1;
+    arguments->OPTION_COUNT++;
+    break;
+  case 'j':
+    arguments->MAC_SRC_OVERWRITE = strtoull (arg, 0, 0);
+    hwaddr_aton2 (arg, &arguments->MAC_SRC_OVERWRITE);
+    arguments->MAC_SRC_OVERWRITE = htobe64 (arguments->MAC_SRC_OVERWRITE) >> 16;
+    nibbletwist(&arguments->MAC_SRC_OVERWRITE, 6);
+    arguments->dohave_MAC_SRC_OVERWRITE = 1;
+    arguments->OPTION_COUNT++;
+    //printf("%llx\n",arguments->MAC_SRC_OVERWRITE);
+    break;
+  case 'k':
+    arguments->MAC_DST_OVERWRITE = strtoull (arg, 0, 0);
+    hwaddr_aton2 (arg, &arguments->MAC_DST_OVERWRITE);
+    arguments->MAC_DST_OVERWRITE = htobe64 (arguments->MAC_DST_OVERWRITE) >> 16;
+    nibbletwist(&arguments->MAC_DST_OVERWRITE, 6);
+    arguments->dohave_MAC_DST_OVERWRITE = 1;
+    arguments->OPTION_COUNT++;
+    //printf("%llx\n",arguments->MAC_DST_OVERWRITE);
     break;
   case 'z':
     arguments->autoaction = 1;
     break;
   case 'm':
     memdump_en ();
+    break;
+  case 'M':
+    arguments->machinereadable=1;
     break;
   case 'n':
     arguments->numberout = 1;
@@ -247,7 +352,7 @@ parse_opt (int key, char *arg, struct argp_state *state)
     arguments->bulk = strtoul (arg, 0, 0);
     break;
   case 'O':
-    arguments->OutPort = strtoul (arg, 0, 0);
+  	arguments->OutPort = strtoul (arg, 0, 0);
     arguments->OutPort_enable = 1;
     arguments->dohave_OutPort = 1;
     arguments->dohave_OutPort_enable = 1;
@@ -287,6 +392,7 @@ parse_opt (int key, char *arg, struct argp_state *state)
     arguments->COUNT = strtoull (arg, 0, 0);
     break;
   case 'S':
+  	arguments->matchcount++;
     arguments->MAC_SRC = strtoull (arg, 0, 0);
     hwaddr_aton2 (arg, &arguments->MAC_SRC);
     arguments->MAC_SRC = htobe64 (arguments->MAC_SRC) >> 16;
@@ -296,6 +402,7 @@ parse_opt (int key, char *arg, struct argp_state *state)
     arguments->OPTION_COUNT++;
     break;
   case 'D':
+  	arguments->matchcount++;
     arguments->MAC_DST = strtoull (arg, 0, 0);
     hwaddr_aton2 (arg, &arguments->MAC_DST);
     arguments->MAC_DST = htobe64 (arguments->MAC_DST) >> 16;
@@ -309,6 +416,7 @@ parse_opt (int key, char *arg, struct argp_state *state)
     arguments->HASH.EMH = strtoull (arg, 0, 0);
     break;
   case 'E':
+  	arguments->matchcount++;
     arguments->ETHERTYPE = strtoull (arg, 0, 0);
     arguments->MASK_ETHERTYPE = 0;
     arguments->dohave_ETHERTYPE = 1;
@@ -316,6 +424,7 @@ parse_opt (int key, char *arg, struct argp_state *state)
     arguments->OPTION_COUNT++;
     break;
   case 'V':
+  	arguments->matchcount++;
     arguments->VLAN_ID = strtoul (arg, 0, 0);
     arguments->MASK_VLAN_ID = 0;
     arguments->dohave_VLAN_ID = 1;
@@ -331,6 +440,7 @@ parse_opt (int key, char *arg, struct argp_state *state)
     arguments->OPTION_COUNT++;
     break;
   case 'W':
+  	arguments->matchcount++;
     arguments->TOS = strtoul (arg, 0, 0);
     arguments->MASK_TOS = 0;
     arguments->dohave_TOS = 1;
@@ -338,6 +448,7 @@ parse_opt (int key, char *arg, struct argp_state *state)
     arguments->OPTION_COUNT++;
     break;
   case 'U':
+  	arguments->matchcount++;
     arguments->VLAN_PRIO = strtoul (arg, 0, 0);
     arguments->MASK_VLAN_PRIO = 0;
     arguments->dohave_VLAN_PRIO = 1;
@@ -345,6 +456,7 @@ parse_opt (int key, char *arg, struct argp_state *state)
     arguments->OPTION_COUNT++;
     break;
   case 'I':
+  	arguments->matchcount++;
     arguments->INPORT = strtoul (arg, 0, 0);
     arguments->MASK_INPORT = 0;
     arguments->dohave_INPORT = 1;
@@ -352,6 +464,7 @@ parse_opt (int key, char *arg, struct argp_state *state)
     arguments->OPTION_COUNT++;
     break;
   case 'C':
+  	arguments->matchcount++;
     arguments->IPv4_SRC = htobe32 (inet_addr (arg));
     arguments->MASK_IPv4_SRC = 0;
     arguments->dohave_IPv4_SRC = 1;
@@ -359,6 +472,7 @@ parse_opt (int key, char *arg, struct argp_state *state)
     arguments->OPTION_COUNT++;
     break;
   case 'T':
+  	arguments->matchcount++;
     arguments->IPv4_DST = htobe32 (inet_addr (arg));
     arguments->MASK_IPv4_DST = 0;
     arguments->dohave_IPv4_DST = 1;
@@ -367,6 +481,7 @@ parse_opt (int key, char *arg, struct argp_state *state)
     break;
 
   case 'P':
+  	arguments->matchcount++;
     arguments->PROTOCOL = strtoul (arg, 0, 0);
     arguments->MASK_PROTOCOL = 0;
     arguments->dohave_PROTOCOL = 1;
@@ -374,6 +489,7 @@ parse_opt (int key, char *arg, struct argp_state *state)
     arguments->OPTION_COUNT++;
     break;
   case 'R':
+  	arguments->matchcount++;
     arguments->PORT_SRC = strtoul (arg, 0, 0);
     arguments->MASK_PORT_SRC = 0;
     arguments->dohave_PORT_SRC = 1;
@@ -381,6 +497,7 @@ parse_opt (int key, char *arg, struct argp_state *state)
     arguments->OPTION_COUNT++;
     break;
   case 'A':
+  	arguments->matchcount++;
     arguments->PORT_DST = strtoul (arg, 0, 0);
     arguments->MASK_PORT_DST = 0;
     arguments->dohave_PORT_DST = 1;

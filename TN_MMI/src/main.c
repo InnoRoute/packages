@@ -139,7 +139,7 @@ INR_proc_PHYspeed_open (struct inode *inode, struct file *file)
 /**init MMI proc functions
 *
 */
-void INR_MMI_remove_procfs(void){
+void INR_MMI_remove_procfs(void) {
 
     remove_proc_entry ("TN_COMint", INR_proc_dir);
     printk (KERN_INFO "/proc/TrustNode/%s removed\n", "TN_COMint");
@@ -154,8 +154,8 @@ void INR_MMI_remove_procfs(void){
 /**init MMI proc functions
 *
 */
-void INR_MMI_init_procfs(void){
- static const struct file_operations PHYspeed = {
+void INR_MMI_init_procfs(void) {
+    static const struct file_operations PHYspeed = {
         .owner = THIS_MODULE,
         .open = INR_proc_PHYspeed_open,
         .write = INR_proc_PHYspeed_write,
@@ -163,7 +163,7 @@ void INR_MMI_init_procfs(void){
         .llseek = seq_lseek,
         .release = single_release,
     };
- static const struct file_operations COMint = {
+    static const struct file_operations COMint = {
         .owner = THIS_MODULE,
         .open = INR_proc_COMint_open,
         .write = INR_proc_COMint_write,
@@ -171,26 +171,26 @@ void INR_MMI_init_procfs(void){
         .llseek = seq_lseek,
         .release = single_release,
     };
-INR_proc_dir = proc_mkdir("TN_MMI",NULL);
+    INR_proc_dir = proc_mkdir("TN_MMI",NULL);
     if(!INR_proc_dir)
     {
         printk(KERN_ALERT "Error creating proc entry");
         return -ENOMEM;
     }
-reg1 = proc_create ("TN_PHYspeed", 0644, INR_proc_dir, &PHYspeed);
+    reg1 = proc_create ("TN_PHYspeed", 0644, INR_proc_dir, &PHYspeed);
     if (reg1 == NULL) {
         remove_proc_entry ("TN_PHYspeed", INR_proc_dir);
         printk (KERN_ALERT "Error: Could not initialize /proc/%s\n", "TN_PHYspeed");
         return -ENOMEM;
     }
-reg2 = proc_create ("TN_COMint", 0644, INR_proc_dir, &COMint);
+    reg2 = proc_create ("TN_COMint", 0644, INR_proc_dir, &COMint);
     if (reg1 == NULL) {
         remove_proc_entry ("TN_COMint", INR_proc_dir);
         printk (KERN_ALERT "Error: Could not initialize /proc/%s\n", "TN_COMint");
         return -ENOMEM;
     }
-    
-    
+
+
 }
 //*****************************************************************************************************************
 static int __init

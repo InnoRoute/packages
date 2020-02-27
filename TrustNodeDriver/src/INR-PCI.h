@@ -4,7 +4,7 @@
 *@author M.Ulbricht 2015
 **/
 
-#include<tn_env.h>
+#include "tn_env.h"
 
 int INR_init_drv (struct pci_dev *dev);
 void INR_UNMAP_all (struct pci_dev *dev);
@@ -63,7 +63,7 @@ int INR_init_drv_dummy (struct pci_dev *dev);
 #define data_size_tx 	64	/*<max fragmentsize of the transmitted packets in byte */
 #define INR_NW_TX_fragmentation 0	/*<enable TX fragmentation */
 #define zerocopy_rx	0	/*<enable rx zerocopy packet handling */
-#define zerocopy_tx	1	/*<enable tx zerocopy packet handling */
+#define zerocopy_tx	0	/*<enable tx zerocopy packet handling */
 #define INR_PCI_page_prealloc_count 32	/*<prealloc pages */
 
 

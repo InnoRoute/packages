@@ -38,6 +38,8 @@ else
   echo "Check PCIe"
   # lspci (filtered): lspci -n -s 01:00.0 -> 01:00.0 0200: 10ee:0000 (rev 02)
 
+  if [ -z "$(lspci -mm -d 10ee:0000)" ]; then echo "No PCIe connection to FPGA. Exiting."; exit 1; fi
+
   echo "MMI R/W tests"
   # PCIe BAR1 Test
   for wr_data in 0xC0FFEE12 0x1C0FFEE2 0x12C0FFEE; do

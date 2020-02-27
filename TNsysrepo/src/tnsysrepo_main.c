@@ -30,7 +30,7 @@ const char *argp_program_version = "tnsysrepo 0.1";
 const char *argp_program_bug_address = "<ulbricht@innoroute.de>";
 struct flock lock;
 
-struct arguments
+struct arguments_main
 {
   char *args[1];
   uint8_t verbose;
@@ -51,7 +51,7 @@ static struct argp_option options[] = {	//user interface
 static error_t
 parse_opt (int key, char *arg, struct argp_state *state)
 {
-  struct arguments *arguments = state->input;
+  struct arguments_main *arguments = state->input;
   switch (key) {
   case 'v':
     arguments->verbose = 1;
@@ -106,8 +106,8 @@ int
 main (int argc, char **argv)
 {
 
-  struct arguments arguments;	//create structure for passing comandlinearguments and settings
-  memset (&arguments, 0, sizeof (arguments));	// clear structure
+  struct arguments_main arguments;	//create structure for passing comandlinearguments and settings
+  memset (&arguments, 0, sizeof (struct arguments_main));	// clear structure
   argp_parse (&argp, argc, argv, 0, 0, &arguments);
 
 

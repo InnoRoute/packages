@@ -33,7 +33,9 @@ ovs-vsctl add-port TNbr TN12 -- set Interface TN12 ofport_request=13
 ovs-vsctl add-port TNbr TN13 -- set Interface TN13 ofport_request=14
 ovs-vsctl add-port TNbr TN14 -- set Interface TN14 ofport_request=15
 ovs-vsctl add-port TNbr TN15 -- set Interface TN15 ofport_request=16
-ovs-vsctl set bridge TNbr other-config:hwaddr=00:53:4E:55:4C:00
+macaddr=$(dd if=/dev/urandom bs=1024 count=1 2>/dev/null|md5sum|sed 's/^\(..\)\(..\)\(..\)\(..\)\(..\)\(..\).*$/\1:\2:\3:\4:\5:\6/')
+ovs-vsctl set bridge TNbr other-config:hwaddr=$macaddr
+ovs-vsctl set bridge TNbr rstp_enable=false
 
 # Configure PLL
 INRpllload /usr/share/InnoRoute/tn-pll-v1.2_synce_7.stp E
@@ -75,6 +77,8 @@ cp /usr/share/InnoRoute/bs_unstable.bit /boot/trustnode_top.bit || true
 # Copy documentation from /boot (Windows partition) to web server
 mkdir -p /www/luci-static/innoroute/doku
 cp /boot/*.pdf /www/luci-static/innoroute/doku/
+tar -cf /www/luci-static/innoroute/doku/yang.tar /etc/sysrepo/yang
+chmod o+r /www/luci-static/innoroute/doku/yangmodel.html
 
 # Wait for state change
 wait

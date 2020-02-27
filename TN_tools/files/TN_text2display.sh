@@ -77,6 +77,7 @@ else
       y) code=$((127-1-16));;
       z) code=$((127-32-4));;
       .) code=$((128));;
+      -) code=$((64));;
       *) code=0 ;;
     esac
     text="$text $code"

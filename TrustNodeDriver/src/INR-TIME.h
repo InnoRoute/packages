@@ -5,7 +5,7 @@
 **/
 
 #include <linux/ptp_clock_kernel.h>
-#include<tn_env.h>
+#include"tn_env.h"
 
 struct INR_TIME_timestamps
 {
@@ -27,12 +27,15 @@ void INR_TIME_correct_HW_timestamp(uint32_t hw_value,struct INR_TIME_timestamps 
 void INR_TIME_set_enable(uint8_t enable);
 void INR_TIME_set_debug(uint8_t enable);
 void INR_TIME_set_USE_ctrl_bridge_clock_offset(uint8_t enable);
+void INR_TIME_reset(void);
+uint8_t get_clockjump(void);
 
 #define INR_TIME_vortex_length 65536
 #define INR_TIME_base 1
 #define INR_TIME_MAX_pollcount 50
 #define MAX_TIME_TX_vortex_queue 2
 extern void INR_MMI_common_interrupt_handler(uint32_t status);
+void set_timedif(uint64_t diff);
 
 struct INR_TIME_TX_entry
 {

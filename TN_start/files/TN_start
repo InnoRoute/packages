@@ -4,6 +4,8 @@ START=98
 
 start() {
 	echo "configuring TrustNode..."
+	source /usr/share/InnoRoute/tn_env.sh
+	source /usr/share/InnoRoute/tn_func_ll.sh
 
 	echo "mounting boot partiton"
 	mount /dev/sda1 /boot/ 2>/dev/null
@@ -15,14 +17,15 @@ start() {
 	stty -F /dev/ttyS1 115200
 
 	# Initialize PHYs
-	/usr/share/InnoRoute/TN_phy_init.sh
-	
-	# Search for package updates
-	#opkg update &
-	
-	# Set all ports to 100 Mbps
-	/usr/share/InnoRoute/TN_phy_force_linkspeed.sh 1
-	
+	tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_FEATURES_NET
+	let multispeed=$(( $read_data & 0x2 ))
+	if [ "$multispeed" -gt "0" ];then
+		TN_phy_init.sh 1 #don't force linkseed if multispeedd is allowed
+	else
+		TN_phy_init.sh 1
+		TN_phy_force_linkspeed.sh 1
+	fi
+	TN_phy_interrupts.sh 1
 	# Start Open vSwitch
 	/usr/share/InnoRoute/scripts/start_ovs.sh
 	
@@ -56,6 +59,12 @@ start() {
 	sysrepoctl --feature-enable=scheduled-traffic --module=ieee802-dot1q-sched
 	#TNrulestorage sysrepo &
 	/usr/share/InnoRoute/FlowCache_persistent.sh
+	phc2sys -a -rr &
+	for i in {0..14}
+		do
+   ifconfig TN$i up
+		done
+	TN_text2display.sh "ready"
 	echo "done"
 }
 

@@ -7,6 +7,9 @@ if [[ $# == 0 ]]; then
   echo "$0 <ex> is used to read the state of the buttons on the front panel and at the back"
   echo "The parameter <ex> can have any value. Without it, this help is displayed"
 else
+
+  if [ -z "$(lspci -mm -d 10ee:0000)" ]; then echo "No PCIe connection to FPGA. Exiting."; exit 1; fi
+
   # Get button status: bits0-15=FrontPanel, bit16=UserEvent
   
   tn_ll_mmi_read $C_BASE_ADDR_PERIPH $C_SUB_ADDR_PERIPH_BUTTONS

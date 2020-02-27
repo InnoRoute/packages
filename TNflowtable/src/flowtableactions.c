@@ -29,6 +29,12 @@ clear_arguments (struct arguments *arguments)
   arguments->OPTION_COUNT = 0;
   arguments->sysrepo = 0;
   arguments->verbose = 0;
+  arguments->machinereadable=0;
+  arguments->matchcount=0;
+  arguments->QCI_enable=0;
+  arguments->QCI_IPV_wildcard=0;
+  arguments->QCI_gate_ID=0;
+  arguments->dohave_QCI_gate_ID=0;
   arguments->NAL_ID = 0;
   arguments->MAC_SRC = 0;
   arguments->bulk = 0;
@@ -115,6 +121,18 @@ clear_arguments (struct arguments *arguments)
   arguments->dohave_BadReason = 0;
   arguments->dohave_Cut_enable = 0;
   arguments->dohave_CutValue = 0;
+  arguments->MAC_SRC_OVERWRITE= 0;
+  arguments->dohave_MAC_SRC_OVERWRITE= 0;
+  arguments->MAC_DST_OVERWRITE= 0;
+  arguments->dohave_MAC_DST_OVERWRITE= 0;
+  arguments->IPv4_SRC_OVERWRITE= 0;
+  arguments->dohave_IPv4_SRC_OVERWRITE= 0;
+  arguments->IPv4_DST_OVERWRITE= 0;
+  arguments->dohave_IPv4_DST_OVERWRITE= 0;
+  arguments->PORT_SRC_OVERWRITE= 0;
+  arguments->dohave_PORT_SRC_OVERWRITE= 0;
+  arguments->PORT_DST_OVERWRITE= 0;
+  arguments->dohave_PORT_DST_OVERWRITE= 0;
 
 }
 
@@ -218,7 +236,7 @@ get_HASH (struct arguments *arguments)
       (0x3fff & (arguments->MAC_DST >> 0)) ^
       (0x3fff & (arguments->MAC_DST >> 14)) ^
       (0x3fff & (arguments->MAC_DST >> 28)) ^ (0x3fff & (arguments->MAC_DST >> 42)) ^ (0x3fff & (arguments->VLAN_PRIO << 0));
-    arguments->HASH.EMH^=(0x7&arguments->EMH_HASH_OVERLAY)<<11;// manupulate last 3 bits
+    //arguments->HASH.EMH^=(0x7&arguments->EMH_HASH_OVERLAY)<<11;// manupulate last 3 bits
     break;
   default:
     verblog printf ("Type not valid\n");
@@ -348,7 +366,7 @@ get_HASH (struct arguments *arguments)
     arguments->HASH.EMH = (0x3fff & (arguments->INPORT << 0));
     break;
   case 2:
-    arguments->HASH.EMH = (0x3fff & (arguments->ETHERTYPE << 0));
+    arguments->HASH.EMH = (0x3fff & (arguments->VLAN_PRIO << 0));
     break;
   case 3:
     arguments->HASH.EMH =
@@ -360,6 +378,75 @@ get_HASH (struct arguments *arguments)
     arguments->HASH.EMH = (0x3fff & (arguments->PORT_DST << 0))^(0x3fff & (arguments->IPv4_DST >> 0)) ^
       (0x3fff & (arguments->IPv4_DST >> 14)) ^
       (0x3fff & (arguments->IPv4_DST >> 28)) ^(0x3fff & (arguments->PROTOCOL << 0))^(0x3fff & (arguments->ETHERTYPE >> 0)) ^ (0x3fff & (arguments->ETHERTYPE >> 14));
+    break;
+  default:
+    verblog printf ("Type not valid\n");
+    break;
+  }
+#endif
+
+#if EMH_hash_revision == 10
+  switch (arguments->TYPE_ID) {
+  case 1:
+    arguments->HASH.EMH = (0x3fff & (arguments->INPORT << 0));
+    break;
+  case 2:
+    arguments->HASH.EMH = (0x3fff & (arguments->VLAN_PRIO << 0));
+    break;
+  case 3:
+    arguments->HASH.EMH =
+      (0x3fff & (arguments->MAC_DST >> 0)) ^
+      (0x3fff & (arguments->MAC_DST >> 14)) ^ (0x3fff & (arguments->MAC_DST >> 28)) ^ (0x3fff & (arguments->MAC_DST >> 42));
+    break;
+  case 4:
+    arguments->HASH.EMH = (0x3fff & (arguments->PORT_DST << 0))^(0x3fff & (arguments->IPv4_DST >> 0)) ^
+      (0x3fff & (arguments->IPv4_DST >> 14)) ^
+      (0x3fff & (arguments->IPv4_DST >> 28)) ^(0x3fff & (arguments->PROTOCOL << 0))^(0x3fff & (arguments->ETHERTYPE >> 0)) ^ (0x3fff & (arguments->ETHERTYPE >> 14));
+    break;
+  default:
+    verblog printf ("Type not valid\n");
+    break;
+  }
+#endif
+
+#if EMH_hash_revision == 11
+  switch (arguments->TYPE_ID) {
+  case 1:
+    arguments->HASH.EMH = (0x3fff & (arguments->INPORT << 0))^(0x3fff & (arguments->VLAN_ID >> 0));
+    break;
+  case 2:
+    arguments->HASH.EMH = (0x3fff & (arguments->INPORT << 0))^(0x3fff & (arguments->MAC_DST >> 0)) ^
+      (0x3fff & (arguments->MAC_DST >> 14)) ^ (0x3fff & (arguments->MAC_DST >> 28)) ^ (0x3fff & (arguments->MAC_DST >> 42));
+    break;
+  case 3:
+    arguments->HASH.EMH =(0x3fff & (arguments->INPORT << 0))^(0x3fff & (arguments->ETHERTYPE >> 0)) ^ (0x3fff & (arguments->ETHERTYPE >> 14))^(0x3fff & (arguments->IPv4_DST >> 0)) ^
+      (0x3fff & (arguments->IPv4_DST >> 14)) ^(0x3fff & (arguments->IPv4_DST >> 28));
+    break;
+  case 4:
+    arguments->HASH.EMH = (0x3fff & (arguments->INPORT << 0))^(0x3fff & (arguments->ETHERTYPE >> 0)) ^ (0x3fff & (arguments->ETHERTYPE >> 14))^(0x3fff & (arguments->IPv4_DST >> 0)) ^
+      (0x3fff & (arguments->IPv4_DST >> 14)) ^(0x3fff & (arguments->IPv4_DST >> 28))^(0x3fff & (arguments->PORT_DST << 0));
+    break;
+  default:
+    verblog printf ("Type not valid\n");
+    break;
+  }
+#endif
+#if EMH_hash_revision == 12
+  switch (arguments->TYPE_ID) {
+  case 1:
+    arguments->HASH.EMH = (0x3fff & (arguments->VLAN_ID >> 0));
+    break;
+  case 2:
+    arguments->HASH.EMH = (0x3fff & (arguments->MAC_DST >> 0)) ^
+      (0x3fff & (arguments->MAC_DST >> 14)) ^ (0x3fff & (arguments->MAC_DST >> 28)) ^ (0x3fff & (arguments->MAC_DST >> 42));
+    break;
+  case 3:
+    arguments->HASH.EMH =(0x3fff & (arguments->VLAN_ID >> 0))^(0x3fff & (arguments->MAC_DST >> 0)) ^
+      (0x3fff & (arguments->MAC_DST >> 14)) ^ (0x3fff & (arguments->MAC_DST >> 28)) ^ (0x3fff & (arguments->MAC_DST >> 42));
+    break;
+  case 4:
+    arguments->HASH.EMH = (0x3fff & (arguments->VLAN_ID >> 0))^(0x3fff & (arguments->MAC_DST >> 0)) ^
+      (0x3fff & (arguments->MAC_DST >> 14)) ^ (0x3fff & (arguments->MAC_DST >> 28)) ^ (0x3fff & (arguments->MAC_DST >> 42))^(0x3fff & (arguments->VLAN_PRIO << 0));
     break;
   default:
     verblog printf ("Type not valid\n");
@@ -440,7 +527,51 @@ HT_EMH_add (struct arguments *arguments)
 
   }
 }
+//********************************************************************************************************************
+/**
+*add entry to ruletable
+@param arguments argumentes from userinterface
+*/
+void
+AT_OVERWRITE_add (struct arguments *arguments)
+{
+  verblog printf ("__FUNCTION__ = %s\n", __FUNCTION__);
+  verblog printf ("Change entry of manipulation action table ID:%i\n", arguments->TableID.ActT_OVERWITE);
+  struct INR_FC_ActT_OVERWRITE_RULE *entry =(struct INR_FC_ActT_OVERWRITE_RULE *) INR_ActT_OVERWRITE_get_addr (arguments->TableID.ActT_OVERWITE,0);
+  struct INR_FC_ActT_OVERWRITE_RULE *entry_1 =(struct INR_FC_ActT_OVERWRITE_RULE *) INR_ActT_OVERWRITE_get_addr (arguments->TableID.ActT_OVERWITE,1);
+  struct INR_FC_ActT_OVERWRITE_RULE *entry_shadow = (struct INR_FC_ActT_OVERWRITE_RULE *) INR_ActT_OVERWRITE_shadow_get_addr (arguments->TableID.ActT_OVERWITE,0);
+  if (entry != NULL) {
+  entry_shadow->valid=0;
+  if(arguments->dohave_MAC_DST_OVERWRITE){entry_shadow->valid|=(1<<0);entry_shadow->MAC_DST=arguments->MAC_DST_OVERWRITE;}
+  if(arguments->dohave_MAC_SRC_OVERWRITE){entry_shadow->valid|=(1<<1);entry_shadow->MAC_SRC=arguments->MAC_SRC_OVERWRITE;}
+  if(arguments->dohave_IPv4_DST_OVERWRITE){entry_shadow->valid|=(1<<2);entry_shadow->IP_DST=arguments->IPv4_DST_OVERWRITE;}
+  if(arguments->dohave_IPv4_SRC_OVERWRITE){entry_shadow->valid|=(1<<3);entry_shadow->IP_SRC=arguments->IPv4_SRC_OVERWRITE;}
+  if(arguments->dohave_PORT_DST_OVERWRITE){entry_shadow->valid|=(1<<4);entry_shadow->PORT_DST=arguments->PORT_DST_OVERWRITE;}
+  if(arguments->dohave_PORT_SRC_OVERWRITE){entry_shadow->valid|=(1<<5);entry_shadow->PORT_SRC=arguments->PORT_SRC_OVERWRITE;}
+  FCmemcpy (entry, entry_shadow, INR_FC_ActT_OVERWRITE_entry_length_memcpy);
+  FCmemcpy (entry_1, entry_shadow, INR_FC_ActT_OVERWRITE_entry_length_memcpy);
+  }
+}
 
+//********************************************************************************************************************
+/**
+*add entry to ruletable
+@param arguments argumentes from userinterface
+*/
+void
+AT_OVERWRITE_del (struct arguments *arguments)
+{
+  verblog printf ("__FUNCTION__ = %s\n", __FUNCTION__);
+  verblog printf ("Change entry of manipulation action table ID:%i\n", arguments->TableID.ActT_OVERWITE);
+  struct INR_FC_ActT_OVERWRITE_RULE *entry =(struct INR_FC_ActT_OVERWRITE_RULE *) INR_ActT_OVERWRITE_get_addr (arguments->TableID.ActT_OVERWITE,0);
+  struct INR_FC_ActT_OVERWRITE_RULE *entry_1 =(struct INR_FC_ActT_OVERWRITE_RULE *) INR_ActT_OVERWRITE_get_addr (arguments->TableID.ActT_OVERWITE,1);
+  struct INR_FC_ActT_OVERWRITE_RULE *entry_shadow = (struct INR_FC_ActT_OVERWRITE_RULE *) INR_ActT_OVERWRITE_shadow_get_addr (arguments->TableID.ActT_OVERWITE,0);
+  if (entry != NULL) {
+  entry_shadow->valid=0;
+  FCmemcpy (entry, entry_shadow, INR_FC_ActT_OVERWRITE_entry_length_memcpy);
+  FCmemcpy (entry_1, entry_shadow, INR_FC_ActT_OVERWRITE_entry_length_memcpy);
+  }
+}
 //********************************************************************************************************************
 /**
 *remove one entry from hashtable
@@ -519,7 +650,7 @@ RT_EMH_add (struct arguments *arguments)
       arguments->RULEPOINTER = INR_RuleTable_EMH_get_next_free_entry (0xffff & arguments->ID);	//save where rule is stored
       if (arguments->autoaction) {
 	if (arguments->dohave_PQUEUE == 0) {
-	  arguments->ACTION_ID = INR_ActT_get_next_free_entry (arguments->ID, arguments->dohave_PQUEUE, arguments->PQUEUE,HAVE_OVERWRITE);
+	  arguments->ACTION_ID = INR_ActT_get_next_free_entry (arguments->ID, arguments->dohave_PQUEUE, arguments->PQUEUE,HAVE_OVERWRITE,(arguments->QCI_enable&0x1)|((arguments->QCI_IPV_wildcard&0x1)<<1)|((arguments->QCI_gate_ID&0xF)<<2));
 	  AT_add (arguments);
 	}
 	else {
@@ -730,7 +861,7 @@ RT_EMH_add (struct arguments *arguments)
 	verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments->TYPE_ID, entry, arguments->RULEPOINTER);
 	break;
       case 2:
-	entry_shadow->COMP_FIELDS.TYPE2.ETHERTYPE = arguments->ETHERTYPE;
+	entry_shadow->COMP_FIELDS.TYPE2.VLAN_PRIO = arguments->VLAN_PRIO;
 
 	verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments->TYPE_ID, entry, arguments->RULEPOINTER);
 	break;
@@ -744,6 +875,98 @@ RT_EMH_add (struct arguments *arguments)
       case 3:
 	entry_shadow->COMP_FIELDS.TYPE3.MAC_DST = arguments->MAC_DST;
 	entry_shadow->COMP_FIELDS.TYPE3.VLAN_ID = arguments->VLAN_ID;
+	verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments->TYPE_ID, entry, arguments->RULEPOINTER);
+	break;
+      default:
+	verblog printf ("action type not valid\n");
+	break;
+      }
+#endif
+#if EMH_hash_revision == 10
+      switch (arguments->TYPE_ID) {
+      case 1:
+	entry_shadow->COMP_FIELDS.TYPE1.INPORT = arguments->INPORT;
+	verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments->TYPE_ID, entry, arguments->RULEPOINTER);
+	break;
+      case 2:
+	entry_shadow->COMP_FIELDS.TYPE2.VLAN_PRIO = arguments->VLAN_PRIO;
+
+	verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments->TYPE_ID, entry, arguments->RULEPOINTER);
+	break;
+      case 4:
+	entry_shadow->COMP_FIELDS.TYPE4.PORT_DST = arguments->PORT_DST;
+	entry_shadow->COMP_FIELDS.TYPE4.IPv4_DST = arguments->IPv4_DST;
+	entry_shadow->COMP_FIELDS.TYPE4.PROTOCOL = arguments->PROTOCOL;
+	entry_shadow->COMP_FIELDS.TYPE4.ETHERTYPE = arguments->ETHERTYPE;
+	verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments->TYPE_ID, entry, arguments->RULEPOINTER);
+	break;
+      case 3:
+	entry_shadow->COMP_FIELDS.TYPE3.MAC_DST = arguments->MAC_DST;
+	verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments->TYPE_ID, entry, arguments->RULEPOINTER);
+	break;
+      default:
+	verblog printf ("action type not valid\n");
+	break;
+      }
+#endif
+#if EMH_hash_revision == 11
+      switch (arguments->TYPE_ID) {
+      case 1:
+	entry_shadow->COMP_FIELDS.TYPE1.INPORT = arguments->INPORT;
+	entry_shadow->COMP_FIELDS.TYPE1.VLAN_ID = arguments->VLAN_ID;
+	verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments->TYPE_ID, entry, arguments->RULEPOINTER);
+	break;
+      case 2:
+	entry_shadow->COMP_FIELDS.TYPE2.INPORT = arguments->INPORT;
+	entry_shadow->COMP_FIELDS.TYPE2.MAC_DST = arguments->MAC_DST;
+	
+
+	verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments->TYPE_ID, entry, arguments->RULEPOINTER);
+	break;
+      case 4:
+	entry_shadow->COMP_FIELDS.TYPE4.INPORT = arguments->INPORT;
+	entry_shadow->COMP_FIELDS.TYPE4.ETHERTYPE = arguments->ETHERTYPE;
+	entry_shadow->COMP_FIELDS.TYPE4.IPv4_DST = arguments->IPv4_DST;
+	entry_shadow->COMP_FIELDS.TYPE4.PORT_DST = arguments->PORT_DST;
+	
+	verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments->TYPE_ID, entry, arguments->RULEPOINTER);
+	break;
+      case 3:
+	entry_shadow->COMP_FIELDS.TYPE3.INPORT = arguments->INPORT;
+	entry_shadow->COMP_FIELDS.TYPE3.ETHERTYPE = arguments->ETHERTYPE;
+	entry_shadow->COMP_FIELDS.TYPE3.IPv4_DST = arguments->IPv4_DST;
+	
+	verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments->TYPE_ID, entry, arguments->RULEPOINTER);
+	break;
+      default:
+	verblog printf ("action type not valid\n");
+	break;
+      }
+#endif
+#if EMH_hash_revision == 12
+      switch (arguments->TYPE_ID) {
+      case 1:
+	entry_shadow->COMP_FIELDS.TYPE1.VLAN_ID = arguments->VLAN_ID;
+	verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments->TYPE_ID, entry, arguments->RULEPOINTER);
+	break;
+      case 2:
+	entry_shadow->COMP_FIELDS.TYPE2.MAC_DST = arguments->MAC_DST;
+	
+
+	verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments->TYPE_ID, entry, arguments->RULEPOINTER);
+	break;
+      case 4:
+	entry_shadow->COMP_FIELDS.TYPE4.MAC_DST = arguments->MAC_DST;
+	entry_shadow->COMP_FIELDS.TYPE4.VLAN_ID = arguments->VLAN_ID;
+	entry_shadow->COMP_FIELDS.TYPE4.VLAN_PRIO = arguments->VLAN_PRIO;
+	
+	verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments->TYPE_ID, entry, arguments->RULEPOINTER);
+	break;
+      case 3:
+	entry_shadow->COMP_FIELDS.TYPE3.MAC_DST = arguments->MAC_DST;
+	entry_shadow->COMP_FIELDS.TYPE3.VLAN_ID = arguments->VLAN_ID;
+	
+	
 	verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments->TYPE_ID, entry, arguments->RULEPOINTER);
 	break;
       default:
@@ -976,7 +1199,7 @@ RT_EMH_update (struct arguments arguments)
       verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments.TYPE_ID, entry, arguments.RULEPOINTER);
       break;
     case 2:
-      entry_shadow->COMP_FIELDS.TYPE2.ETHERTYPE = arguments.ETHERTYPE;
+      entry_shadow->COMP_FIELDS.TYPE2.VLAN_PRIO = arguments.VLAN_PRIO;
 
       verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments.TYPE_ID, entry, arguments.RULEPOINTER);
       break;
@@ -997,6 +1220,95 @@ RT_EMH_update (struct arguments arguments)
       break;
     }
 #endif
+#if EMH_hash_revision == 10
+    switch (arguments.TYPE_ID) {
+    case 1:
+      entry_shadow->COMP_FIELDS.TYPE1.INPORT = arguments.INPORT;
+      verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments.TYPE_ID, entry, arguments.RULEPOINTER);
+      break;
+    case 2:
+      entry_shadow->COMP_FIELDS.TYPE2.VLAN_PRIO = arguments.VLAN_PRIO;
+
+      verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments.TYPE_ID, entry, arguments.RULEPOINTER);
+      break;
+    case 4:
+      entry_shadow->COMP_FIELDS.TYPE4.PORT_DST = arguments.PORT_DST;
+      entry_shadow->COMP_FIELDS.TYPE4.IPv4_DST = arguments.IPv4_DST;
+      entry_shadow->COMP_FIELDS.TYPE4.PROTOCOL = arguments.PROTOCOL;
+      entry_shadow->COMP_FIELDS.TYPE4.ETHERTYPE = arguments.ETHERTYPE;
+      verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments.TYPE_ID, entry, arguments.RULEPOINTER);
+      break;
+    case 3:
+      entry_shadow->COMP_FIELDS.TYPE3.MAC_DST = arguments.MAC_DST;
+      verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments.TYPE_ID, entry, arguments.RULEPOINTER);
+      break;
+    default:
+      verblog printf ("action type not valid\n");
+      break;
+    }
+#endif
+
+#if EMH_hash_revision == 11
+    switch (arguments.TYPE_ID) {
+    case 1:
+      entry_shadow->COMP_FIELDS.TYPE1.INPORT = arguments.INPORT;
+	entry_shadow->COMP_FIELDS.TYPE1.VLAN_ID = arguments.VLAN_ID;
+      verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments.TYPE_ID, entry, arguments.RULEPOINTER);
+      break;
+    case 2:
+      entry_shadow->COMP_FIELDS.TYPE2.INPORT = arguments.INPORT;
+	entry_shadow->COMP_FIELDS.TYPE2.MAC_DST = arguments.MAC_DST;
+
+      verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments.TYPE_ID, entry, arguments.RULEPOINTER);
+      break;
+    case 4:
+      entry_shadow->COMP_FIELDS.TYPE4.INPORT = arguments.INPORT;
+	entry_shadow->COMP_FIELDS.TYPE4.ETHERTYPE = arguments.ETHERTYPE;
+	entry_shadow->COMP_FIELDS.TYPE4.IPv4_DST = arguments.IPv4_DST;
+	entry_shadow->COMP_FIELDS.TYPE4.PORT_DST = arguments.PORT_DST;
+      verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments.TYPE_ID, entry, arguments.RULEPOINTER);
+      break;
+    case 3:
+      entry_shadow->COMP_FIELDS.TYPE3.INPORT = arguments.INPORT;
+	entry_shadow->COMP_FIELDS.TYPE3.ETHERTYPE = arguments.ETHERTYPE;
+	entry_shadow->COMP_FIELDS.TYPE3.IPv4_DST = arguments.IPv4_DST;
+      verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments.TYPE_ID, entry, arguments.RULEPOINTER);
+      break;
+    default:
+      verblog printf ("action type not valid\n");
+      break;
+    }
+#endif
+#if EMH_hash_revision == 12
+    switch (arguments.TYPE_ID) {
+    case 1:
+      entry_shadow->COMP_FIELDS.TYPE1.VLAN_ID = arguments.VLAN_ID;
+      verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments.TYPE_ID, entry, arguments.RULEPOINTER);
+      break;
+    case 2:
+      entry_shadow->COMP_FIELDS.TYPE2.MAC_DST = arguments.MAC_DST;
+
+      verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments.TYPE_ID, entry, arguments.RULEPOINTER);
+      break;
+    case 4:
+      entry_shadow->COMP_FIELDS.TYPE4.MAC_DST = arguments.MAC_DST;
+      entry_shadow->COMP_FIELDS.TYPE4.VLAN_ID = arguments.VLAN_ID;
+      entry_shadow->COMP_FIELDS.TYPE4.VLAN_PRIO = arguments.VLAN_PRIO;
+      
+      verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments.TYPE_ID, entry, arguments.RULEPOINTER);
+      break;
+    case 3:
+      entry_shadow->COMP_FIELDS.TYPE3.MAC_DST = arguments.MAC_DST;
+      entry_shadow->COMP_FIELDS.TYPE3.VLAN_ID = arguments.VLAN_ID;
+      verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments.TYPE_ID, entry, arguments.RULEPOINTER);
+      break;
+    default:
+      verblog printf ("action type not valid\n");
+      break;
+    }
+#endif
+
+
     FCmemcpy (entry, entry_shadow, INR_FC_EMH_RuleTable_entry_length_memcpy);	//copy shadow to mmi (wordwise)
   }
   else {
@@ -1215,7 +1527,7 @@ RT_EMH_print (struct arguments arguments)
 				printf ("INPORT:0x%lx  ", entry->COMP_FIELDS.TYPE1.INPORT);
 	break;
       case 2:
-	printf ("ETHERTYPE:0x%lx  ", entry->COMP_FIELDS.TYPE2.ETHERTYPE);
+	printf ("VLAN_PRIO:0x%lx  ", entry->COMP_FIELDS.TYPE2.VLAN_PRIO);
 	break;
       case 3:
 	printf ("MAC_DST:0x%lx  ", entry->COMP_FIELDS.TYPE3.MAC_DST);
@@ -1227,6 +1539,80 @@ RT_EMH_print (struct arguments arguments)
   printf ("PROTOCOL:0x%lx  ", entry->COMP_FIELDS.TYPE4.PROTOCOL);
   printf ("ETHERTYPE:0x%lx  ", entry->COMP_FIELDS.TYPE4.ETHERTYPE);
 	
+	
+	break;
+      default:
+	printf ("action type not valid\n");
+	break;
+      }
+#endif
+#if EMH_hash_revision == 10
+      switch (entry->TYPE_ID) {
+      case 1:
+				printf ("INPORT:0x%lx  ", entry->COMP_FIELDS.TYPE1.INPORT);
+	break;
+      case 2:
+	printf ("VLAN_PRIO:0x%lx  ", entry->COMP_FIELDS.TYPE2.VLAN_PRIO);
+	break;
+      case 3:
+	printf ("MAC_DST:0x%lx  ", entry->COMP_FIELDS.TYPE3.MAC_DST);
+	break;
+      case 4:
+  printf ("DSTPORT:0x%lx  ", entry->COMP_FIELDS.TYPE4.PORT_DST);
+  printf ("IPv4_DST:0x%lx  ", entry->COMP_FIELDS.TYPE4.IPv4_DST);
+  printf ("PROTOCOL:0x%lx  ", entry->COMP_FIELDS.TYPE4.PROTOCOL);
+  printf ("ETHERTYPE:0x%lx  ", entry->COMP_FIELDS.TYPE4.ETHERTYPE);
+	
+	
+	break;
+      default:
+	printf ("action type not valid\n");
+	break;
+      }
+#endif
+#if EMH_hash_revision == 11
+      switch (entry->TYPE_ID) {
+      case 1:
+				printf ("INPORT:0x%lx  ", entry->COMP_FIELDS.TYPE1.INPORT);
+				printf ("VLAN_ID:0x%lx  ", entry->COMP_FIELDS.TYPE1.VLAN_ID);
+	break;
+      case 2:
+	printf ("INPORT:0x%lx  ", entry->COMP_FIELDS.TYPE2.INPORT);
+	printf ("MAC_DST:0x%lx  ", entry->COMP_FIELDS.TYPE2.MAC_DST);
+	break;
+      case 3:
+	printf ("INPORT:0x%lx  ", entry->COMP_FIELDS.TYPE3.INPORT);
+	printf ("ETHERTYPE:0x%lx  ", entry->COMP_FIELDS.TYPE3.ETHERTYPE);
+	printf ("IPv4_DST:0x%lx  ", entry->COMP_FIELDS.TYPE3.IPv4_DST);
+	break;
+      case 4:
+	printf ("INPORT:0x%lx  ", entry->COMP_FIELDS.TYPE4.INPORT);
+	printf ("ETHERTYPE:0x%lx  ", entry->COMP_FIELDS.TYPE4.ETHERTYPE);
+	printf ("IPv4_DST:0x%lx  ", entry->COMP_FIELDS.TYPE4.IPv4_DST);
+	 printf ("DSTPORT:0x%lx  ", entry->COMP_FIELDS.TYPE4.PORT_DST);
+	
+	break;
+      default:
+	printf ("action type not valid\n");
+	break;
+      }
+#endif
+#if EMH_hash_revision == 12
+      switch (entry->TYPE_ID) {
+      case 1:
+				printf ("VLAN_ID:0x%lx  ", entry->COMP_FIELDS.TYPE1.VLAN_ID);
+	break;
+      case 2:
+	printf ("MAC_DST:0x%lx  ", entry->COMP_FIELDS.TYPE2.MAC_DST);
+	break;
+      case 3:
+	printf ("MAC_DST:0x%lx  ", entry->COMP_FIELDS.TYPE3.MAC_DST);
+	printf ("VLAN_ID:0x%lx  ", entry->COMP_FIELDS.TYPE3.VLAN_ID);
+	break;
+      case 4:
+	printf ("MAC_DST:0x%lx  ", entry->COMP_FIELDS.TYPE4.MAC_DST);
+	printf ("VLAN_ID:0x%lx  ", entry->COMP_FIELDS.TYPE4.VLAN_ID);
+	printf ("VLAN_PRIO:0x%lx  ", entry->COMP_FIELDS.TYPE4.VLAN_PRIO);
 	
 	break;
       default:
@@ -1259,7 +1645,7 @@ CT_EMH_add (struct arguments *arguments)
     if (entry != NULL) {
       if (arguments->autoaction) {
 	if (arguments->dohave_PQUEUE == 0) {
-	  arguments->ACTION_ID = INR_ActT_get_next_free_entry (arguments->ID, arguments->dohave_PQUEUE, arguments->PQUEUE,HAVE_OVERWRITE);
+	  arguments->ACTION_ID = INR_ActT_get_next_free_entry (arguments->ID, arguments->dohave_PQUEUE, arguments->PQUEUE,HAVE_OVERWRITE,(arguments->QCI_enable&0x1)|((arguments->QCI_IPV_wildcard&0x1)<<1)|((arguments->QCI_gate_ID&0xF)<<2));
 	  AT_add (arguments);
 	}
 	else {
@@ -1466,7 +1852,7 @@ CT_EMH_add (struct arguments *arguments)
 	verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments->TYPE_ID, entry, arguments->RULEPOINTER);
 	break;
       case 2:
-	entry_shadow->COMP_FIELDS.TYPE2.ETHERTYPE = 0xffffffff & arguments->ETHERTYPE;
+	entry_shadow->COMP_FIELDS.TYPE2.VLAN_PRIO = 0xffffffff & arguments->VLAN_PRIO;
 	verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments->TYPE_ID, entry, arguments->RULEPOINTER);
 	break;
       case 3:
@@ -1479,6 +1865,96 @@ CT_EMH_add (struct arguments *arguments)
 	entry_shadow->COMP_FIELDS.TYPE4.IPv4_DST =arguments->IPv4_DST ;
 	entry_shadow->COMP_FIELDS.TYPE4.PROTOCOL =arguments->PROTOCOL ;
 	entry_shadow->COMP_FIELDS.TYPE4.ETHERTYPE =arguments->ETHERTYPE ;
+	
+	verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments->TYPE_ID, entry, arguments->RULEPOINTER);
+	break;
+      default:
+	verblog printf ("action type not valid\n");
+	break;
+      }
+#endif
+#if EMH_hash_revision == 10
+      switch (arguments->TYPE_ID) {
+      case 1:
+	entry_shadow->COMP_FIELDS.TYPE1.INPORT =arguments->INPORT ;
+	verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments->TYPE_ID, entry, arguments->RULEPOINTER);
+	break;
+      case 2:
+	entry_shadow->COMP_FIELDS.TYPE2.VLAN_PRIO = 0xffffffff & arguments->VLAN_PRIO;
+	verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments->TYPE_ID, entry, arguments->RULEPOINTER);
+	break;
+      case 3:
+	entry_shadow->COMP_FIELDS.TYPE3.MAC_DST = 0xffffffff & arguments->MAC_DST;
+	
+	verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments->TYPE_ID, entry, arguments->RULEPOINTER);
+	break;
+      case 4:
+	entry_shadow->COMP_FIELDS.TYPE4.PORT_DST =arguments->PORT_DST ;
+	entry_shadow->COMP_FIELDS.TYPE4.IPv4_DST =arguments->IPv4_DST ;
+	entry_shadow->COMP_FIELDS.TYPE4.PROTOCOL =arguments->PROTOCOL ;
+	entry_shadow->COMP_FIELDS.TYPE4.ETHERTYPE =arguments->ETHERTYPE ;
+	
+	verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments->TYPE_ID, entry, arguments->RULEPOINTER);
+	break;
+      default:
+	verblog printf ("action type not valid\n");
+	break;
+      }
+#endif
+#if EMH_hash_revision == 11
+      switch (arguments->TYPE_ID) {
+      case 1:
+	      entry_shadow->COMP_FIELDS.TYPE1.INPORT = arguments->INPORT;
+	entry_shadow->COMP_FIELDS.TYPE1.VLAN_ID = arguments->VLAN_ID;
+	verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments->TYPE_ID, entry, arguments->RULEPOINTER);
+	break;
+      case 2:
+	entry_shadow->COMP_FIELDS.TYPE2.INPORT = arguments->INPORT;
+	entry_shadow->COMP_FIELDS.TYPE2.MAC_DST = arguments->MAC_DST;
+	verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments->TYPE_ID, entry, arguments->RULEPOINTER);
+	break;
+      case 3:
+	entry_shadow->COMP_FIELDS.TYPE3.INPORT = arguments->INPORT;
+	entry_shadow->COMP_FIELDS.TYPE3.ETHERTYPE = arguments->ETHERTYPE;
+	entry_shadow->COMP_FIELDS.TYPE3.IPv4_DST = arguments->IPv4_DST;
+	
+	verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments->TYPE_ID, entry, arguments->RULEPOINTER);
+	break;
+      case 4:
+	 entry_shadow->COMP_FIELDS.TYPE4.INPORT = arguments->INPORT;
+	entry_shadow->COMP_FIELDS.TYPE4.ETHERTYPE = arguments->ETHERTYPE;
+	entry_shadow->COMP_FIELDS.TYPE4.IPv4_DST = arguments->IPv4_DST;
+	entry_shadow->COMP_FIELDS.TYPE4.PORT_DST = arguments->PORT_DST;
+	
+	verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments->TYPE_ID, entry, arguments->RULEPOINTER);
+	break;
+      default:
+	verblog printf ("action type not valid\n");
+	break;
+      }
+#endif
+#if EMH_hash_revision == 12
+      switch (arguments->TYPE_ID) {
+      case 1:
+	      
+	entry_shadow->COMP_FIELDS.TYPE1.VLAN_ID = arguments->VLAN_ID;
+	verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments->TYPE_ID, entry, arguments->RULEPOINTER);
+	break;
+      case 2:
+	
+	entry_shadow->COMP_FIELDS.TYPE2.MAC_DST = arguments->MAC_DST;
+	verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments->TYPE_ID, entry, arguments->RULEPOINTER);
+	break;
+      case 3:
+	entry_shadow->COMP_FIELDS.TYPE3.MAC_DST = arguments->MAC_DST;
+	entry_shadow->COMP_FIELDS.TYPE3.VLAN_ID = arguments->VLAN_ID;
+	
+	verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments->TYPE_ID, entry, arguments->RULEPOINTER);
+	break;
+      case 4:
+	entry_shadow->COMP_FIELDS.TYPE4.MAC_DST = arguments->MAC_DST;
+	entry_shadow->COMP_FIELDS.TYPE4.VLAN_ID = arguments->VLAN_ID;
+	entry_shadow->COMP_FIELDS.TYPE4.VLAN_PRIO = 0xffffffff & arguments->VLAN_PRIO;
 	
 	verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments->TYPE_ID, entry, arguments->RULEPOINTER);
 	break;
@@ -1703,7 +2179,7 @@ CT_EMH_update (struct arguments arguments)
       verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments.TYPE_ID, entry, arguments.RULEPOINTER);
       break;
     case 2:
-      entry_shadow->COMP_FIELDS.TYPE2.ETHERTYPE = arguments.ETHERTYPE;
+      entry_shadow->COMP_FIELDS.TYPE2.VLAN_PRIO = arguments.VLAN_PRIO;
       verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments.TYPE_ID, entry, arguments.RULEPOINTER);
       break;
     case 3:
@@ -1724,6 +2200,95 @@ CT_EMH_update (struct arguments arguments)
       break;
     }
 #endif
+#if EMH_hash_revision == 10
+    switch (arguments.TYPE_ID) {
+    case 1:
+      entry_shadow->COMP_FIELDS.TYPE1.INPORT = arguments.INPORT;
+      verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments.TYPE_ID, entry, arguments.RULEPOINTER);
+      break;
+    case 2:
+      entry_shadow->COMP_FIELDS.TYPE2.VLAN_PRIO = arguments.VLAN_PRIO;
+      verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments.TYPE_ID, entry, arguments.RULEPOINTER);
+      break;
+    case 3:
+      entry_shadow->COMP_FIELDS.TYPE3.MAC_DST = 0xffffffff & arguments.MAC_DST;
+      
+      verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments.TYPE_ID, entry, arguments.RULEPOINTER);
+      break;
+    case 4:
+      entry_shadow->COMP_FIELDS.TYPE4.PORT_DST = arguments.PORT_DST;
+      entry_shadow->COMP_FIELDS.TYPE4.IPv4_DST = arguments.IPv4_DST;
+      entry_shadow->COMP_FIELDS.TYPE4.PROTOCOL = arguments.PROTOCOL;
+      entry_shadow->COMP_FIELDS.TYPE4.ETHERTYPE = arguments.ETHERTYPE;
+      verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments.TYPE_ID, entry, arguments.RULEPOINTER);
+      break;
+    
+    default:
+      verblog printf ("action type not valid\n");
+      break;
+    }
+#endif
+#if EMH_hash_revision == 11
+    switch (arguments.TYPE_ID) {
+    case 1:
+      entry_shadow->COMP_FIELDS.TYPE1.INPORT = arguments.INPORT;
+	entry_shadow->COMP_FIELDS.TYPE1.VLAN_ID = arguments.VLAN_ID;
+      verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments.TYPE_ID, entry, arguments.RULEPOINTER);
+      break;
+    case 2:
+      entry_shadow->COMP_FIELDS.TYPE2.INPORT = arguments.INPORT;
+	entry_shadow->COMP_FIELDS.TYPE2.MAC_DST = arguments.MAC_DST;
+      verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments.TYPE_ID, entry, arguments.RULEPOINTER);
+      break;
+    case 3:
+      entry_shadow->COMP_FIELDS.TYPE3.INPORT = arguments.INPORT;
+	entry_shadow->COMP_FIELDS.TYPE3.ETHERTYPE = arguments.ETHERTYPE;
+	entry_shadow->COMP_FIELDS.TYPE3.IPv4_DST = arguments.IPv4_DST;
+      
+      verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments.TYPE_ID, entry, arguments.RULEPOINTER);
+      break;
+    case 4:
+      entry_shadow->COMP_FIELDS.TYPE4.INPORT = arguments.INPORT;
+	entry_shadow->COMP_FIELDS.TYPE4.ETHERTYPE = arguments.ETHERTYPE;
+	entry_shadow->COMP_FIELDS.TYPE4.IPv4_DST = arguments.IPv4_DST;
+	entry_shadow->COMP_FIELDS.TYPE4.PORT_DST = arguments.PORT_DST;
+      verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments.TYPE_ID, entry, arguments.RULEPOINTER);
+      break;
+    
+    default:
+      verblog printf ("action type not valid\n");
+      break;
+    }
+#endif
+#if EMH_hash_revision == 12
+    switch (arguments.TYPE_ID) {
+    case 1:
+      entry_shadow->COMP_FIELDS.TYPE1.VLAN_ID = arguments.VLAN_ID;
+      verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments.TYPE_ID, entry, arguments.RULEPOINTER);
+      break;
+    case 2:
+      entry_shadow->COMP_FIELDS.TYPE2.MAC_DST = arguments.MAC_DST;
+      verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments.TYPE_ID, entry, arguments.RULEPOINTER);
+      break;
+    case 3:
+      entry_shadow->COMP_FIELDS.TYPE3.VLAN_ID = arguments.VLAN_ID;
+      entry_shadow->COMP_FIELDS.TYPE3.MAC_DST = arguments.MAC_DST;
+      
+      verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments.TYPE_ID, entry, arguments.RULEPOINTER);
+      break;
+    case 4:
+			entry_shadow->COMP_FIELDS.TYPE4.VLAN_ID = arguments.VLAN_ID;
+      entry_shadow->COMP_FIELDS.TYPE4.MAC_DST = arguments.MAC_DST;
+      entry_shadow->COMP_FIELDS.TYPE4.VLAN_PRIO = arguments.VLAN_PRIO;
+      verblog printf ("Type %i action written to 0x%lx id:%i\n", arguments.TYPE_ID, entry, arguments.RULEPOINTER);
+      break;
+    
+    default:
+      verblog printf ("action type not valid\n");
+      break;
+    }
+#endif
+
     FCmemcpy (entry, entry_shadow, INR_FC_EMH_CTable_entry_length_memcpy);	//copy shadow to mmi (wordwise)
   }
   else {
@@ -1952,7 +2517,7 @@ CT_EMH_print (struct arguments arguments)
 	printf ("INPORT:0x%x  ", entry->COMP_FIELDS.TYPE1.INPORT);
 	break;
       case 2:
-	printf ("ETHERTYPE:0x%x  ", entry->COMP_FIELDS.TYPE2.ETHERTYPE);
+	printf ("VLAN_PRIO:0x%x  ", entry->COMP_FIELDS.TYPE2.VLAN_PRIO);
 	break;
 	break;
       case 3:
@@ -1973,6 +2538,87 @@ CT_EMH_print (struct arguments arguments)
 	break;
       }
 #endif
+#if EMH_hash_revision == 10
+      switch (entry->TYPE_ID) {
+      case 1:
+	printf ("INPORT:0x%x  ", entry->COMP_FIELDS.TYPE1.INPORT);
+	break;
+      case 2:
+	printf ("VLAN_PRIO:0x%x  ", entry->COMP_FIELDS.TYPE2.VLAN_PRIO);
+	break;
+	break;
+      case 3:
+	printf ("MAC_DST:0x%x  ", entry->COMP_FIELDS.TYPE3.MAC_DST);
+	
+	break;
+	break;
+      case 4:
+	
+	
+	printf ("PORT_DST:0x%x  ", entry->COMP_FIELDS.TYPE4.PORT_DST);
+	printf ("IPv4_DST:0x%x  ", entry->COMP_FIELDS.TYPE4.IPv4_DST);
+	printf ("PROTOCOL:0x%x  ", entry->COMP_FIELDS.TYPE4.PROTOCOL);
+	printf ("ETHERTYPE:0x%x  ", entry->COMP_FIELDS.TYPE4.ETHERTYPE);
+	break;
+      default:
+	printf ("action type not valid\n");
+	break;
+      }
+#endif
+#if EMH_hash_revision == 11
+      switch (entry->TYPE_ID) {
+      case 1:
+	printf ("INPORT:0x%x  ", entry->COMP_FIELDS.TYPE1.INPORT);
+	printf ("VLAN_ID:0x%x  ", entry->COMP_FIELDS.TYPE1.VLAN_ID);
+	break;
+      case 2:
+	printf ("INPORT:0x%x  ", entry->COMP_FIELDS.TYPE2.INPORT);
+	printf ("MAC_DST:0x%x  ", entry->COMP_FIELDS.TYPE2.MAC_DST);
+	break;
+	break;
+      case 3:
+	printf ("INPORT:0x%x  ", entry->COMP_FIELDS.TYPE3.INPORT);
+	printf ("ETHERTYPE:0x%x  ", entry->COMP_FIELDS.TYPE3.ETHERTYPE);
+	printf ("IPv4_DST:0x%x  ", entry->COMP_FIELDS.TYPE3.IPv4_DST);
+	break;
+	break;
+      case 4:
+	printf ("INPORT:0x%x  ", entry->COMP_FIELDS.TYPE4.INPORT);
+	printf ("ETHERTYPE:0x%x  ", entry->COMP_FIELDS.TYPE4.ETHERTYPE);
+	printf ("IPv4_DST:0x%x  ", entry->COMP_FIELDS.TYPE4.IPv4_DST);
+	printf ("PORT_DST:0x%x  ", entry->COMP_FIELDS.TYPE4.PORT_DST);
+	break;
+      default:
+	printf ("action type not valid\n");
+	break;
+      }
+#endif
+#if EMH_hash_revision == 12
+      switch (entry->TYPE_ID) {
+      case 1:
+	printf ("VLAN_ID:0x%x  ", entry->COMP_FIELDS.TYPE1.VLAN_ID);
+	break;
+      case 2:
+	printf ("MAC_DST:0x%x  ", entry->COMP_FIELDS.TYPE2.MAC_DST);
+	break;
+	break;
+      case 3:
+	printf ("VLAN_ID:0x%x  ", entry->COMP_FIELDS.TYPE3.VLAN_ID);
+	printf ("MAC_DST:0x%x  ", entry->COMP_FIELDS.TYPE3.MAC_DST);
+	break;
+	break;
+      case 4:
+	printf ("VLAN_ID:0x%x  ", entry->COMP_FIELDS.TYPE4.VLAN_ID);
+	printf ("MAC_DST:0x%x  ", entry->COMP_FIELDS.TYPE4.MAC_DST);
+	printf ("VLAN_PRIO:0x%x  ", entry->COMP_FIELDS.TYPE4.VLAN_PRIO);
+	break;
+      default:
+	printf ("action type not valid\n");
+	break;
+      }
+#endif
+
+
       printf ("\n");
     }
     else {
@@ -2075,7 +2721,7 @@ RT_EMA_add (struct arguments *arguments)
     if (entry != NULL) {
       if (arguments->autoaction) {
 	if (arguments->dohave_PQUEUE == 0) {
-	  arguments->ACTION_ID = INR_ActT_get_next_free_entry (arguments->ID, arguments->dohave_PQUEUE, arguments->PQUEUE,HAVE_OVERWRITE);
+	  arguments->ACTION_ID = INR_ActT_get_next_free_entry (arguments->ID, arguments->dohave_PQUEUE, arguments->PQUEUE,HAVE_OVERWRITE,(arguments->QCI_enable&0x1)|((arguments->QCI_IPV_wildcard&0x1)<<1)|((arguments->QCI_gate_ID&0xF)<<2));
 	  AT_add (arguments);
 	}
 	else {
@@ -2325,20 +2971,23 @@ AT_add (struct arguments *arguments)
 {
   verblog printf ("__FUNCTION__ = %s\n", __FUNCTION__);
   verblog printf ("Adding rule to next free space up from ID:%i\n", arguments->ID);
-  if (INR_FC_ActT_valid_mask & INR_ActT_get_next_free_entry (arguments->ID, arguments->dohave_PQUEUE, arguments->PQUEUE,HAVE_OVERWRITE)) {
+  if (INR_FC_ActT_valid_mask & INR_ActT_get_next_free_entry (arguments->ID, arguments->dohave_PQUEUE, arguments->PQUEUE,HAVE_OVERWRITE,(arguments->QCI_enable&0x1)|((arguments->QCI_IPV_wildcard&0x1)<<1)|((arguments->QCI_gate_ID&0xF)<<2))) {
     struct INR_FC_ActT_RULE *entry =
       (struct INR_FC_ActT_RULE *) INR_ActT_get_addr (INR_FC_ActT_valid_mask &
-						     INR_ActT_get_next_free_entry (arguments->ID, arguments->dohave_PQUEUE, arguments->PQUEUE,HAVE_OVERWRITE));
+						     INR_ActT_get_next_free_entry (arguments->ID, arguments->dohave_PQUEUE, arguments->PQUEUE,HAVE_OVERWRITE,(arguments->QCI_enable&0x1)|((arguments->QCI_IPV_wildcard&0x1)<<1)|((arguments->QCI_gate_ID&0xF)<<2)));
     struct INR_FC_ActT_RULE *entry_shadow =
       (struct INR_FC_ActT_RULE *) INR_ActT_shadow_get_addr (INR_FC_ActT_valid_mask &
 							    INR_ActT_get_next_free_entry (arguments->ID, arguments->dohave_PQUEUE,
-											  arguments->PQUEUE,HAVE_OVERWRITE));
+											  arguments->PQUEUE,HAVE_OVERWRITE,(arguments->QCI_enable&0x1)|((arguments->QCI_IPV_wildcard&0x1)<<1)|((arguments->QCI_gate_ID&0xF)<<2)));
 	
     if (entry != NULL) {
-      arguments->RULEPOINTER = (INR_FC_ActT_valid_mask) & INR_ActT_get_next_free_entry (arguments->ID, arguments->dohave_PQUEUE, arguments->PQUEUE,HAVE_OVERWRITE);	//save where rule is stored
+      arguments->RULEPOINTER = (INR_FC_ActT_valid_mask|INR_FC_ActT_OVERWRITE_valid_mask|INR_FC_ActT_QCI_valid_mask) & INR_ActT_get_next_free_entry (arguments->ID, arguments->dohave_PQUEUE, arguments->PQUEUE,HAVE_OVERWRITE,(arguments->QCI_enable&0x1)|((arguments->QCI_IPV_wildcard&0x1)<<1)|((arguments->QCI_gate_ID&0xF)<<2));	//save where rule is stored
       arguments->TableID.ActT = arguments->RULEPOINTER;	//store table position in arguments structure
       arguments->ACTION_ID = arguments->RULEPOINTER;
-
+			if(HAVE_OVERWRITE){
+      	arguments->TableID.ActT_OVERWITE=(arguments->TableID.ActT&(INR_FC_ActT_OVERWRITE_valid_mask))>>16;
+  	  	AT_OVERWRITE_add(arguments);
+  	  }
       if (arguments->numberout)
 	printf ("ActT_ID:%i\n", arguments->ACTION_ID);
       entry_shadow->OutPort_enable = 1 & arguments->OutPort_enable;	//Outputport enable 

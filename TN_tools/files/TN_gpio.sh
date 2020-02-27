@@ -11,6 +11,7 @@ if [[ $# == 0 ]]; then
   echo "  bits 16-25: TrustNode-internal User-GPIO is Input (not Output)"
   echo "  bits 26-29: TrustNode-internal Artix-PMod is Input (not Output)"
 else
+  if [ -z "$(lspci -mm -d 10ee:0000)" ]; then echo "No PCIe connection to FPGA. Exiting."; exit 1; fi
 
   # If a parameter is given, it is assumed that this is the GPIO output value
   let gpio=$1

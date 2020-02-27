@@ -166,14 +166,17 @@ define Image/Build/gzip
 		./grub_skelet.cfg > grub.cfg
 	rm -f $(BIN_DIR)/$(IMG_PREFIX)-uefi.img
 	mkfs.fat -C $(BIN_DIR)/$(IMG_PREFIX)-uefi.img $(FAT32_BLOCKS)
-	mmd -i $(BIN_DIR)/$(IMG_PREFIX)-uefi.img ::/EFI
+	mmd -i $(BIN_DIR)/$(IMG_PREFIX)-uefi.img ::/efi
 	mmd -i $(BIN_DIR)/$(IMG_PREFIX)-uefi.img ::/boot
-	mmd -i $(BIN_DIR)/$(IMG_PREFIX)-uefi.img ::/EFI/grub
+	mmd -i $(BIN_DIR)/$(IMG_PREFIX)-uefi.img ::/boot/efi
+	mmd -i $(BIN_DIR)/$(IMG_PREFIX)-uefi.img ::/efi/grub
 	mcopy -i $(BIN_DIR)/$(IMG_PREFIX)-uefi.img inrcontent/* ::
-	mcopy -i $(BIN_DIR)/$(IMG_PREFIX)-uefi.img grub_efi/* ::/EFI/grub/
+	mcopy -i $(BIN_DIR)/$(IMG_PREFIX)-uefi.img grub_efi/* ::/efi/grub/
 	mcopy -i $(BIN_DIR)/$(IMG_PREFIX)-uefi.img grub_efi/startup.nsh ::
-	mcopy -i $(BIN_DIR)/$(IMG_PREFIX)-uefi.img grub.cfg ::/EFI/grub/
+	mcopy -i $(BIN_DIR)/$(IMG_PREFIX)-uefi.img grub.cfg ::/efi/grub/
 	mcopy -i $(BIN_DIR)/$(IMG_PREFIX)-uefi.img $(KDIR)/vmlinux ::/boot/
+	mcopy -i $(BIN_DIR)/$(IMG_PREFIX)-uefi.img $(KDIR)/bzImage ::/boot/efi/vmlinuz.efi
+	mcopy -i $(BIN_DIR)/$(IMG_PREFIX)-uefi.img $(KDIR)/bzImage ::/boot/vmlinuz.efi
 	mcopy -i $(BIN_DIR)/$(IMG_PREFIX)-uefi.img $(KDIR)/bzImage ::/boot/bootx64.efi
 	mcopy -i $(BIN_DIR)/$(IMG_PREFIX)-uefi.img $(KDIR)/vmlinux.elf ::/boot/
 	./gen_rpi_sdcard_img.sh $(BIN_DIR)/$(IMG_PREFIX)-combined-uefi.img $(BIN_DIR)/$(IMG_PREFIX)-uefi.img $(BIN_DIR)/$(IMG_PREFIX)-rootfs-$(1).img $(CONFIG_TARGET_UEFI_PARTSIZE) $(CONFIG_TARGET_ROOTFS_PARTSIZE) $(SIGNATURE)

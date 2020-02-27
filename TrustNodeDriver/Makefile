@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 include $(INCLUDE_DIR)/kernel.mk
 
 PKG_NAME:=trustnode
-PKG_VERSION:=0.8
+PKG_VERSION:=0.9
 PKG_RELEASE:=1
 PKG_BUILD_DEPENDS:= TN_tools
 include $(INCLUDE_DIR)/package.mk

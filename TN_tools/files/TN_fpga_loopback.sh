@@ -9,6 +9,8 @@ if [[ $# == 0 ]]; then
   echo "and 1 (by default all traffic is sent back to the incomming port). Both settings"
   echo "are the default values that can be overridden by FlowCache+ActionUnit or by EthSwitch"
 else
+  if [ -z "$(lspci -mm -d 10ee:0000)" ]; then echo "No PCIe connection to FPGA. Exiting."; exit 1; fi
+
   if [[ $1 -eq 1 ]]; then
     echo "Default forwarding from physical ports is now looping back on FPGA level"
     tn_ll_mmi_write $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_FEATURES_FLOWCACHE 0x00

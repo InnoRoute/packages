@@ -10,6 +10,7 @@ if [[ $# == 0 ]]; then
   echo "  bits 8-9: Right Alaska front-LEDs"
   echo "  bit   10: blinking right Alaska front-LEDs (overriding bit 8 and 9 temporarily)"
 else
+  if [ -z "$(lspci -mm -d 10ee:0000)" ]; then echo "No PCIe connection to FPGA. Exiting."; exit 1; fi
 
   # If a parameter is given, it is assumed that this is the leds value
   let leds=$1

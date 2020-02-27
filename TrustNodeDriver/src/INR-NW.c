@@ -35,6 +35,30 @@ struct net_device *globnwdev[INR_NW_devcount];
 struct hwtstamp_config INR_tstamp_config;
 volatile uint8_t INR_force_HW_ts[INR_NW_devcount]= {0};
 volatile uint8_t NO_TX=0;//disable packet TX completely
+uint8_t PTP_prio=7;
+
+/**
+*set PTP priority
+*@param prio
+*/
+void
+INR_NW_set_PTP_prio (uint8_t prio)
+{
+    PTP_prio=prio;
+    INR_PCI_BAR1_write_ext(0x7&prio,(C_BASE_ADDR_FLOW_CACHE<<8)|C_SUB_ADDR_FLOW_CACHE_PTP_QUEUE);
+    
+}
+
+/**
+*get PTP priority
+*
+*/
+uint8_t
+INR_NW_get_PTP_prio ()
+{
+    return PTP_prio;
+}
+
 
 /**
 *updates the interface carrier status
@@ -44,23 +68,40 @@ volatile uint8_t NO_TX=0;//disable packet TX completely
 void
 INR_NW_carrier_update (uint8_t index,uint16_t status)
 {
+		uint64_t BRIDGE_clock_value=0,CTRLD_clock_value=0;
+    uint32_t BRIDGE_clock_value_L=0,CTRLD_clock_value_L=0,BRIDGE_clock_value_H=0,CTRLD_clock_value_H=0;
     INR_LOG_debug("TN%i link state changed to %i\n",index,status);
+    BRIDGE_clock_value_L=INR_PCI_BAR1_read_ext((C_BASE_ADDR_RTC<<8)+C_SUB_ADDR_RTC_BRIDGE_LOW);
+    BRIDGE_clock_value_H=INR_PCI_BAR1_read_ext((C_BASE_ADDR_RTC<<8)+C_SUB_ADDR_RTC_BRIDGE_HIGH);
+    CTRLD_clock_value_L=INR_PCI_BAR1_read_ext((C_BASE_ADDR_RTC<<8)+C_SUB_ADDR_RTC_CTRLD_LOW);
+    CTRLD_clock_value_H=INR_PCI_BAR1_read_ext((C_BASE_ADDR_RTC<<8)+C_SUB_ADDR_RTC_CTRLD_HIGH);
+    CTRLD_clock_value=CTRLD_clock_value_L|((uint64_t)CTRLD_clock_value_H<<32);
+    INR_LOG_debug("CTL_CLK: %lli\n",CTRLD_clock_value);
     if(status) {
     #ifdef C_SUB_ADDR_COMMON_PARAM_PRT_CNT
     if(index<INR_PCI_BAR1_read_ext(C_BASE_ADDR_COMMON_LOWER*256+C_SUB_ADDR_COMMON_PARAM_PRT_CNT))
     #endif
-        netif_carrier_on(get_nwdev(index));
+        if(get_nwdev(index)) netif_carrier_on(get_nwdev(index));
     }
     else {
-        netif_carrier_off(get_nwdev(index));
+       if(get_nwdev(index)) netif_carrier_off(get_nwdev(index));
     }
 }
 
-int INR_NW_set_mac(struct net_device *nwdev, void *addr){
-uint64_t *addresse=addr;
-INR_LOG_debug("Change MAC to %x",*addresse);
-memcpy (nwdev->dev_addr, addr, MAX_ADDR_LEN);
+int INR_NW_set_mac(struct net_device *nwdev, void *p){
 
+
+
+	struct sockaddr *addr = p;
+
+	if (!is_valid_ether_addr(addr->sa_data)){
+		return -1;
+		INR_LOG_debug("error changing mac address");
+		}
+	INR_LOG_debug("Change MAC to %x",addr->sa_data);
+	memcpy(nwdev->dev_addr, addr->sa_data, nwdev->addr_len);
+//	memcpy(hw->mac.addr, addr->sa_data, netdev->addr_len);
+return 0;
 }
 /**
 *return pointer to net-dev
@@ -80,6 +121,7 @@ INR_NW_zerovars()
 {
     nwdev_counter = 0;
     send2cpu = 0;
+    PTP_prio=7;
 }
 
 /**
@@ -190,7 +232,7 @@ INR_NW_open (struct net_device *nwdev)
     INR_LOG_debug (loglevel_info "NWDev open\n");
     
     struct INR_NW_priv *priv = netdev_priv (nwdev);
-    
+    nwdev->max_mtu=INR_NWDEV_MAX_MTU;
     INR_LOG_debug (loglevel_info"HW-addr:%x Broadcast-addr:%x\n", nwdev->dev_addr, nwdev->broadcast);
     netif_start_queue (nwdev);
     INR_PCI_FPGA_PORT_status(priv->port,1);
@@ -244,6 +286,7 @@ INR_NW_tx (struct sk_buff *skb, struct net_device *nwdev)
         uint32_t TXtimestamp=0;
         unsigned int consumed = 0;
         uint16_t TX_confirmastion_id=0;
+        uint64_t no0cpdata_consumed=0;		
 				
 				if(NO_TX){if (skb)
                     kfree_skb (skb);    //free skb if dropped (handled by nw_stack if returned busy)
@@ -251,15 +294,22 @@ INR_NW_tx (struct sk_buff *skb, struct net_device *nwdev)
         }
 
         if (EN_TSN_sock_opt) {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5,0,0)        
             time_queue=0x3f&skb->TN_TX_queue;
             if(get_tx_dbg())printk("TX queue:%i   (%i)\n",skb->TN_TX_queue,time_queue);
             TXtimestamp=skb->TN_TX_timestamp;
+#else
+//todo
+#endif            
         } else {
             time_queue=0x3f&TSN_TX_queue;
             TXtimestamp=TSN_TX_ts;
         }
-
-
+        uint16_t ethertype=((uint16_t )skb->data[13] << 8) + skb->data[12];
+				if(get_tx_dbg())printk("Ethertype:%x\n",ethertype);
+				if (ethertype==0xf788){//is ptp packet
+					time_queue=PTP_prio;
+				}
         // if(zerocopy_tx)skb_shinfo(skb)->tx_flags |= SKBTX_DEV_ZEROCOPY; //maybe this fix the memory drain
         //######Timestamping
         if ((skb_shinfo(skb)->tx_flags & SKBTX_HW_TSTAMP)||INR_force_HW_ts[toport]) { //check if timestamp is requested or forced
@@ -277,59 +327,58 @@ INR_NW_tx (struct sk_buff *skb, struct net_device *nwdev)
         //#################
         from = 0;
         if (skb_shinfo (skb)->nr_frags) {
-            if (zerocopy_tx) {
+             	
+							uint8_t *no0cpdata = kmalloc (skb->len, GFP_DMA | GFP_ATOMIC);				
+												
+							
+            if(get_tx_dbg())printk("Fragmented SKB, zerocopy:%i\n",zerocopy_tx);
                 int i = 0;
                 if(get_INR_PCI_HW_timestamp()) {
                     uint64_t *timestamp = kmalloc (8, GFP_DMA | GFP_ATOMIC);
                     //ktime_t time=ktime_get(); //real
                     *timestamp=((uint64_t)TX_confirmastion_id<<32)|(0xffffffff&TXtimestamp);
-                    error = INR_TX_push (nwdev,skb, (uint8_t*)timestamp, 8, 0, toport, get_send2cpu(), 0, 1,time_queue,1);
+                    error = INR_TX_push (nwdev,NULL, (uint8_t*)timestamp, 8, 0, toport, get_send2cpu(), 0, 1,time_queue,1);
                     if (error) {
                         goto errorhandling;
                     }
                 }
-                error = INR_TX_push (nwdev,skb, skb->data, skb_headlen (skb), 0, toport, get_send2cpu(), 1, skb_shinfo (skb)->nr_frags,time_queue,0);
+                if (zerocopy_tx) {error = INR_TX_push (nwdev,skb, skb->data, skb_headlen (skb), 0, toport, get_send2cpu(), 1, skb_shinfo (skb)->nr_frags,time_queue,0);
                 if (error) {
                     goto errorhandling;
+                }} else { //nozerocopy
+                memcpy(no0cpdata+no0cpdata_consumed,skb->data,skb_headlen (skb));             
+                no0cpdata_consumed+=skb_headlen (skb);
                 }
                 for (i = 0; i < skb_shinfo (skb)->nr_frags - 1; i++) {
+                if (zerocopy_tx){
                     error = INR_TX_push (nwdev,skb, page_address (skb_shinfo (skb)->frags[i].page.p) + skb_shinfo (skb)->frags[i].page_offset, skb_shinfo (skb)->frags[i].size, 0, toport, get_send2cpu(), 1, skb_shinfo (skb)->nr_frags - i,time_queue,0);    //add fragments
                     if (error) {
                         goto errorhandling;
+                    }}else{//nozerocopy
+                    memcpy(no0cpdata+no0cpdata_consumed,page_address (skb_shinfo (skb)->frags[i].page.p) + skb_shinfo (skb)->frags[i].page_offset,skb_shinfo (skb)->frags[i].size);             
+                		no0cpdata_consumed+=skb_shinfo (skb)->frags[i].size;
+                    
+                    
+                    
                     }
                 }
                 i = skb_shinfo (skb)->nr_frags - 1;
-                error = INR_TX_push (nwdev,skb, page_address (skb_shinfo (skb)->frags[i].page.p) + skb_shinfo (skb)->frags[i].page_offset, skb_shinfo (skb)->frags[i].size, 1, toport, get_send2cpu(), 1, 1,time_queue,0); //add last fragment
+                if (zerocopy_tx){error = INR_TX_push (nwdev,skb, page_address (skb_shinfo (skb)->frags[i].page.p) + skb_shinfo (skb)->frags[i].page_offset, skb_shinfo (skb)->frags[i].size, 1, toport, get_send2cpu(), 1, 1,time_queue,0); //add last fragment
                 if (error) {
                     goto errorhandling;
+                }}else{//nozerocopy
+                memcpy(no0cpdata+no0cpdata_consumed,page_address (skb_shinfo (skb)->frags[i].page.p) + skb_shinfo (skb)->frags[i].page_offset,skb_shinfo (skb)->frags[i].size);             
+                no0cpdata_consumed+=skb_shinfo (skb)->frags[i].size;
+                
                 }
-            } else {
-                skb_prepare_seq_read (skb, from, to, &st);
-                if(get_INR_PCI_HW_timestamp()) {
-                    uint64_t *timestamp = kmalloc (8, GFP_DMA | GFP_ATOMIC);
-                    //ktime_t time=ktime_get();
-                    *timestamp=((uint64_t)TX_confirmastion_id<<32)|(0xffffffff&TXtimestamp);
-                    error = INR_TX_push (nwdev,skb, (uint8_t*)timestamp, 8, 0, toport, get_send2cpu(), 0, 1,time_queue,1);
-                    if (error) {
-                        goto errorhandling;
-                    }
-                }
-                while ((len = skb_seq_read (consumed, &data, &st)) != 0) {
-                    if (consumed + len == to) {
-                        error = INR_TX_push (nwdev,skb, data, len, 1, toport, get_send2cpu(), 0, 1,time_queue,0);
-                    }
-                    if (error) {
-                        goto errorhandling;
-                    } else {
-                        error = INR_TX_push (nwdev,skb, data, len, 0, toport, get_send2cpu(), 0, 30,time_queue,0); //30 free fragments needed
-                    }
-                    if (error) {
-                        goto errorhandling;
-                    }
-                    consumed += len;
-                }
-            }
-        } else {
+							if (zerocopy_tx==0){
+							error = INR_TX_push (nwdev,skb, no0cpdata, no0cpdata_consumed, 1, toport, get_send2cpu(), 1, 1,time_queue,0); //add last fragment
+                if (error) {
+                    goto errorhandling;
+                }			
+							
+							}else kfree(no0cpdata);
+        } else { if(get_tx_dbg())printk("non Fragmented SKB\n");
             if (skb->len > INR_PCI_FPGA_max_tx_length) {
                 uint16_t rest = skb->len;
                 uint16_t offset = 0, nextfrag = 0;
@@ -339,12 +388,13 @@ INR_NW_tx (struct sk_buff *skb, struct net_device *nwdev)
                     uint64_t *timestamp = kmalloc (8, GFP_DMA | GFP_ATOMIC);
                     //ktime_t time=ktime_get();
                     *timestamp=((uint64_t)TX_confirmastion_id<<32)|(0xffffffff&TXtimestamp);
-                    error = INR_TX_push (nwdev,skb, (uint8_t*)timestamp, 8, 0, toport, get_send2cpu(), 0, 1,time_queue,1);
+                    error = INR_TX_push (nwdev,NULL, (uint8_t*)timestamp, 8, 0, toport, get_send2cpu(), 0, 1,time_queue,1);
                     if (error) {
                         goto errorhandling;
                     }
                 }
                 while (rest) {
+                if(get_tx_dbg())printk("bigskbhandling rest:%i, offset:%i\n",rest,offset);
                     if (rest > INR_PCI_FPGA_max_tx_length) {
                         nextfrag = INR_PCI_FPGA_max_tx_length;
                     }
@@ -356,7 +406,7 @@ INR_NW_tx (struct sk_buff *skb, struct net_device *nwdev)
                     if (!skb_data) {
                         INR_LOG_debug (loglevel_err"Cant alloc tx data\n");
                     } else {
-                        memcpy (skb_data, skb->data + offset, nextfrag);
+                        memcpy (skb_data+ offset, skb->data + offset, nextfrag);
                         error = INR_TX_push (nwdev,skb, skb_data, nextfrag, last, toport, get_send2cpu(), 0, (skb->len / INR_PCI_FPGA_max_tx_length) + 1 - countfrag,time_queue,0);
                         countfrag++;
                         if (error) {
@@ -381,7 +431,7 @@ INR_NW_tx (struct sk_buff *skb, struct net_device *nwdev)
                         uint64_t *timestamp = kmalloc (8, GFP_DMA | GFP_ATOMIC);
                         //ktime_t time=ktime_get();
                         *timestamp=((uint64_t)TX_confirmastion_id<<32)|(0xffffffff&TXtimestamp);
-                        error = INR_TX_push (nwdev,skb, (uint8_t*)timestamp, 8, 0, toport, get_send2cpu(), 0, 1,time_queue,1);
+                        error = INR_TX_push (nwdev,NULL, (uint8_t*)timestamp, 8, 0, toport, get_send2cpu(), 0, 1,time_queue,1);
                         if (error) {
                             goto errorhandling;
                         }
@@ -407,9 +457,10 @@ errorhandling:
             } else {
                 if (skb)
                     kfree_skb (skb);    //free skb if dropped (handled by nw_stack if returned busy)
-                return NETDEV_TX_OK;
+                return NET_XMIT_DROP;
             }
         }
+        
         return NETDEV_TX_OK;
     }
     return NETDEV_TX_BUSY;
@@ -560,6 +611,8 @@ INR_NW_init (struct net_device *nwdev)
     nwdev->ethtool_ops = &INR_NW_ethtool_ops;
     nwdev->real_num_tx_queues=INR_NW_queue_count;
     nwdev->real_num_rx_queues=0;
+    nwdev->max_mtu=INR_NWDEV_MAX_MTU;
+    nwdev->mtu=1400;
     nwdev->dev_addr[ETH_ALEN - 1] = priv->port;
     uint8_t i = 0;
     for (i = 0; i < ETH_ALEN; i++) {

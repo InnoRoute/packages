@@ -6,7 +6,7 @@ all:
 	
 SRC := $(shell pwd)
 bb:
-	$(MAKE) -C $(KERNEL_SRC) M=$(SRC)
+	$(MAKE) -C $(KERNEL_PATH) M=$(SRC)
 
 doku:
 	astyle *.c
@@ -16,8 +16,9 @@ doku:
 	doxygen Doxyfile
 	
 clean:
-	$(MAKE) -C ${KERNEL}  M=$(PWD) clean
+	rm -f *.o *.ko *.mod.c *~
+#	$(MAKE) -C ${KERNEL}  M=$(PWD) clean
 	
 modules_install:
-	$(MAKE) -C ${KERNEL} M=$(PWD) modules_install
+	$(MAKE) -C $(KERNEL_SRC) M=$(SRC) modules_install
 

@@ -24,6 +24,7 @@ def read_flows():
     except:
     	lines=""
     for line in lines.splitlines():
+        parse_ok=1
         if not re.findall(r" (actions=)", line):
             continue
         a,b=line.split('actions=', 1 )
@@ -56,7 +57,13 @@ def read_flows():
         for tmp in b:
             if re.findall(":",tmp):
                 x,y=tmp.split(':')
-                action_map[x]=y
+                if not x in action_map:
+                	action_map[x]=y
+                else:
+                	del action_map[x]
+                	parse_ok=0 #flow has several actions with the same type, this is currently not supported
+                	
+                	
             elif re.findall(r"\(\d*\,\d*\)",tmp):
                 x=re.findall(r"(.*)(\(\d*\,\d*\))",tmp)
                 action_map[x[0][0]]= x[0][1]
@@ -71,7 +78,8 @@ def read_flows():
 
         ### flow_list = list of dict of dict
         #  
-        flow_list.append(flow)
+        if parse_ok:
+        	flow_list.append(flow)
 
 
 def print_flows():
@@ -144,13 +152,22 @@ def TNflowcache(tmp,act):
 #			command=command+" -P"+tmp['match'][p]
 #deactivated, have to fix nameconversatzion of OVS, need numbers no strings
 	cmd_ok=0
+	outputcount=0
+	queuecount=0
+	print tmp['action']
 	for p in tmp['action']:
-		if p == "set_queue" :
+		if p == "set_queue":
 			command=command+" -q"+tmp['action'][p]
 			cmd_ok=1	
-		if p == "output" :
+			queuecount=1+queuecount
+		if p == "output":
 			cmd_ok=1
+			outputcount=1+outputcount
 			command=command+" -O"+str(int(tmp['action'][p])-1) #ovs counts from 1 we from 0
+	if outputcount>1:
+		cmd_ok=0
+	if queuecount>1:
+		cmd_ok=0	
 	if cmd_ok == 1:	
 		command="TNflowtable "+act+" "+command
 #		command='echo "' +command +'"'  #testing mode
@@ -172,7 +189,7 @@ def check_flows():
                 break 
         if not match:
 #            print "\nFLOW ADDED [", datetime.datetime.now(),"]"
-#            print_flow(a)
+            #print_flow(a)
 	    print TNflowcache(a,"add")
             
     for a in flow_list_old:
@@ -183,7 +200,7 @@ def check_flows():
                 break 
         if not match:
 #            print "\nFLOW REMOVED [", datetime.datetime.now(),"]"
-#            print_flow(a)
+            #print_flow(a)
 	    print TNflowcache(a,"del")
    
 
