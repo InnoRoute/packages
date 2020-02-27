@@ -1,0 +1,12 @@
+#!/bin/ash
+#PCImem wrapper for Trustnode Bar1
+#ulbricht@innoroute.de 2016
+
+if [[ $# -lt 4 && $# -gt 0 ]]; then
+	test -e /sys/bus/pci/devices/0000:01:00.0/resource1 && pcimem /sys/bus/pci/devices/0000:01:00.0/resource1 $1 $2 $3
+else
+	echo "Usage:TNbar1 { offset } [ type [ data ] ]\n"
+	echo "offset  : offset into pci memory region to act upon\n"
+	echo "type    : access operation type : [b]yte, [h]alfword, [w]ord\n"
+	echo "data    : data to be written\n\n"
+fi

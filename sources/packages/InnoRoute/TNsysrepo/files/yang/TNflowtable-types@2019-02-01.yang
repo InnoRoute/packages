@@ -1,0 +1,26 @@
+module TNflowtable-types {
+    namespace "TrustNode:flow:types";
+    prefix flow;
+   import TNflowtable-actions {prefix action;revision-date "2019-02-01";} 
+   import TNflowtable-match-types {prefix match; revision-date "2019-02-01";}
+    
+    description 
+		"TrustNode FlowCache flow datamodel";
+    revision "2019-02-01" {
+        description "Initial revision";
+    }
+    grouping flow {
+        container match {
+            uses match:match;
+           /* leaf state {
+      		type string;
+      		}*/
+        }
+        container action {
+            uses action:action-list;
+        }
+        
+        
+        } 
+        
+        }

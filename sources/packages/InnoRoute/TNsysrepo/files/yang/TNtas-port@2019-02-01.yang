@@ -1,0 +1,35 @@
+module TNtas-port {
+    namespace "TrustNode:tas:port";
+    prefix tas;
+    
+    description 
+		"TrustNode TAS port description";
+    revision "2019-02-01" {
+        description "Initial revision";
+    }
+    grouping port {
+        list GCL {
+				key id;
+				leaf id {
+					type uint32;
+				}
+				leaf timeperiod {
+					type uint32;
+				}
+				leaf gatestates {
+					type uint8;
+				}
+				}
+        leaf admin_base_time {
+					type uint64;
+				}
+				leaf admin_cycle_time_ext {
+					type uint32;
+				}
+        leaf gate_enable {
+					type boolean;
+				}
+        
+        } 
+        
+        }

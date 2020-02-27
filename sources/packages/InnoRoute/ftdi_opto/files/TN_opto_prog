@@ -1,0 +1,86 @@
+#!/bin/bash
+if [ $# -ne 1 ]; then
+	echo "Please provide a file to programm"
+fi
+
+if [ $# -eq 1 ]; then
+	i2cset -y 0 4 2 1
+
+	# Wait for SMBus accesses to be executed -> might be skipped
+	i2cget -y 0 4 2
+
+	# Write Data using FTDI tool
+	INR_ftdi_opto_tool $1
+
+	# echo 4 > /proc/TN_LPC_ctl
+	sleep 1
+	i2cset -y 0 4 2 2
+
+	# Wait for SMBus accesses to be executed -> might be skipped
+	i2cget -y 0 4 2
+
+	i2cset -y 0 4 2 0
+	sleep 10
+	let biterr=`i2cget -y 0 4 0x02`
+  printf  " -  2: Bitstream Error (ID-ERR+ID & CONF-ERR (R); OPTO (W)) 0x%02x\n" $biterr
+  rewritecount=0
+  while [[ $(( $biterr & 140 )) -ne 0 ]]; do
+  	rewritecount=$((rewritecount + 1))
+  	if [ "$rewritecount" -gt "5" ]; then
+  	echo "error: exit programming loop"
+  	exit 1
+  	fi
+  	echo "Error, writing bitstream again...."
+    i2cset -y 0 4 2 1
+
+		# Wait for SMBus accesses to be executed -> might be skipped
+		i2cget -y 0 4 2
+
+		# Write Data using FTDI tool
+		INR_ftdi_opto_tool $1
+
+		# echo 4 > /proc/TN_LPC_ctl
+		sleep 1
+		i2cset -y 0 4 2 2
+
+		# Wait for SMBus accesses to be executed -> might be skipped
+		i2cget -y 0 4 2
+
+		i2cset -y 0 4 2 0
+    sleep 10
+    let biterr=`i2cget -y 0 4 0x02`
+  done
+	
+	sleep 2
+	
+	#Hardreset PHYs
+	TN_phy_reset.sh 1
+	sleep 2
+	
+	#read mmi errors
+	TN_mmi_status.sh 0
+
+	#Enable packettransmission to CPU
+	TN_fpga_loopback.sh 0
+
+	#TN_mute.sh 1
+
+	#/etc/init.d/TN_start start
+	# Initialize PHYs
+	/usr/share/InnoRoute/TN_phy_init.sh 0
+	# Set all ports to 1000 Mbps
+	/usr/share/InnoRoute/TN_phy_force_linkspeed.sh 1
+	# Set PHY interrupt masks
+	TN_phy_access.sh 0 0 0x19 7
+	TN_phy_access.sh 1 0 0x19 7
+	TN_phy_access.sh 2 0 0x19 7
+	TN_phy_access.sh 3 0 0x19 7
+	TN_phy_access.sh 4 0 0x19 7
+	TN_phy_access.sh 5 0 0x19 7
+	TN_phy_access.sh 6 0 0x19 7
+	TN_phy_access.sh 7 0 0x19 7
+	TN_phy_access.sh 8 0 0x19 7
+	TN_phy_access.sh 9 0 0x19 7
+
+	/etc/init.d/network restart
+fi

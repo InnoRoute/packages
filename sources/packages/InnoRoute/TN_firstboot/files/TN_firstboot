@@ -1,0 +1,15 @@
+#!/bin/sh /etc/rc.common
+
+START=80
+
+start() {
+	bash /usr/share/InnoRoute/firstboot.sh > /usr/share/InnoRoute/firstboot.log 2>&1
+/etc/init.d/TN_firstboot disable
+/etc/init.d/TN_start enable
+sync
+reboot
+}
+
+stop() {
+	echo "stop"
+}

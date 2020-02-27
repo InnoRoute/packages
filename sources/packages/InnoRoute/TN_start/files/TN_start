@@ -1,0 +1,74 @@
+#!/bin/sh /etc/rc.common
+
+START=98
+
+start() {
+	echo "configuring TrustNode..."
+	source /usr/share/InnoRoute/tn_env.sh
+	source /usr/share/InnoRoute/tn_func_ll.sh
+
+	echo "mounting boot partiton"
+	mount /dev/sda1 /boot/ 2>/dev/null
+	
+	# Apply sensor configuration
+	sensors -c /usr/share/InnoRoute/tn_sensor.conf -s > /usr/share/InnoRoute/TNstart.log 2>&1
+	
+	# set FPGA terminal baudrate
+	stty -F /dev/ttyS1 115200
+
+	# Initialize PHYs
+	tn_ll_mmi_read $C_BASE_ADDR_COMMON_LOWER $C_SUB_ADDR_COMMON_FEATURES_NET
+	let multispeed=$(( $read_data & 0x2 ))
+	if [ "$multispeed" -gt "0" ];then
+		TN_phy_init.sh 1 #don't force linkseed if multispeedd is allowed
+	else
+		TN_phy_init.sh 1
+		TN_phy_force_linkspeed.sh 1
+	fi
+	TN_phy_interrupts.sh 1
+	# Start Open vSwitch
+	/usr/share/InnoRoute/scripts/start_ovs.sh
+	
+	# Set PHY interrupt masks
+	TN_phy_access.sh 0 0 0x19 7
+	TN_phy_access.sh 1 0 0x19 7
+	TN_phy_access.sh 2 0 0x19 7
+	TN_phy_access.sh 3 0 0x19 7
+	TN_phy_access.sh 4 0 0x19 7
+	TN_phy_access.sh 5 0 0x19 7
+	TN_phy_access.sh 6 0 0x19 7
+	TN_phy_access.sh 7 0 0x19 7
+	TN_phy_access.sh 8 0 0x19 7
+	TN_phy_access.sh 9 0 0x19 7
+	
+	# Trigger phy state update
+	cat /proc/TN_MMI/TN_PHYspeed
+	
+	# Set hardware switch mac address
+	TN_mac_addr.sh 0x00534E554C00
+	
+	# Start WLAN, if available
+	wpa_supplicant -i wlan0 -D wext -c /etc/wpa_supplicant/wpa_supplicant.conf -B &
+#	sysrepod -d &
+#	sleep 10
+#	netopeer2-server -d &
+#	sleep 10
+#	sysrepo-plugind
+#	sleep 10
+	/usr/share/InnoRoute/TN_sysrepo_watchdog.sh &
+	sysrepoctl --feature-enable=scheduled-traffic --module=ieee802-dot1q-sched
+	#TNrulestorage sysrepo &
+	/usr/share/InnoRoute/FlowCache_persistent.sh
+	phc2sys -a -rr &
+	for i in {0..14}
+		do
+   ifconfig TN$i up
+		done
+	TN_text2display.sh "ready"
+	echo "done"
+}
+
+stop() {
+	echo "stop"
+}
+

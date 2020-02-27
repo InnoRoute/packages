@@ -1,0 +1,20 @@
+#!/bin/sh /etc/rc.common
+
+START=99
+
+start() {
+	source /usr/share/InnoRoute/TNflowdump.conf
+	
+	#ovs-vsctl add-br $bridge
+	sleep 30
+	python2.7 /usr/share/InnoRoute/scripts/TNdumpflow.py $bridge > /var/log/TNflowdump.log 2>&1 &
+	echo "running"
+}
+
+stop() {
+	echo "stop"
+	killall python2.7
+}
+
+#pip3 install --upgrade setuptools
+#pip3  --no-cache-dir  install flask request 
