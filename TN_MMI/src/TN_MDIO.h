@@ -14,6 +14,7 @@ void INR_ALASKA_adapt_speed(uint8_t id);
 void INR_collective_max_speed(void);
 uint8_t INR_MDIO_GPHY_getpartnerspeed(uint8_t id);
 uint8_t INR_MAC_multispeed(void);
+void INR_MDIO_update_port_states(void);
 
 #ifndef C_BASE_ADDR_BM
 #define C_BASE_ADDR_BM 0

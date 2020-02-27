@@ -36,6 +36,7 @@ define Build/Prepare
 	$(CP) src/Makefile src/*.c src/*.h $(PKG_BUILD_DIR)/
 	$(CP) src/TN_MMI.h $(STAGING_DIR)/usr/include/
 	$(CP) $(STAGING_DIR)/usr/include/tn_env.h $(PKG_BUILD_DIR)/
+	$(CP) $(STAGING_DIR)/usr/include/tnpkg.h $(PKG_BUILD_DIR)/
 endef
 
 define Build/Compile

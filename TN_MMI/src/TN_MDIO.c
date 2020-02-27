@@ -256,3 +256,12 @@ void INR_ALASKA_adapt_speed(uint8_t id) {
         printk("new MAC speed mask:0x%llx",INR_PCI_MMI_read((C_BASE_ADDR_NET_LOWER<<8)+C_SUB_ADDR_NET_SPEED));
     }
 }
+void INR_MDIO_update_port_states(){
+uint16_t result=0;
+uint8_t i;
+for (i=0; i<12; i++)if((1<<2)&INR_MDIO_read(i+16,0x1)) result|=(1<<i);
+#if C_MMI_ADDR_MAP_REVISION > 8
+INR_PCI_MMI_write(result,(C_BASE_ADDR_NET_LOWER<<8)+C_SUB_ADDR_NET_LINK);
+printk("set NET_LINK to 0x%x",result);
+#endif
+}

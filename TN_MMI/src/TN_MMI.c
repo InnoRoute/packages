@@ -10,6 +10,7 @@
 #include "TN_MMI.h"
 #include "TN_MDIO.h"
 #include "tn_env.h"
+#include "tnpkg.h"
 #include <linux/kthread.h>
 //#include <linux/uio_driver.h>
 
@@ -176,7 +177,7 @@ void INR_MMI_interrupt_handler() {
     //printk("Flowcache EMA has entry 1 cleared\n");
     if(ENABLE) {
     
-//#if C_MMI_ADDR_MAP_REVISION < 8
+#if C_MMI_ADDR_MAP_REVISION < 8
 uint32_t MDIO_int=INR_PCI_BAR1_read(INR_MDIO_interrupt); // get MDIO interrupt mask
 // ignoring INR_MDIO_interrupt
 //##############TX_timestamp interrupt       
@@ -378,10 +379,10 @@ uint32_t MDIO_int=INR_PCI_BAR1_read(INR_MDIO_interrupt); // get MDIO interrupt m
         	break;}
         }
         */
-/*#else
+#else
 uint32_t MMI_interrupt=INR_PCI_BAR1_read(INR_MMI_interrupt_status);
 uint8_t i=0;
-if(i=C_MMI_INT_HC_LOWER;i<C_MMI_INT_HC_UPPER;i++)if(MMI_interrupt&(1<<i)){
+for(i=C_MMI_INT_HC_LOWER;i<C_MMI_INT_HC_UPPER;i++)if(MMI_interrupt&(1<<i)){
 					        if (portcount>0)INR_PCI_BAR1_read(INR_HC_INTERRUPT(0));  // hc interrupts handled by tx interrupt ISW so reset all
 									if (portcount>1)INR_PCI_BAR1_read(INR_HC_INTERRUPT(1));
 									if (portcount>2)INR_PCI_BAR1_read(INR_HC_INTERRUPT(2));
@@ -417,7 +418,7 @@ if(MMI_interrupt&(1<<C_MMI_INT_ETH_SW)){
 if(MMI_interrupt&(1<<C_MMI_INT_CAN )){
 									INR_MMI_can_interrupt_handler(INR_PCI_BAR1_read((C_BASE_ADDR_CAN_COMMON<<8)|C_SUB_ADDR_CAN_INTERRUPT));
 }
-#endif */
+#endif 
     }
 }
 //*****************************************************************************************************************
@@ -438,7 +439,7 @@ void INR_MMI_exit() {
 */
 void INR_MMI_PHY_interrupt(uint16_t id) {
     //printk("MMI_PHY_INTERRUPT: 0x%lx\n",id);
-    uint8_t phyid=0,i=0,j=0;
+    uint8_t phyid=0,i=0,j=0,statechanged=0;
     uint16_t read_val_gphy,read_val_alaska;
     for (i=0; i<12; i++)if(id&(1<<i))if(i<10) {
                 phyid=i+16;
@@ -504,6 +505,8 @@ void INR_MMI_PHY_interrupt(uint16_t id) {
                         //wake_up_interruptible (&INR_MMI_phy_state_watch_wq);
                         if(INR_NW_carrier_update_handler)INR_NW_carrier_update_handler(i,(1<<2)&INR_MDIO_read(i+16,0x1));
                         if((1<<2)&INR_MDIO_read(i+16,0x1))INR_GPHY_adapt_speed(i+16);
+                        statechanged=1;
+                        
                         //INR_collective_max_speed();
                         //if(i==0){
                         //INR_PCI_BAR1_write(0x0,0xc00040);
@@ -584,6 +587,7 @@ void INR_MMI_PHY_interrupt(uint16_t id) {
 
 
             }
+            if(statechanged)INR_MDIO_update_port_states();
 
 }
 //*****************************************************************************************************************

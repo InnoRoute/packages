@@ -1,0 +1,9 @@
+#define  C_MMI_INT_HC_LOWER 0
+#define  C_MMI_INT_HC_UPPER 17
+#define  C_MMI_INT_MDIO 18
+#define  C_MMI_INT_RTC 19
+#define  C_MMI_INT_PERIPHERALS 20
+#define  C_MMI_INT_DEBUG 21
+#define  C_MMI_INT_COMMON 22
+#define  C_MMI_INT_ETH_SW 23
+#define  C_MMI_INT_CAN 24
