@@ -1,7 +1,0 @@
-#!/bin/sh
-uci batch <<-EOF
-        set luci.themes.innoroute=/luci-static/innoroute  
-        set luci.main.mediaurlbase=/luci-static/innoroute 
-        commit luci
-EOF
-exit 0
