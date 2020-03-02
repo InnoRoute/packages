@@ -1,0 +1,4 @@
+module: TNptp4l
+  +--rw TNptp4l
+     +--ro pathdelay?     int64
+     +--ro currenttime?   int64
